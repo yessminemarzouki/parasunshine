@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useSearchParams } from "react-router-dom";
 import { Search, Eye, Trash2, Sparkles } from "lucide-react";
+import { STORAGE_URL } from "../../config/api";
 import {
   getAdminOrders,
   updateOrderStatus,
@@ -309,7 +310,7 @@ export default function AdminOrders() {
                       >
                         {item.product?.image && (
                           <img
-                            src={`http://localhost/storage/${item.product.image}`}
+                            src={`${STORAGE_URL}/${item.product.image}`}
                             alt=""
                             className="w-5 h-5 rounded object-cover flex-shrink-0"
                           />
@@ -507,7 +508,7 @@ export default function AdminOrders() {
                     >
                       {item.product?.image && (
                         <img
-                          src={`http://localhost/storage/${item.product.image}`}
+                          src={`${STORAGE_URL}/${item.product.image}`}
                           alt=""
                           className="w-11 h-11 rounded-xl object-cover border border-gray-100 flex-shrink-0"
                         />

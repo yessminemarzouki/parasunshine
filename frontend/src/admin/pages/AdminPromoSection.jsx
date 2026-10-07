@@ -448,7 +448,7 @@ export default function AdminPromoSection() {
                     <div className="w-9 h-9 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                       {p.image ? (
                         <img
-                          src={`http://localhost/storage/${p.image}`}
+                          src={`${STORAGE_URL}/${p.image}`}
                           alt={p.name}
                           className="w-full h-full object-cover"
                         />

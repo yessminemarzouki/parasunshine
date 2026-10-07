@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useSearchParams } from "react-router-dom";
 import ProductPreviewModal from "../components/ProductPreviewModal";
-
+import { STORAGE_URL } from "../../config/api";
 import ImageDropzone from "../components/ImageDropzone";
 import RichTextEditor from "../components/RichTextEditor";
 import * as XLSX from "xlsx";
@@ -828,7 +828,7 @@ export default function AdminProducts() {
           : "",
     );
 
-    setPreviewImg(p.image ? `http://localhost/storage/${p.image}` : null);
+    setPreviewImg(p.image ? `${STORAGE_URL}/${p.image}` : null);
     const existing = p.images || [];
     setGalleryExisting([
       existing[0] || null,
@@ -836,9 +836,9 @@ export default function AdminProducts() {
       existing[2] || null,
     ]);
     setGalleryPreviews([
-      existing[0] ? `http://localhost/storage/${existing[0]}` : null,
-      existing[1] ? `http://localhost/storage/${existing[1]}` : null,
-      existing[2] ? `http://localhost/storage/${existing[2]}` : null,
+      existing[0] ? `${STORAGE_URL}/${existing[0]}` : null,
+      existing[1] ? `${STORAGE_URL}/${existing[1]}` : null,
+      existing[2] ? `${STORAGE_URL}/${existing[2]}` : null,
     ]);
     setGalleryFiles([null, null, null]);
     setSelectedFile(null);
@@ -1630,7 +1630,7 @@ export default function AdminProducts() {
                           <div className="flex items-center gap-3">
                             {p.image ? (
                               <img
-                                src={`http://localhost/storage/${p.image}`}
+                                src={`${STORAGE_URL}/p.image}`}
                                 alt=""
                                 className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0"
                               />
@@ -2545,7 +2545,7 @@ export default function AdminProducts() {
                                       ) : color.image ? (
                                         <div className="flex items-center gap-2 justify-center">
                                           <img
-                                            src={`http://localhost/storage/${color.image}`}
+                                            src={`${STORAGE_URL}/${color.image}`}
                                             alt={color.name}
                                             className="w-12 h-12 rounded-lg object-cover"
                                           />
@@ -3083,7 +3083,7 @@ function BulkBadgePicker({ field, label, onClose, onApplied, showToast }) {
                   />
                   {p.image ? (
                     <img
-                      src={`http://localhost/storage/${p.image}`}
+                      src={`${STORAGE_URL}/${p.image}`}
                       alt=""
                       className="w-8 h-8 rounded-md object-cover flex-shrink-0"
                     />
