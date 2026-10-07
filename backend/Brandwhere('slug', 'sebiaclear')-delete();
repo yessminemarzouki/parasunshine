@@ -1,0 +1,13 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#8304
+    [34mall[39m: [
+      [34;4mApp\Models\Brand[39;24m {#8301
+        [34mid[39m: [35m24[39m,
+        [34mparent_id[39m: [36mnull[39m,
+        [34mname[39m: [32m"[39m[32msebiaclear[39m[32m"[39m,
+        [34mslug[39m: [32m"[39m[32msebiaclear[39m[32m"[39m,
+        [34mlogo[39m: [36mnull[39m,
+        [34mcreated_at[39m: [32m"[39m[32m2026-08-24 13:59:22[39m[32m"[39m,
+        [34mupdated_at[39m: [32m"[39m[32m2026-08-24 13:59:22[39m[32m"[39m,
+      },
+    ],
+  }

@@ -1,0 +1,47 @@
+[90m= [39m[
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mLa Roche Posay[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mla-roche-posay[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1LWs1UIBcQ2V2f-S1gx3lD2yoPMd50lYVgg&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mVichy[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mvichy[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUp5LQyiBA30zfNmROYastnqJRyZEzljjdGw&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mBioderma[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mbioderma[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://logos-world.net/wp-content/uploads/2020/11/Bioderma-Logo.png[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mMustela[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mmustela[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://www.paralabel.tn/img/m/105.jpg[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mUriage[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32muriage[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIdylAaCdWDRVkcJDEdPHI5lEllceNe7kfPw&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mVital[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mvital[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTB0plqwnZ5Wz5Yir5dBCxZY9sBnsootEqxUw&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mDoppelherz[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mdoppelherz[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNrvgbb1fExyVeKcucc00HlJgyANuIEle7_Q&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mMuriac[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mmuriac[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRK9fGEYcYxo46jIEZw1O9Ev7O57ya-uZwj8A&s[39m[32m"[39m,
+    ],
+    [
+      [34m"[39m[34mname[39m[34m"[39m => [32m"[39m[32mRogé[39m[32m"[39m,
+      [34m"[39m[34mslug[39m[34m"[39m => [32m"[39m[32mroge[39m[32m"[39m,
+      [34m"[39m[34mlogo_url[39m[34m"[39m => [32m"[39m[32mhttps://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4L-gECMViwCOh5tZbUqd_GN4GSbSLh_Jw3Q&s[39m[32m"[39m,
+    ],
+  ]

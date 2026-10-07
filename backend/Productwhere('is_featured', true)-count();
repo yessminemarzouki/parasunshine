@@ -1,0 +1,20 @@
+[90m= [39m[
+    "[32mid[39m",
+    "[32mname[39m",
+    "[32mslug[39m",
+    "[32mdescription[39m",
+    "[32mprice[39m",
+    "[32mpromo_price[39m",
+    "[32mstock[39m",
+    "[32mimage[39m",
+    "[32mimages[39m",
+    "[32mcategory_id[39m",
+    "[32mbrand_id[39m",
+    "[32mis_featured[39m",
+    "[32mis_promo[39m",
+    "[32mdiscount_percentage[39m",
+    "[32mcreated_at[39m",
+    "[32mupdated_at[39m",
+    "[32mis_new[39m",
+  ]
+

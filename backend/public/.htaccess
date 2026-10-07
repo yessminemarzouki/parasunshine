@@ -1,0 +1,80 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # ✅ COMPRESSION GZIP (ajouté juste après RewriteEngine On)
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
+        AddOutputFilterByType DEFLATE image/svg+xml
+    </IfModule>
+
+    # ✅ COMPRESSION BROTLI (meilleure que GZIP si disponible)
+    <IfModule mod_brotli.c>
+        AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
+        AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+    </IfModule>
+
+    # ✅ CACHE HEADERS (améliore la vitesse des visites répétées)
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        
+        # API responses - cache court
+        ExpiresByType application/json "access plus 5 minutes"
+        
+        # Images - cache long
+        ExpiresByType image/jpeg "access plus 1 year"
+        ExpiresByType image/png "access plus 1 year"
+        ExpiresByType image/webp "access plus 1 year"
+        ExpiresByType image/svg+xml "access plus 1 year"
+        ExpiresByType image/gif "access plus 1 year"
+        
+        # CSS et JS - cache moyen
+        ExpiresByType text/css "access plus 1 month"
+        ExpiresByType text/javascript "access plus 1 month"
+        ExpiresByType application/javascript "access plus 1 month"
+        
+        # Fonts - cache long
+        ExpiresByType font/woff2 "access plus 1 year"
+        ExpiresByType font/woff "access plus 1 year"
+        ExpiresByType font/ttf "access plus 1 year"
+    </IfModule>
+
+    # ✅ HEADERS DE CACHE (en complément)
+    <IfModule mod_headers.c>
+        # Cache pour les images
+        <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+            Header set Cache-Control "max-age=31536000, public"
+        </FilesMatch>
+        
+        # Pas de cache pour les API JSON
+        <FilesMatch "\.json$">
+            Header set Cache-Control "max-age=300, public"
+        </FilesMatch>
+        
+        # CORS pour l'API (important pour React)
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    </IfModule>
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
