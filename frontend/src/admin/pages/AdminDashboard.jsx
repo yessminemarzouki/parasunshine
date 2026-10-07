@@ -16,6 +16,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { getAdminStats, getAdminProducts } from "../services/adminApi";
+import { STORAGE_URL } from "../../config/api";
 import { useNavigate } from "react-router-dom";
 
 const STATUS_MAP = {
@@ -522,7 +523,7 @@ export default function AdminDashboard() {
                   </span>
                   {p.image && (
                     <img
-                      src={`http://localhost/storage/${p.image}`}
+                      src={`${STORAGE_URL}/${p.image}`}
                       alt={p.name}
                       className="w-9 h-9 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                       onError={(e) => (e.target.style.display = "none")}
@@ -750,7 +751,7 @@ export default function AdminDashboard() {
                     >
                       {p.image ? (
                         <img
-                          src={`http://localhost/storage/${p.image}`}
+                          src={`${STORAGE_URL}/${p.image}`}
                           alt=""
                           className="w-10 h-10 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                         />
@@ -965,7 +966,7 @@ export default function AdminDashboard() {
                       </span>
                       {p.image ? (
                         <img
-                          src={`http://localhost/storage/${p.image}`}
+                          src={`${STORAGE_URL}/${p.image}`}
                           alt=""
                           className="w-10 h-10 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                         />

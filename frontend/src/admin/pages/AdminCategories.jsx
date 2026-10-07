@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ImageDropzone from "../components/ImageDropzone";
+import { STORAGE_URL } from "../../config/api";
 import * as XLSX from "xlsx";
 import { invalidateRefCache } from "../services/adminApi";
 import {
@@ -180,7 +181,7 @@ function MegaMenuContent({ category }) {
           </p>
           {child.image ? (
             <img
-              src={`http://localhost/storage/${child.image}`}
+              src={`${STORAGE_URL}/${child.image}`}
               alt={child.name}
               className="w-full h-16 object-cover rounded-lg mb-2"
             />
@@ -231,7 +232,7 @@ function MegaMenuContent({ category }) {
                 src={
                   b.logo?.startsWith("http")
                     ? b.logo
-                    : `http://localhost/storage/${b.logo}`
+                    : `${STORAGE_URL}/${b.logo}`
                 }
                 alt={b.name}
                 className="w-full h-12 object-contain bg-white border border-gray-100 rounded-md p-1"
@@ -245,7 +246,7 @@ function MegaMenuContent({ category }) {
           <>
             {category.bundle?.image && (
               <img
-                src={`http://localhost/storage/${category.bundle.image}`}
+                src={`${STORAGE_URL}/${category.bundle.image}`}
                 alt=""
                 className="w-full h-24 object-cover rounded-lg mb-2"
               />
@@ -917,7 +918,7 @@ export default function AdminCategories() {
                                   ? null
                                   : editLogoPreview ||
                                     (item.logo
-                                      ? `http://localhost/storage/${item.logo}`
+                                      ? `${STORAGE_URL}/${item.logo}`
                                       : null)
                               }
                               onFileSelect={(file) => {
@@ -937,7 +938,7 @@ export default function AdminCategories() {
                           <div className="w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
                             {item.logo ? (
                               <img
-                                src={`http://localhost/storage/${item.logo}`}
+                                src={`${STORAGE_URL}/${item.logo}`}
                                 alt={item.name}
                                 className="w-full h-full object-contain p-0.5"
                               />
@@ -1604,7 +1605,7 @@ export default function AdminCategories() {
                     {selectedTop.slug === "soin" &&
                       (child.image ? (
                         <img
-                          src={`http://localhost/storage/${child.image}`}
+                          src={`${STORAGE_URL}/${child.image}`}
                           alt=""
                           className="w-8 h-8 rounded-md object-cover flex-shrink-0"
                         />
@@ -1872,7 +1873,7 @@ function CategoryConfigPanel({
   const isTopLevel = !category.parent_id;
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(
-    category.image ? `http://localhost/storage/${category.image}` : null,
+    category.image ? `${STORAGE_URL}/${category.image}` : null,
   );
   const [promoTitle, setPromoTitle] = useState(category.promo_title || "");
   const [promoText, setPromoText] = useState(category.promo_text || "");
@@ -2011,7 +2012,7 @@ function CategoryConfigPanel({
                     >
                       {b.logo && (
                         <img
-                          src={`http://localhost/storage/${b.logo}`}
+                          src={`${STORAGE_URL}/${b.logo}`}
                           alt=""
                           className="w-4 h-4 object-contain"
                         />
@@ -2080,7 +2081,7 @@ function CategoryConfigPanel({
                                 <div className="w-9 h-9 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
                                   {b.image ? (
                                     <img
-                                      src={`http://localhost/storage/${b.image}`}
+                                      src={`${STORAGE_URL}/${b.image}`}
                                       alt=""
                                       className="w-full h-full object-contain p-0.5"
                                     />
@@ -2120,7 +2121,7 @@ function CategoryConfigPanel({
                       <div className="w-14 h-14 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
                         {selectedBundle.image ? (
                           <img
-                            src={`http://localhost/storage/${selectedBundle.image}`}
+                            src={`${STORAGE_URL}/${selectedBundle.image}`}
                             alt=""
                             className="w-full h-full object-contain p-1"
                           />
