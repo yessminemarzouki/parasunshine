@@ -10,6 +10,8 @@ import {
   bulkRejectReviews,
   bulkDeleteReviews,
 } from "../services/adminApi";
+import { STORAGE_URL } from "../../config/api";
+
 import {
   ActionBtn,
   Input,
@@ -292,7 +294,7 @@ export default function AdminReviews() {
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                 {selectedReview.product?.image && (
                   <img
-                    src={`http://localhost/storage/${selectedReview.product.image}`}
+                    src={`${STORAGE_URL}/${selectedReview.product.image}`}
                     alt=""
                     className="w-12 h-12 rounded-xl object-cover border border-gray-100 flex-shrink-0"
                   />
@@ -623,7 +625,7 @@ export default function AdminReviews() {
                   <div className="flex items-center gap-2">
                     {r.product?.image && (
                       <img
-                        src={`http://localhost/storage/${r.product.image}`}
+                        src={`${STORAGE_URL}/${r.product.image}`}
                         alt=""
                         className="w-8 h-8 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                       />

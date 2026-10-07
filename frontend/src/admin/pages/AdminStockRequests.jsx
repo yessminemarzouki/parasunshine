@@ -10,6 +10,7 @@ import {
   X,
   CheckCircle2,
 } from "lucide-react";
+import { STORAGE_URL } from "../../config/api";
 import {
   getStockRequests,
   sendStockAvailabilityEmail,
@@ -185,7 +186,7 @@ export default function AdminStockRequests() {
                     >
                       {r.item_image ? (
                         <img
-                          src={`http://localhost/storage/${r.item_image}`}
+                          src={`${STORAGE_URL}/${r.item_image}`}
                           alt=""
                           className="w-full h-full object-cover"
                         />

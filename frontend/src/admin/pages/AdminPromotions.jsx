@@ -16,6 +16,7 @@ import {
   getAdminCategories,
   getAdminBrands,
 } from "../services/adminApi";
+import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
 
 export default function AdminPromotions() {
@@ -325,7 +326,7 @@ export default function AdminPromotions() {
                   <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                     {p.image && (
                       <img
-                        src={`http://localhost/storage/${p.image}`}
+                        src={`${STORAGE_URL}/${p.image}`}
                         alt=""
                         className="w-full h-full object-cover"
                       />

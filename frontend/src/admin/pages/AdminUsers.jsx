@@ -32,6 +32,7 @@ import {
   Spinner,
   PageHeader,
 } from "../components/AdminShared";
+import { STORAGE_URL } from "../../config/api";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -629,7 +630,7 @@ export default function AdminUsers() {
                           >
                             {item.image ? (
                               <img
-                                src={`http://localhost/storage/${item.image}`}
+                                src={`${STORAGE_URL}/${item.image}`}
                                 alt=""
                                 className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                               />
@@ -720,7 +721,7 @@ export default function AdminUsers() {
                                   >
                                     {item.image && (
                                       <img
-                                        src={`http://localhost/storage/${item.image}`}
+                                        src={`${STORAGE_URL}/${item.image}`}
                                         alt=""
                                         className="w-8 h-8 rounded-md object-cover flex-shrink-0"
                                       />

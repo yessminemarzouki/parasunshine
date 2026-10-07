@@ -43,7 +43,7 @@ Route::middleware('throttle:register')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
-Route::middleware('throttle:login')->group(function () {
+Route::middleware('throttle:6,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
