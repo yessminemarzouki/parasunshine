@@ -30,6 +30,9 @@ export default function ProductList() {
     searchParams.get("category") || "",
   );
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || "",
+  );
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(5000);
   const [showPromo, setShowPromo] = useState(
@@ -60,6 +63,8 @@ export default function ProductList() {
     setShowBestseller(searchParams.get("bestseller") === "true");
     setShowFeatured(searchParams.get("featured") === "true");
     setShowPromo(searchParams.get("promo") === "true");
+    // Lit le paramètre search de l'URL (recherche depuis le Header)
+    setSearchQuery(searchParams.get("search") || "");
   }, [searchParams]);
 
   useEffect(() => {
@@ -85,6 +90,7 @@ export default function ProductList() {
   }, [
     selectedCategory,
     selectedBrand,
+    searchQuery,
     showPromo,
     showNew,
     showBestseller,
@@ -133,6 +139,7 @@ export default function ProductList() {
       const params = new URLSearchParams();
       if (selectedCategory) params.append("category", selectedCategory);
       if (selectedBrand) params.append("brand", selectedBrand);
+      if (searchQuery) params.append("search", searchQuery);
       if (minPrice > 0) params.append("min_price", minPrice);
       if (maxPrice < 5000) params.append("max_price", maxPrice);
       if (showPromo) params.append("promo", "1");
@@ -159,6 +166,7 @@ export default function ProductList() {
   const resetFilters = () => {
     setSelectedCategory("");
     setSelectedBrand("");
+    setSearchQuery("");
     setMinPrice(0);
     setMaxPrice(5000);
     setShowPromo(false);
@@ -297,13 +305,16 @@ export default function ProductList() {
   };
 
   const getPageTitle = () => {
-    // Priorité 1 : une catégorie est choisie — peu importe les autres filtres actifs
+    // Priorité 1 : une recherche est active
+    if (searchQuery) return `Résultats pour "${searchQuery}"`;
+
+    // Priorité 2 : une catégorie est choisie
     if (currentCategoryName) return `Nos produits ${currentCategoryName}`;
 
-    // Priorité 2 : une marque est choisie, sans catégorie
+    // Priorité 3 : une marque est choisie, sans catégorie
     if (selectedBrand) return `Nos produits ${getSelectedBrandName()}`;
 
-    // Priorité 3 : un seul filtre spécial actif, sans catégorie ni marque
+    // Priorité 4 : un seul filtre spécial actif
     if (showPromo) return "Nos promotions";
     if (showNew) return "Nos nouveautés";
     if (showBestseller) return "Nos meilleures ventes";
