@@ -211,6 +211,7 @@ const Register = () => {
                 <input
                   type="text"
                   name="first_name"
+                  autoComplete="given-name"
                   placeholder="Votre prénom"
                   value={formData.first_name}
                   onChange={handleChange}
@@ -235,6 +236,7 @@ const Register = () => {
                 <input
                   type="text"
                   name="last_name"
+                  autoComplete="family-name"
                   placeholder="Votre nom"
                   value={formData.last_name}
                   onChange={handleChange}
@@ -262,6 +264,7 @@ const Register = () => {
               <input
                 type="email"
                 name="email"
+                autoComplete="email"
                 placeholder="email@example.com"
                 value={formData.email}
                 onChange={handleChange}
@@ -288,6 +291,7 @@ const Register = () => {
               <input
                 type="tel"
                 name="phone"
+                autoComplete="tel"
                 placeholder="+216 20 123 456"
                 value={formData.phone}
                 onChange={handleChange}
@@ -314,6 +318,7 @@ const Register = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
+                autoComplete="new-password"
                 placeholder="Min 8 caractères"
                 value={formData.password}
                 onChange={handleChange}
@@ -347,6 +352,7 @@ const Register = () => {
               <input
                 type={showPasswordConfirm ? "text" : "password"}
                 name="password_confirmation"
+                autoComplete="new-password"
                 placeholder="Confirmer mot de passe"
                 value={formData.password_confirmation}
                 onChange={handleChange}
