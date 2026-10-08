@@ -233,6 +233,12 @@ function SearchResultsBody({
   onSelectBrand,
   onSeeAll,
 }) {
+  // Garde-fous : si une prop est undefined, on utilise un tableau vide
+  // (évite les crash "Cannot read properties of undefined")
+  results = results || [];
+  suggestions = suggestions || [];
+  brands = brands || [];
+
   return (
     <>
       {brands.length > 0 && (
@@ -826,8 +832,10 @@ export default function Header() {
               onSubmit={handleSubmit}
               results={results}
               suggestions={suggestions}
+              brands={brandResults}
               hasResults={hasResults}
               onSelect={handleSelect}
+              onSelectBrand={handleSelectBrand}
               onSeeAll={handleSeeAll}
             />
 
