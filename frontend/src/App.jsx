@@ -205,6 +205,7 @@ function App() {
                       path="featured-section"
                       element={<AdminFeaturedSection />}
                     />
+                    <Route path="hero-slides" element={<AdminHeroSlides />} />
                     <Route
                       path="promotions"
                       element={<AdminPromotionsLayout />}
@@ -214,7 +215,6 @@ function App() {
                         element={<Navigate to="banniere" replace />}
                       />
                       <Route path="banniere" element={<AdminPromoBanner />} />
-                      <Route path="hero-slides" element={<AdminHeroSlides />} />
                       <Route path="top-promo" element={<AdminPromoSection />} />
                       <Route path="assistant" element={<AdminPromotions />} />
                       <Route
