@@ -32,6 +32,8 @@ use App\Http\Controllers\Api\Admin\AdminReviewController;
 use App\Http\Controllers\Api\Admin\AdminContactController;
 use App\Http\Controllers\Api\Admin\AdminCategoryController;
 use App\Http\Controllers\Api\Admin\AdminPromoBannerController;
+use App\Http\Controllers\Api\Admin\AdminHeroSlideController;
+use App\Http\Controllers\Api\HeroSlideController;
 use App\Http\Controllers\Api\Admin\AdminPromotionController;
 use App\Http\Controllers\Api\Admin\AdminShippingController;
 use App\Http\Controllers\Api\ShippingController;
@@ -114,6 +116,7 @@ Route::get('/hygiene-section', [AdminHygieneSectionController::class, 'public'])
 Route::get('/category-showcase', [CategoryShowcaseController::class, 'show']);
 Route::get('/featured-section', [FeaturedSectionController::class, 'show']);
 Route::get('/homepage-videos', [\App\Http\Controllers\Api\HomepageVideoController::class, 'index']);
+Route::get('/hero-slides', [HeroSlideController::class, 'index']);
 // ========================================
 // COFFRETS (publiques)
 // ========================================
@@ -168,6 +171,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Promo Banner
     Route::get('/promo-banner', [AdminPromoBannerController::class, 'show']);
     Route::put('/promo-banner', [AdminPromoBannerController::class, 'update']);
+
+    // Hero Slides (Carrousel)
+    Route::get('/hero-slides', [AdminHeroSlideController::class, 'index']);
+    Route::post('/hero-slides', [AdminHeroSlideController::class, 'store']);
+    Route::post('/hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'update']);
+    Route::delete('/hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'destroy']);
+    Route::patch('/hero-slides/{heroSlide}/toggle', [AdminHeroSlideController::class, 'toggle']);
+    Route::post('/hero-slides/reorder', [AdminHeroSlideController::class, 'reorder']);
 
     // Commandes
     Route::get('/orders', [AdminOrderController::class, 'index']);

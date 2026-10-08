@@ -269,6 +269,9 @@ export const validatePromoCode = async (code, cartItems) => {
 export const getHomepageVideos = async () => {
   return cachedFetch(`${API_URL}/homepage-videos`);
 };
+export const getHeroSlides = async () => {
+  return cachedFetch(`${API_URL}/hero-slides`);
+};
 // ── AVIS — gestion de son propre avis ──
 export const checkUserReview = async (productId) => {
   const response = await api.get(`/reviews/check/${productId}`);

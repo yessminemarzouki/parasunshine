@@ -60,6 +60,7 @@ const AdminContacts = lazy(() => import("./admin/pages/AdminContacts"));
 const AdminNewsletter = lazy(() => import("./admin/pages/AdminNewsletter"));
 const AdminCategories = lazy(() => import("./admin/pages/AdminCategories"));
 const AdminPromoBanner = lazy(() => import("./admin/pages/AdminPromoBanner"));
+const AdminHeroSlides = lazy(() => import("./admin/pages/AdminHeroSlides"));
 const AdminPromoCampaigns = lazy(
   () => import("./admin/pages/AdminPromoCampaigns"),
 );
@@ -213,6 +214,7 @@ function App() {
                         element={<Navigate to="banniere" replace />}
                       />
                       <Route path="banniere" element={<AdminPromoBanner />} />
+                      <Route path="hero-slides" element={<AdminHeroSlides />} />
                       <Route path="top-promo" element={<AdminPromoSection />} />
                       <Route path="assistant" element={<AdminPromotions />} />
                       <Route

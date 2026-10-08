@@ -247,6 +247,43 @@ export const invalidateRefCache = () => refCache.clear();
 
 export default adminApi;
 // ========================================
+// HERO SLIDES (CARROUSEL)
+// ========================================
+export const getAdminHeroSlides = async () => {
+  const response = await adminApi.get("/admin/hero-slides");
+  return response.data;
+};
+
+export const createHeroSlide = async (formData) => {
+  const response = await adminApi.post("/admin/hero-slides", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const updateHeroSlide = async (id, formData) => {
+  const response = await adminApi.post(`/admin/hero-slides/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const deleteHeroSlide = async (id) => {
+  const response = await adminApi.delete(`/admin/hero-slides/${id}`);
+  return response.data;
+};
+
+export const toggleHeroSlide = async (id) => {
+  const response = await adminApi.patch(`/admin/hero-slides/${id}/toggle`);
+  return response.data;
+};
+
+export const reorderHeroSlides = async (order) => {
+  const response = await adminApi.post("/admin/hero-slides/reorder", { order });
+  return response.data;
+};
+
+// ========================================
 // PROMO BANNER
 // ========================================
 export const getPromoBanner = async () => {

@@ -25,6 +25,7 @@ import {
   Truck,
   Percent,
   Video,
+  Image,
 } from "lucide-react";
 import {
   getAdminUser,
@@ -53,6 +54,7 @@ const navItems = [
   { label: "Promotions", icon: Sparkles, to: "/admin/promotions" },
   { label: "Codes promo", icon: Percent, to: "/admin/promo-codes" },
   { label: "Vidéos accueil", icon: Video, to: "/admin/homepage-videos" },
+  { label: "Carrousel", icon: Image, to: "/admin/hero-slides" },
   { label: "Livraison", icon: Truck, to: "/admin/shipping" },
   { label: "Bandeau Catégories", icon: Layers, to: "/admin/hygiene-section" },
   {
