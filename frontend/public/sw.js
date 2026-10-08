@@ -1,5 +1,5 @@
-const CACHE_NAME = "parasunshine-v2";
-const API_CACHE = "parasunshine-api-v2";
+const CACHE_NAME = "parasunshine-v3";
+const API_CACHE = "parasunshine-api-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting(); // active la nouvelle version immédiatement, sans attendre la fermeture des onglets
