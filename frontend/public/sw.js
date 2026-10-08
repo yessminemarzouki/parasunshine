@@ -38,6 +38,8 @@ const NEVER_CACHE_PATTERNS = [
   "/api/wishlist",
   "/api/reviews/check",
   "/api/admin",
+  "/checkout",
+  "/order-confirmation",
 ];
 
 self.addEventListener("fetch", (event) => {
@@ -73,6 +75,12 @@ self.addEventListener("fetch", (event) => {
         });
       }),
     );
+    return;
+  }
+
+  // Ne jamais servir du cache pour les pages HTML dynamiques
+  if (request.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(fetch(request));
     return;
   }
 

@@ -279,4 +279,10 @@ export const deleteReview = async (id) => {
   const response = await api.delete(`/reviews/${id}`);
   return response.data;
 };
+
+export const updateReview = async (id, data) => {
+  const response = await api.put(`/reviews/${id}`, data);
+  return response.data;
+};
+
 export default api;

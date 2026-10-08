@@ -259,6 +259,14 @@ export default function Checkout() {
         shipping_address: shippingAddress,
         phone: shippingPhone,
         promo_code: promoCode?.code || null,
+        shipping_city: useNewAddress
+          ? formData.governorate
+          : savedAddresses.find((a) => a.id === selectedAddressId)
+              ?.governorate || "",
+        shipping_postal_code: useNewAddress
+          ? formData.postalCode
+          : savedAddresses.find((a) => a.id === selectedAddressId)
+              ?.postal_code || "",
       };
 
       const response = await createOrder(orderData);

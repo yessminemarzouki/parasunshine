@@ -70,7 +70,9 @@ class OrderController extends Controller
                      'promo_code' => 'nullable|string|max:50',
                     'items.*.selected_size' => 'nullable|string|max:50',
             'items.*.selected_color' => 'nullable|string|max:100',
-            'items.*.selected_age' => 'nullable|string|max:50',
+         'items.*.selected_age' => 'nullable|string|max:50',
+            'shipping_city' => 'nullable|string|max:100',
+            'shipping_postal_code' => 'nullable|string|max:20',
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -205,8 +207,10 @@ class OrderController extends Controller
                 'shipping_cost' => $shippingCost,
                 'total' => $total,
                 'shipping_address' => $validated['shipping_address'],
-                'shipping_phone' => $validated['phone'],
-                'payment_method' => 'cash_on_delivery', // 🆕 FIXÉ À PAIEMENT À LA LIVRAISON
+             'shipping_phone' => $validated['phone'],
+                'shipping_city' => $validated['shipping_city'] ?? '',
+                'shipping_postal_code' => $validated['shipping_postal_code'] ?? '',
+                'payment_method' => 'cash_on_delivery',// 🆕 FIXÉ À PAIEMENT À LA LIVRAISON
                 'payment_status' => 'pending',
                 'promo_code' => $promoDiscountPercentage ? strtoupper(trim($validated['promo_code'])) : null,
                 'promo_discount_percentage' => $promoDiscountPercentage,
