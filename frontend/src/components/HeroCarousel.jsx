@@ -3,27 +3,10 @@ import { Link } from "react-router-dom";
 import { STORAGE_URL } from "../config/api";
 import { getHeroSlides } from "../services/api";
 
-const FALLBACK_SLIDES = [
-  {
-    id: 1,
-    image:
-      "https://pharma-shop.tn/themes/pharmashop/assets/img/modules/appagebuilder/images/NUTRI.png",
-  },
-  {
-    id: 2,
-    image:
-      "https://www.maparatunisie.tn/wp-content/uploads/2025/01/Maman-et-Bebe-1536x521.avif",
-  },
-  {
-    id: 3,
-    image:
-      "https://www.maparatunisie.tn/wp-content/uploads/2024/12/Banner-ANTI-TACHES-MAPARATUNISIE-1536x521.avif",
-  },
-];
-
 const HeroCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState(FALLBACK_SLIDES);
+  const [slides, setSlides] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getHeroSlides()
@@ -32,7 +15,8 @@ const HeroCarousel = () => {
           setSlides(data);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -43,12 +27,15 @@ const HeroCarousel = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  // ✅ APRÈS les hooks : on peut return null
+  if (loading || slides.length === 0) return null;
+
   const goToSlide = (index) => setCurrentSlide(index);
 
   const getImageUrl = (image) => {
     if (!image) return "";
-    if (image.startsWith("http")) return image; // URL externe (fallback)
-    return `${STORAGE_URL}/${image}`; // Image uploadée
+    if (image.startsWith("http")) return image;
+    return `${STORAGE_URL}/${image}`;
   };
 
   return (
