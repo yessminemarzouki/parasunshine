@@ -196,11 +196,28 @@ class AuthController extends Controller
 
             // Chercher ou créer l'utilisateur
             $user = User::where('email', $googleUser->email)->first();
-
             if (!$user) {
+                // Découper le nom complet en first_name + last_name
+                // Google fournit généralement name="Prénom Nom"
+                $fullName = trim($googleUser->name ?? '');
+                $parts = explode(' ', $fullName, 2);
+                $firstName = $parts[0] ?? '';
+                $lastName = $parts[1] ?? '';
+
+                // Essayer de récupérer les vrais first_name/last_name de Google
+                // (plus fiables quand disponibles)
+                if (!empty($googleUser->user['given_name'])) {
+                    $firstName = $googleUser->user['given_name'];
+                }
+                if (!empty($googleUser->user['family_name'])) {
+                    $lastName = $googleUser->user['family_name'];
+                }
+
                 // Créer un nouvel utilisateur
                 $user = User::create([
-                    'name' => $googleUser->name,
+                    'name' => $fullName,
+                    'first_name' => $firstName ?: null,
+                    'last_name' => $lastName ?: null,
                     'email' => $googleUser->email,
                     'password' => Hash::make(Str::random(16)),
                     'role' => 'user',
