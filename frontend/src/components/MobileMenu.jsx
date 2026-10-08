@@ -98,32 +98,46 @@ export default function MobileMenu({ isOpen, onClose }) {
             const isExpanded = expanded === cat.slug;
             return (
               <div key={cat.id} className="border-b border-gray-100">
-                <button
-                  onClick={() => {
-                    if (hasChildren) {
-                      // 1er clic : ouvre le sous-menu
-                      // 2ᵉ clic (si déjà ouvert) : navigue vers la catégorie
-                      if (isExpanded) {
-                        handleNavigate(`/products?category=${cat.slug}`);
+                <div className="flex items-center w-full px-5 py-3.5">
+                  {/* Nom de la catégorie : navigue ou ouvre */}
+                  <button
+                    onClick={() => {
+                      if (hasChildren) {
+                        // 1er clic : ouvre le sous-menu
+                        // 2ᵉ clic (si déjà ouvert) : navigue vers la catégorie
+                        if (isExpanded) {
+                          handleNavigate(`/products?category=${cat.slug}`);
+                        } else {
+                          toggleExpand(cat.slug);
+                        }
                       } else {
-                        toggleExpand(cat.slug);
+                        handleNavigate(`/products?category=${cat.slug}`);
                       }
-                    } else {
-                      handleNavigate(`/products?category=${cat.slug}`);
-                    }
-                  }}
-                  className="flex items-center justify-between w-full text-left px-5 py-3.5 text-gray-900 font-medium text-[0.95rem]"
-                >
-                  {cat.name}
+                    }}
+                    className="flex-1 text-left text-gray-900 font-medium text-[0.95rem]"
+                  >
+                    {cat.name}
+                  </button>
+
+                  {/* Flèche : ouvre/ferme uniquement (ne navigue pas) */}
                   {hasChildren && (
-                    <ChevronDown
-                      size={16}
-                      className={`text-gray-400 transition-transform duration-300 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpand(cat.slug);
+                      }}
+                      aria-label={isExpanded ? "Fermer" : "Ouvrir"}
+                      className="w-8 h-8 flex items-center justify-center -mr-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-300 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
                   )}
-                </button>
+                </div>
 
                 {hasChildren && (
                   <div
