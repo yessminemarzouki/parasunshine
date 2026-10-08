@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { X, ChevronDown, Search, Gift, Home } from "lucide-react";
+import { X, ChevronDown, Gift, Home, Package } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
 
 export default function MobileMenu({ isOpen, onClose }) {
   const { categories } = useCategories();
   const [expanded, setExpanded] = useState(null);
-  const [query, setQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,11 +44,7 @@ export default function MobileMenu({ isOpen, onClose }) {
     navigate(to);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    handleNavigate(`/products?search=${encodeURIComponent(query.trim())}`);
-  };
+  // (handleSearch retiré — barre de recherche supprimée)
 
   return (
     <>
@@ -82,22 +77,7 @@ export default function MobileMenu({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Recherche */}
-        <form onSubmit={handleSearch} className="px-5 py-4 flex-shrink-0">
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un produit..."
-              className="w-full py-2.5 pl-10 pr-3 border border-gray-200 rounded-xl text-[0.9rem] outline-none focus:border-[#1a5242]"
-            />
-            <Search
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-          </div>
-        </form>
+        {/* (barre de recherche retirée — déjà présente dans le Header) */}
 
         {/* Liste scrollable */}
         <div
@@ -119,11 +99,19 @@ export default function MobileMenu({ isOpen, onClose }) {
             return (
               <div key={cat.id} className="border-b border-gray-100">
                 <button
-                  onClick={() =>
-                    hasChildren
-                      ? toggleExpand(cat.slug)
-                      : handleNavigate(`/products?category=${cat.slug}`)
-                  }
+                  onClick={() => {
+                    if (hasChildren) {
+                      // 1er clic : ouvre le sous-menu
+                      // 2ᵉ clic (si déjà ouvert) : navigue vers la catégorie
+                      if (isExpanded) {
+                        handleNavigate(`/products?category=${cat.slug}`);
+                      } else {
+                        toggleExpand(cat.slug);
+                      }
+                    } else {
+                      handleNavigate(`/products?category=${cat.slug}`);
+                    }
+                  }}
                   className="flex items-center justify-between w-full text-left px-5 py-3.5 text-gray-900 font-medium text-[0.95rem]"
                 >
                   {cat.name}
@@ -187,10 +175,18 @@ export default function MobileMenu({ isOpen, onClose }) {
 
           <button
             onClick={() => handleNavigate("/products?promo=true")}
-            className="flex items-center gap-2 w-full text-left px-5 py-3.5 font-semibold text-[0.95rem]"
+            className="flex items-center gap-2 w-full text-left px-5 py-3.5 font-semibold text-[0.95rem] border-b border-gray-100"
             style={{ color: "#c62828" }}
           >
             <Gift size={16} /> Promotions
+          </button>
+
+          <button
+            onClick={() => handleNavigate("/coffrets")}
+            className="flex items-center gap-2 w-full text-left px-5 py-3.5 font-semibold text-[0.95rem]"
+            style={{ color: "#1a5242" }}
+          >
+            <Package size={16} /> Nos coffrets
           </button>
         </div>
       </div>
