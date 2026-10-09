@@ -185,6 +185,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
     Route::put('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
     // ── Produits (toutes les routes AVANT {product} doivent être déclarées en premier) ──
+    Route::get('/products/export', [AdminProductController::class, 'exportExcel']);   // ← AJOUT
     Route::post('/products/import', [AdminProductController::class, 'importCsv']);
     Route::post('/products/import-main-images-zip', [AdminProductController::class, 'importMainImagesZip']);
     Route::post('/products/import-optional-images-zip', [AdminProductController::class, 'importOptionalImagesZip']);

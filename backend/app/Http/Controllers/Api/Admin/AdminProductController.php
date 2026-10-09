@@ -128,6 +128,9 @@ class AdminProductController extends Controller
             'file' => 'required|file|mimes:csv,txt,xlsx|max:51200', // 50 Mo
         ]);
 
+        // Mode : 'create' (défaut) ou 'upsert' (mise à jour par id)
+        $mode = $request->input('mode', 'create');
+
         $file = $request->file('file');
         $extension = $file->getClientOriginalExtension();
 
@@ -153,6 +156,7 @@ class AdminProductController extends Controller
         }
 
         $imported = 0;
+        $updated = 0;
         $errors = [];
         $emptyPriceProducts = [];
         $row = 1;
@@ -472,9 +476,11 @@ class AdminProductController extends Controller
                     $promoPrice = round($price - ($price * $promoPercent / 100), 3);
                 }
 
-                \App\Models\Product::create([
+                $productId = !empty($data['id']) && is_numeric($data['id']) ? (int) $data['id'] : null;
+                $existing = $productId ? \App\Models\Product::find($productId) : null;
+
+                $payload = [
                     'name'                => $data['name'],
-                    'slug'                => $this->generateUniqueProductSlug($data['name']),
                     'reference'           => $reference,
                     'display_category1'   => true,
                     'display_category2'   => false,
@@ -483,29 +489,39 @@ class AdminProductController extends Controller
                     'discount_percentage' => $promoPercent,
                     'promo_starts_at'     => !empty($data['promo_starts_at']) ? $data['promo_starts_at'] : null,
                     'promo_ends_at'       => !empty($data['promo_ends_at']) ? $data['promo_ends_at'] : null,
-                    'stock'             => $stock,
-                    'description'       => $data['description'] ?? null,
-                    'short_description' => $data['short_description'] ?? null,
-                    'benefits'          => $data['benefits'] ?? null,
-                    'usage_tips'        => $data['usage_tips'] ?? null,
-                   'category_id'       => $category?->id,
-                    'category2_id'      => $category2?->id,
-                    'brand_id'          => $brand?->id,
-                    'is_featured'       => !empty($data['is_featured']) && (int) $data['is_featured'] === 1,
-                    'is_new'            => !empty($data['is_new']) && (int) $data['is_new'] === 1,
-                    'is_promo'          => !empty($data['is_promo']) && (int) $data['is_promo'] === 1,
-                    'is_bestseller'     => !empty($data['is_bestseller']) && (int) $data['is_bestseller'] === 1,
-                                   'is_unavailable'    => false,
-                    'image'             => $mainImage,
-                    'images'            => !empty($gallery) ? $gallery : null,
-                'has_sizes'         => $hasSizes,
-                    'sizes'             => $sizes,
-                    'has_colors'        => $hasColors,
-                    'colors'            => $colors,
-                    'has_age'           => $hasAge,
-                    'ages'              => $ages,
-                ]);
-                $imported++;
+                    'stock'               => $stock,
+                    'description'         => $data['description'] ?? null,
+                    'short_description'   => $data['short_description'] ?? null,
+                    'benefits'            => $data['benefits'] ?? null,
+                    'usage_tips'          => $data['usage_tips'] ?? null,
+                    'category_id'         => $category?->id,
+                    'category2_id'        => $category2?->id,
+                    'brand_id'            => $brand?->id,
+                    'is_featured'         => !empty($data['is_featured']) && (int) $data['is_featured'] === 1,
+                    'is_new'              => !empty($data['is_new']) && (int) $data['is_new'] === 1,
+                    'is_promo'            => !empty($data['is_promo']) && (int) $data['is_promo'] === 1,
+                    'is_bestseller'       => !empty($data['is_bestseller']) && (int) $data['is_bestseller'] === 1,
+                    'is_unavailable'      => !empty($data['is_unavailable']) && (int) $data['is_unavailable'] === 1,
+                    'has_sizes'           => $hasSizes,
+                    'sizes'               => $sizes,
+                    'has_colors'          => $hasColors,
+                    'colors'              => $colors,
+                    'has_age'             => $hasAge,
+                    'ages'                => $ages,
+                ];
+
+                if ($mode === 'upsert' && $existing) {
+                    // Mise à jour : on ne touche ni au slug ni aux images
+                    $existing->update($payload);
+                    $updated++;
+                } else {
+                    // Création
+                    $payload['slug']   = $this->generateUniqueProductSlug($data['name']);
+                    $payload['image']  = $mainImage;
+                    $payload['images'] = !empty($gallery) ? $gallery : null;
+                    \App\Models\Product::create($payload);
+                    $imported++;
+                }
             } catch (\Exception $e) {
                 $errors[] = "Ligne $row : erreur — " . $e->getMessage();
             }
@@ -523,12 +539,134 @@ class AdminProductController extends Controller
         }
 
         return response()->json([
-            'message'  => "$imported produit(s) importé(s) avec succès.",
-            'imported' => $imported,
-            'errors'   => $errors,
+        'message'  => "$imported créé(s), $updated mis à jour.",
+        'imported' => $imported,
+        'updated'  => $updated,
+        'errors'   => $errors,
         ]);
     }
+    public function exportExcel()
+    {
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
 
+        $products = Product::with(['category:id,name', 'category2:id,name', 'brand:id,name', 'brand.parent:id,name'])
+            ->orderBy('id')
+            ->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Produits');
+
+        $headers = [
+            'id', 'reference', 'name', 'price', 'promo_price', 'promo_percentage',
+            'promo_starts_at', 'promo_ends_at', 'stock',
+            'category', 'category2', 'brand', 'parent_brand',
+            'short_description', 'description', 'benefits', 'usage_tips',
+            'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
+            'display_category1', 'display_category2',
+            'has_sizes', 'sizes', 'has_colors', 'colors', 'has_age', 'ages',
+        ];
+
+        // Écriture des en-têtes (ligne 1)
+        $col = 1;
+        foreach ($headers as $h) {
+            $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . '1';
+            $sheet->setCellValue($coord, $h);
+            $sheet->getStyle($coord)->getFont()->setBold(true);
+            $col++;
+        }
+
+        // Écriture des lignes
+        $row = 2;
+        foreach ($products as $p) {
+            $sizesStr = '';
+            if ($p->has_sizes && is_array($p->sizes)) {
+                $sizesStr = collect($p->sizes)
+                    ->map(fn ($s) => ($s['label'] ?? '') . ':' . ($s['stock'] ?? 999))
+                    ->implode(',');
+            }
+
+            $colorsStr = '';
+            if ($p->has_colors && is_array($p->colors)) {
+                $colorsStr = collect($p->colors)
+                    ->map(fn ($c) => ($c['name'] ?? '') . ':' . ($c['stock'] ?? 999))
+                    ->implode(',');
+            }
+
+            $agesStr = '';
+            if ($p->has_age && is_array($p->ages)) {
+                if ($p->has_colors) {
+                    $agesStr = collect($p->ages)->map(function ($a) {
+                        $label = $a['label'] ?? '';
+                        $cols = collect($a['colors'] ?? [])
+                            ->map(fn ($c) => ($c['name'] ?? '') . ':' . ($c['stock'] ?? 0))
+                            ->implode('|');
+                        return $label . '=' . $cols;
+                    })->implode(';');
+                } else {
+                    $agesStr = collect($p->ages)
+                        ->map(fn ($a) => ($a['label'] ?? '') . ':' . ($a['stock'] ?? 999))
+                        ->implode(',');
+                }
+            }
+
+            $values = [
+                $p->id,
+                $p->reference,
+                $p->name,
+                $p->price,
+                $p->promo_price,
+                $p->discount_percentage,
+                $p->promo_starts_at,
+                $p->promo_ends_at,
+                $p->stock,
+                $p->category?->name,
+                $p->category2?->name,
+                $p->brand?->name,
+                $p->brand?->parent?->name,
+                strip_tags($p->short_description ?? ''),
+                strip_tags($p->description ?? ''),
+                strip_tags($p->benefits ?? ''),
+                strip_tags($p->usage_tips ?? ''),
+                $p->is_featured ? 1 : 0,
+                $p->is_new ? 1 : 0,
+                $p->is_promo ? 1 : 0,
+                $p->is_bestseller ? 1 : 0,
+                $p->is_unavailable ? 1 : 0,
+                $p->display_category1 ? 1 : 0,
+                $p->display_category2 ? 1 : 0,
+                $p->has_sizes ? 1 : 0,
+                $sizesStr,
+                $p->has_colors ? 1 : 0,
+                $colorsStr,
+                $p->has_age ? 1 : 0,
+                $agesStr,
+            ];
+
+            $col = 1;
+            foreach ($values as $v) {
+                $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . $row;
+                $sheet->setCellValue($coord, $v);
+                $col++;
+            }
+            $row++;
+        }
+
+        // Largeur auto
+        foreach (range(1, count($headers)) as $c) {
+            $letter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+            $sheet->getColumnDimension($letter)->setAutoSize(true);
+        }
+
+        $filename = 'produits_export_' . date('Y-m-d_His') . '.xlsx';
+        $tempPath = storage_path('app/' . $filename);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
     private function downloadImageFromUrl(?string $url, string $path = 'products'): ?string
     {
         if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {

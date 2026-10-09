@@ -358,13 +358,23 @@ export const updateHygieneSection = async (formData) => {
   });
   return response.data;
 };
-export const importProductsCsv = async (file) => {
+export const importProductsCsv = async (file, mode = "create") => {
   const fd = new FormData();
   fd.append("file", file);
+  fd.append("mode", mode);
   const response = await adminApi.post("/admin/products/import", fd, {
     headers: { "Content-Type": "multipart/form-data" },
+    timeout: 10 * 60 * 1000,
   });
   return response.data;
+};
+
+export const exportProductsExcel = async () => {
+  const response = await adminApi.get("/admin/products/export", {
+    responseType: "blob",
+    timeout: 10 * 60 * 1000,
+  });
+  return response;
 };
 export const getAdminOrderDetail = async (id) => {
   const response = await adminApi.get(`/admin/orders/${id}`);

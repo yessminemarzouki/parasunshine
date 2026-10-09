@@ -33,6 +33,7 @@ import {
   createProduct,
   updateProduct,
   importProductsCsv,
+  exportProductsExcel,
   importMainImagesZip,
   importOptionalImagesZip,
   getPromoSection,
@@ -208,6 +209,7 @@ export default function AdminProducts() {
 
   const [importingMain, setImportingMain] = useState(false);
   const [importingOptional, setImportingOptional] = useState(false);
+  const [upsertMode, setUpsertMode] = useState(false);
 
   const handleImageImportError = (err) => {
     if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
@@ -350,7 +352,10 @@ export default function AdminProducts() {
     if (!file) return;
     setImporting(true);
     try {
-      const result = await importProductsCsv(file);
+      const result = await importProductsCsv(
+        file,
+        upsertMode ? "upsert" : "create",
+      );
       setImportResult(result);
       fetchProducts();
       showToast(result.message, "success");
@@ -359,6 +364,23 @@ export default function AdminProducts() {
     } finally {
       setImporting(false);
       e.target.value = "";
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await exportProductsExcel();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `produits_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast("Export Excel téléchargé.", "success");
+    } catch {
+      showToast("Erreur lors de l'export.", "error");
     }
   };
 
@@ -1234,6 +1256,9 @@ export default function AdminProducts() {
           <Btn ghost onClick={handleDownloadTemplate}>
             <Download size={14} /> Modèle CSV
           </Btn>
+          <Btn ghost onClick={handleExportExcel}>
+            <Download size={14} /> Exporter Excel
+          </Btn>
           <label className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-lg text-[13.5px] font-semibold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
             <Upload size={14} />
             {importing ? "Importation..." : "Importer CSV"}
@@ -1244,6 +1269,17 @@ export default function AdminProducts() {
               onChange={handleImport}
               disabled={importing}
             />
+          </label>
+          <label className="flex items-center gap-2 px-3 h-9 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={upsertMode}
+              onChange={(e) => setUpsertMode(e.target.checked)}
+              className="w-3.5 h-3.5 accent-[#1a4731]"
+            />
+            <span className="text-[12px] text-gray-600 font-medium whitespace-nowrap">
+              Mettre à jour les produits existants (par id)
+            </span>
           </label>
           <Btn onClick={openAdd}>
             <Plus size={14} /> Nouveau produit
