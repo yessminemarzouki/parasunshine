@@ -757,6 +757,21 @@ export const importOptionalImagesZip = async (file) => {
   );
   return response.data;
 };
+export const exportBrandsExcel = async () => {
+  const response = await adminApi.get("/admin/brands/export", {
+    responseType: "blob",
+    timeout: 10 * 60 * 1000,
+  });
+  return response;
+};
+
+export const exportBrandLogosZip = async () => {
+  const response = await adminApi.get("/admin/brands/export-logos-zip", {
+    responseType: "blob",
+    timeout: 10 * 60 * 1000,
+  });
+  return response;
+};
 export const importBrandsExcel = async (file) => {
   const fd = new FormData();
   fd.append("file", file);

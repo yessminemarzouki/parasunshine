@@ -525,7 +525,99 @@ class AdminCategoryController extends Controller
             'skipped_names' => array_slice($skipped, 0, 50),
         ]);
     }
+    /**
+     * Export Excel des marques : name + parent_brand
+     * → même format que l'import Excel, pour permettre un aller-retour
+     */
+    public function exportBrandsExcel()
+    {
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
 
+        $brands = Brand::with('parent:id,name')
+            ->orderBy('name')
+            ->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Marques');
+
+        // En-têtes
+        $headers = ['name', 'parent_brand'];
+        $col = 1;
+        foreach ($headers as $h) {
+            $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . '1';
+            $sheet->setCellValue($coord, $h);
+            $sheet->getStyle($coord)->getFont()->setBold(true);
+            $col++;
+        }
+
+        // Lignes
+        $row = 2;
+        foreach ($brands as $b) {
+            $sheet->setCellValueExplicit(
+                'A' . $row,
+                (string) $b->name,
+                \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+            );
+            $sheet->setCellValueExplicit(
+                'B' . $row,
+                (string) ($b->parent?->name ?? ''),
+                \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+            );
+            $row++;
+        }
+
+        // Largeur auto
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+
+        $filename = 'marques_export_' . date('Y-m-d_His') . '.xlsx';
+        $tempPath = storage_path('app/' . $filename);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Export ZIP des logos de marques
+     * → nommés comme les marques (slug.webp), prêts à être ré-importés
+     */
+    public function exportBrandLogosZip()
+    {
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
+
+        $brands = Brand::whereNull('parent_id')
+            ->whereNotNull('logo')
+            ->select('id', 'name', 'slug', 'logo')
+            ->get();
+
+        $zipFilename = 'logos_marques_' . date('Y-m-d_His') . '.zip';
+        $zipPath = storage_path('app/' . $zipFilename);
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return response()->json(['message' => 'Impossible de créer le ZIP.'], 500);
+        }
+
+        $added = 0;
+        foreach ($brands as $brand) {
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($brand->logo);
+            if (file_exists($fullPath)) {
+                // Nom du fichier = slug de la marque + extension d'origine
+                $ext = pathinfo($brand->logo, PATHINFO_EXTENSION);
+                $zip->addFile($fullPath, $brand->slug . '.' . $ext);
+                $added++;
+            }
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
     public function destroyBrand(Brand $brand)
     {
         if ($brand->logo) {

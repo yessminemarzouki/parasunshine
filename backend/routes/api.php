@@ -230,6 +230,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     Route::put('/categories/{category}/brands', [AdminCategoryController::class, 'syncCategoryBrands']);
 
     // Marques
+    Route::get('/brands/export', [AdminCategoryController::class, 'exportBrandsExcel']);
+    Route::get('/brands/export-logos-zip', [AdminCategoryController::class, 'exportBrandLogosZip']);
     Route::post('/brands/import', [AdminCategoryController::class, 'importBrandsExcel']);
     Route::post('/brands/import-logos-zip', [AdminCategoryController::class, 'importBrandLogosZip']);
     Route::get('/brands', [AdminCategoryController::class, 'brands']);

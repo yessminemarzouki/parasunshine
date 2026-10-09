@@ -42,6 +42,8 @@ import {
   syncCategoryBrands,
   importBrandsExcel,
   importBrandLogosZip,
+  exportBrandsExcel,
+  exportBrandLogosZip,
 } from "../services/adminApi";
 import adminApi from "../services/adminApi";
 import {
@@ -302,6 +304,8 @@ export default function AdminCategories() {
   const [busyKey, setBusyKey] = useState(null); // identifiant de l'action en cours (ex: "delete-5", "toggle-3-show_in_menu")
   const [importingBrands, setImportingBrands] = useState(false);
   const [importingLogos, setImportingLogos] = useState(false);
+  const [exportingBrands, setExportingBrands] = useState(false);
+  const [exportingLogos, setExportingLogos] = useState(false);
   const [brandImportResult, setBrandImportResult] = useState(null);
   const [logoImportResult, setLogoImportResult] = useState(null);
 
@@ -344,6 +348,45 @@ export default function AdminCategories() {
     } finally {
       setImportingLogos(false);
       e.target.value = "";
+    }
+  };
+  const handleExportBrandsExcel = async () => {
+    setExportingBrands(true);
+    try {
+      const res = await exportBrandsExcel();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `marques_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast("Export Excel des marques téléchargé.");
+    } catch {
+      showToast("Erreur lors de l'export.", "error");
+    } finally {
+      setExportingBrands(false);
+    }
+  };
+
+  const handleExportBrandLogosZip = async () => {
+    setExportingLogos(true);
+    try {
+      const res = await exportBrandLogosZip();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `logos_marques_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast("Export ZIP des logos téléchargé.");
+    } catch {
+      showToast("Erreur lors de l'export des logos.", "error");
+    } finally {
+      setExportingLogos(false);
     }
   };
 
@@ -697,6 +740,22 @@ export default function AdminCategories() {
               <Btn ghost onClick={handleDownloadBrandsTemplate}>
                 <Download size={14} /> Modèle CSV
               </Btn>
+              <Btn
+                ghost
+                onClick={handleExportBrandsExcel}
+                disabled={exportingBrands}
+              >
+                {exportingBrands ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                    Export...
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} /> Exporter Excel
+                  </>
+                )}
+              </Btn>
               <label className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-lg text-[13.5px] font-semibold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
                 <Upload size={14} />
                 {importingBrands ? "Import..." : "Importer marques (CSV)"}
@@ -708,6 +767,22 @@ export default function AdminCategories() {
                   disabled={importingBrands}
                 />
               </label>
+              <Btn
+                ghost
+                onClick={handleExportBrandLogosZip}
+                disabled={exportingLogos}
+              >
+                {exportingLogos ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                    Export...
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} /> Exporter logos (ZIP)
+                  </>
+                )}
+              </Btn>
               <label
                 className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-lg text-[13.5px] font-semibold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
                 title="ZIP contenant les logos, nommés exactement comme le nom de la marque (ex: Avène.webp)"
