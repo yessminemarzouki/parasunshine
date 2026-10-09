@@ -25,6 +25,12 @@ class User extends Authenticatable
          'birthdate',
          'civility',
          'newsletter_opt_in',
+         'last_seen_orders_at',
+         'last_seen_users_at',
+         'last_seen_reviews_at',
+         'last_seen_contacts_at',
+         'last_seen_newsletter_at',
+         'last_seen_stock_at',
      ];
 
     protected $hidden = [
@@ -33,9 +39,15 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-         'email_verified_at' => 'datetime',
-         'password'          => 'hashed',
-         'newsletter_opt_in' => 'boolean',
+         'email_verified_at'       => 'datetime',
+         'password'                => 'hashed',
+         'newsletter_opt_in'       => 'boolean',
+         'last_seen_orders_at'     => 'datetime',
+         'last_seen_users_at'      => 'datetime',
+         'last_seen_reviews_at'    => 'datetime',
+         'last_seen_contacts_at'   => 'datetime',
+         'last_seen_newsletter_at' => 'datetime',
+         'last_seen_stock_at'      => 'datetime',
      ];
 
     public function orders()
