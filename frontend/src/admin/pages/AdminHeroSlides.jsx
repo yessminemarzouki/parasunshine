@@ -101,7 +101,7 @@ export default function AdminHeroSlides() {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (typeof v === "boolean") fd.append(k, v ? "1" : "0");
-        else if (v !== "" && v !== null) fd.append(k, v);
+        else if (v !== null && v !== undefined) fd.append(k, v ?? "");
       });
       if (imageFile) fd.append("image", imageFile);
 
