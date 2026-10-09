@@ -652,7 +652,18 @@ class AdminProductController extends Controller
             $col = 1;
             foreach ($values as $v) {
                 $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . $row;
-                $sheet->setCellValue($coord, $v);
+
+                // Colonne 1 (reference) : force en texte pour éviter la notation scientifique
+                // (sinon Excel transforme 8710123456789 en 8,71E+12)
+                if ($col === 1) {
+                    $sheet->setCellValueExplicit(
+                        $coord,
+                        (string) $v,
+                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+                    );
+                } else {
+                    $sheet->setCellValue($coord, $v);
+                }
                 $col++;
             }
             $row++;

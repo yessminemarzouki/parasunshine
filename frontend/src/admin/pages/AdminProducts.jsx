@@ -210,6 +210,7 @@ export default function AdminProducts() {
   const [importingMain, setImportingMain] = useState(false);
   const [importingOptional, setImportingOptional] = useState(false);
   const [upsertMode, setUpsertMode] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
 
   const handleImageImportError = (err) => {
     if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
@@ -368,6 +369,7 @@ export default function AdminProducts() {
   };
 
   const handleExportExcel = async () => {
+    setExportingExcel(true);
     try {
       const res = await exportProductsExcel();
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -381,6 +383,8 @@ export default function AdminProducts() {
       showToast("Export Excel téléchargé.", "success");
     } catch {
       showToast("Erreur lors de l'export.", "error");
+    } finally {
+      setExportingExcel(false);
     }
   };
 
@@ -1256,8 +1260,17 @@ export default function AdminProducts() {
           <Btn ghost onClick={handleDownloadTemplate}>
             <Download size={14} /> Modèle CSV
           </Btn>
-          <Btn ghost onClick={handleExportExcel}>
-            <Download size={14} /> Exporter Excel
+          <Btn ghost onClick={handleExportExcel} disabled={exportingExcel}>
+            {exportingExcel ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                Export en cours...
+              </>
+            ) : (
+              <>
+                <Download size={14} /> Exporter Excel
+              </>
+            )}
           </Btn>
           <label className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-lg text-[13.5px] font-semibold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
             <Upload size={14} />
