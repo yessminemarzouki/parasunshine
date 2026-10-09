@@ -1630,7 +1630,7 @@ export default function AdminProducts() {
                           <div className="flex items-center gap-3">
                             {p.image ? (
                               <img
-                                src={`${STORAGE_URL}/p.image}`}
+                                src={`${STORAGE_URL}/${p.image}`}
                                 alt=""
                                 className="w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0"
                               />
