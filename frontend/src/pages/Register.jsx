@@ -265,7 +265,7 @@ const Register = () => {
                 type="email"
                 name="email"
                 autoComplete="email"
-                placeholder="email@example.com"
+                placeholder="email@exemple.com"
                 value={formData.email}
                 onChange={handleChange}
                 className={`${inputCls} ${inputBorder("email")}`}
