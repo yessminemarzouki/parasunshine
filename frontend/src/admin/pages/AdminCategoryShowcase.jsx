@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { STORAGE_URL } from "../../config/api";
 import {
   Plus,
   Trash2,
@@ -213,7 +214,7 @@ export default function AdminCategoryShowcase() {
               />
               {item.image ? (
                 <img
-                  src={`http://localhost/storage/${item.image}`}
+                  src={`${STORAGE_URL}/${item.image}`}
                   alt=""
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0"
                 />

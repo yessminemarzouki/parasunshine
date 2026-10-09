@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import RichTextEditor from "../components/RichTextEditor";
+import { STORAGE_URL } from "../../config/api";
 import {
   Plus,
   Trash2,
@@ -233,9 +234,7 @@ export default function AdminBlog() {
       section_visible: post.section_visible,
     });
     setImageFile(null);
-    setImagePreview(
-      post.image ? `http://localhost/storage/${post.image}` : null,
-    );
+    setImagePreview(post.image ? `${STORAGE_URL}/${post.image}` : null);
     setShowForm(true);
   };
 
@@ -719,7 +718,7 @@ export default function AdminBlog() {
                   <div className="w-14 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                     {post.image ? (
                       <img
-                        src={`http://localhost/storage/${post.image}`}
+                        src={`${STORAGE_URL}/${post.image}`}
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />

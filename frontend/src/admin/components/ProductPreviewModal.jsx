@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { X, Package, Star } from "lucide-react";
 import { getProductStats } from "../services/adminApi";
+import { STORAGE_URL } from "../../config/api";
 function CountdownTimer({ endDate }) {
   const getTimeLeft = () => {
     const end = new Date(endDate.replace(" ", "T"));
@@ -124,7 +125,7 @@ export default function ProductPreviewModal({ product, onClose }) {
               >
                 {product.image ? (
                   <img
-                    src={`http://localhost/storage/${product.image}`}
+                    src={`${STORAGE_URL}/${product.image}`}
                     alt={product.name}
                     className="w-full h-full object-contain p-4"
                   />
@@ -143,7 +144,7 @@ export default function ProductPreviewModal({ product, onClose }) {
                       style={{ height: 60 }}
                     >
                       <img
-                        src={`http://localhost/storage/${img}`}
+                        src={`${STORAGE_URL}/${img}`}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -430,7 +431,7 @@ export default function ProductPreviewModal({ product, onClose }) {
                 </p>
 
                 <a
-                  href={`http://localhost:3000/products/${product.slug}`}
+                  href={`/products/${product.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[12px] text-[#1a4731] font-semibold hover:underline break-all"

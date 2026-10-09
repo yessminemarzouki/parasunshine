@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { STORAGE_URL } from "../../config/api";
 import {
   Search,
   Trash2,
@@ -206,7 +207,7 @@ export default function AdminFeaturedSection() {
               >
                 {p.image ? (
                   <img
-                    src={`http://localhost/storage/${p.image}`}
+                    src={`${STORAGE_URL}/${p.image}`}
                     alt=""
                     className="w-10 h-10 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                   />
@@ -274,7 +275,7 @@ export default function AdminFeaturedSection() {
               >
                 {p.image ? (
                   <img
-                    src={`http://localhost/storage/${p.image}`}
+                    src={`${STORAGE_URL}/${p.image}`}
                     alt=""
                     className="w-11 h-11 rounded-lg object-cover border border-gray-100 flex-shrink-0"
                   />

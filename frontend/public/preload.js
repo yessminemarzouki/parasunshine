@@ -1,6 +1,6 @@
 // Précharge l'API home en parallèle du chargement de React
 (function () {
-  fetch("http://localhost/api/home")
+  fetch("/api/home")
     .then((res) => res.json())
     .then((data) => {
       // Stocke dans sessionStorage
