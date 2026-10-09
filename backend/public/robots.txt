@@ -1,2 +1,35 @@
+# Robots.txt pour ParaSunshine
+# Site : https://www.parasunshine.tn
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Pages privées / admin — NE PAS indexer
+Disallow: /admin/
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /wishlist/
+Disallow: /wishlist
+Disallow: /order-confirmation
+Disallow: /orders/
+Disallow: /api/
+
+# Bloquer les robots agressifs
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Sitemap
+Sitemap: https://www.parasunshine.tn/sitemap.xml
