@@ -17,7 +17,12 @@ import {
   Mail as MailIcon,
   Megaphone,
 } from "lucide-react";
-import { getAdminUsers, getAdminUser2, deleteUser } from "../services/adminApi";
+import {
+  getAdminUsers,
+  getAdminUser2,
+  deleteUser,
+  markAsSeen,
+} from "../services/adminApi";
 import {
   Badge,
   ActionBtn,
@@ -51,6 +56,10 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers();
   }, [debouncedSearch, purchaseStatus, page]);
+
+  useEffect(() => {
+    markAsSeen("users");
+  }, []);
 
   const fetchUsers = async () => {
     setLoading(true);

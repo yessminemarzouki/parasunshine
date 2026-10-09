@@ -242,31 +242,47 @@ class AdminStatsController extends Controller
                   'never_sold_products' => $neverSoldCount,
         ];
     }
-    public function badges()
+    public function badges(Request $request)
     {
-        return \Illuminate\Support\Facades\Cache::remember('admin_badges', 60, function () {
-            return [
-                'orders' => [
-                    'pending' => Order::where('status', 'pending')->count(),
-                ],
-                'clients' => [
-                    'new_last_24h' => User::where('role', 'user')
-                        ->where('created_at', '>=', now()->subHours(24))
-                        ->count(),
-                ],
-                'reviews' => [
-                    'pending' => Review::where('is_approved', false)->count(),
-                ],
-                'unread_contacts' => Contact::where('is_read', false)->count(),
-                'newsletter_new_last_24h' => NewsletterSubscriber::where('is_active', true)
-                    ->where('created_at', '>=', now()->subHours(24))
+        $user = $request->user();
+
+        return [
+            'orders' => [
+                'pending' => Order::where('status', 'pending')->count(),
+            ],
+            'clients' => [
+                'new_last_24h' => User::where('role', 'user')
+                    ->when($user->last_seen_users_at, fn ($q) => $q->where('created_at', '>', $user->last_seen_users_at))
                     ->count(),
-                'stock_requests' => [
-                    'pending' => DB::table('product_notifications')
-                        ->where('notified', false)
-                        ->count(),
-                ],
-            ];
-        });
+            ],
+            'reviews' => [
+                'pending' => Review::where('is_approved', false)->count(),
+            ],
+            'unread_contacts' => Contact::where('is_read', false)
+                ->when($user->last_seen_contacts_at, fn ($q) => $q->where('created_at', '>', $user->last_seen_contacts_at))
+                ->count(),
+            'newsletter_new_last_24h' => NewsletterSubscriber::where('is_active', true)
+                ->when($user->last_seen_newsletter_at, fn ($q) => $q->where('created_at', '>', $user->last_seen_newsletter_at))
+                ->count(),
+            'stock_requests' => [
+                'pending' => DB::table('product_notifications')
+                    ->where('notified', false)
+                    ->count(),
+            ],
+        ];
+    }
+
+    public function markSeen(Request $request, string $type)
+    {
+        $allowed = ['orders', 'users', 'reviews', 'contacts', 'newsletter', 'stock'];
+
+        if (!in_array($type, $allowed, true)) {
+            return response()->json(['message' => 'Type invalide.'], 422);
+        }
+
+        $field = "last_seen_{$type}_at";
+        $request->user()->update([$field => now()]);
+
+        return response()->json(['success' => true]);
     }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { NavLink, useNavigate, Outlet } from "react-router-dom";
+import { NavLink, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { getAdminBadges } from "../services/adminApi";
 import { Brain } from "lucide-react";
 import {
@@ -75,6 +75,7 @@ export default function AdminLayout() {
   const [newSubscribers, setNewSubscribers] = useState(0);
   const [pendingStockRequests, setPendingStockRequests] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getAdminUser();
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
@@ -116,9 +117,9 @@ export default function AdminLayout() {
         .catch(() => {});
     };
     fetchBadges();
-    const interval = setInterval(fetchBadges, 60000); // rafraîchi toutes les 60s
+    const interval = setInterval(fetchBadges, 60000);
     return () => clearInterval(interval);
-  }, [authChecked]);
+  }, [authChecked, location.pathname]);
 
   if (!authChecked) return null;
 

@@ -167,6 +167,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Stats
     Route::get('/stats', [AdminStatsController::class, 'index']);
     Route::get('/stats/badges', [AdminStatsController::class, 'badges']);
+    Route::post('/mark-seen/{type}', [AdminStatsController::class, 'markSeen']);
 
     // Promo Banner
     Route::get('/promo-banner', [AdminPromoBannerController::class, 'show']);

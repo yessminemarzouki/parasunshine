@@ -6,6 +6,7 @@ import {
   getAdminNewsletter,
   deleteSubscriber,
   bulkDeleteSubscribers,
+  markAsSeen,
 } from "../services/adminApi";
 import {
   Badge,
@@ -38,6 +39,10 @@ export default function AdminNewsletter() {
   useEffect(() => {
     fetchSubs();
   }, [filter, debouncedSearch, page]);
+
+  useEffect(() => {
+    markAsSeen("newsletter");
+  }, []);
 
   const fetchSubs = async () => {
     setLoading(true);

@@ -8,6 +8,7 @@ import {
   updateOrderStatus,
   deleteOrder,
   getAdminOrderDetail,
+  markAsSeen,
 } from "../services/adminApi";
 import {
   Badge,
@@ -78,6 +79,10 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
   }, [debouncedSearch, status, page]);
+
+  useEffect(() => {
+    markAsSeen("orders");
+  }, []);
 
   const fetchOrders = async () => {
     setLoading(true);

@@ -14,6 +14,7 @@ import { STORAGE_URL } from "../../config/api";
 import {
   getStockRequests,
   sendStockAvailabilityEmail,
+  markAsSeen,
 } from "../services/adminApi";
 import {
   Badge,
@@ -48,6 +49,10 @@ export default function AdminStockRequests() {
   useEffect(() => {
     fetchRequests();
   }, [debouncedSearch, statusFilter, typeFilter, page]);
+
+  useEffect(() => {
+    markAsSeen("stock");
+  }, []);
 
   const fetchRequests = async () => {
     setLoading(true);

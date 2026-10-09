@@ -94,6 +94,13 @@ export const getAdminBadges = async () => {
   const response = await adminApi.get("/admin/stats/badges");
   return response.data;
 };
+export const markAsSeen = async (type) => {
+  try {
+    await adminApi.post(`/admin/mark-seen/${type}`);
+  } catch {
+    // silencieux
+  }
+};
 
 // ========================================
 // COMMANDES

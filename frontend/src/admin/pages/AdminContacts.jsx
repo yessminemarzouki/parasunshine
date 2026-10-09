@@ -7,6 +7,7 @@ import {
   deleteContact,
   bulkMarkContactsRead,
   bulkDeleteContacts,
+  markAsSeen,
 } from "../services/adminApi";
 import {
   ActionBtn,
@@ -36,6 +37,10 @@ export default function AdminContacts() {
   useEffect(() => {
     fetchContacts();
   }, [filter, page]);
+
+  useEffect(() => {
+    markAsSeen("contacts");
+  }, []);
 
   const fetchContacts = async () => {
     setLoading(true);
