@@ -596,7 +596,13 @@ export default function ProductDetail() {
           </Link>
           <ChevronRight size={13} />
           <Link
-            to="/products"
+            to={(() => {
+              // Reconstruit l'URL précédente avec tous ses filtres
+              const prevSearch = sessionStorage.getItem(
+                "productlist_last_search",
+              );
+              return `/products${prevSearch || ""}`;
+            })()}
             className="hover:text-[#1a5242] transition-colors"
           >
             Produits

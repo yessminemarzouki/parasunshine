@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useLocation } from "react-router-dom";
 import { cachedFetch } from "../utils/cache";
 import ProductCard from "../components/ProductCard";
 import { API_URL } from "../config/api";
@@ -14,6 +14,7 @@ import {
 
 export default function ProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -107,7 +108,45 @@ export default function ProductList() {
   useEffect(() => {
     if (selectedCategory && categories.length > 0) autoExpandSelectedCategory();
   }, [selectedCategory, categories]);
+  // ── Sauvegarde / restauration de la position de scroll ──
+  // Clé unique par combinaison de filtres → si l'utilisateur change de
+  // catégorie/marque/recherche, on repart de 0, mais s'il revient d'une
+  // fiche produit sur la même liste, on restaure sa position exacte.
+  const scrollKey = `productlist_scroll_${location.search || "default"}`;
 
+  // Sauvegarde à chaque scroll (throttlé via requestAnimationFrame)
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          sessionStorage.setItem(scrollKey, String(window.scrollY));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [scrollKey]);
+
+  // Restauration au montage — seulement si on vient d'une autre page
+  // (fiche produit) et qu'on a une position sauvegardée.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    if (loading) return; // attend que les produits soient chargés
+    const saved = sessionStorage.getItem(scrollKey);
+    if (saved && parseInt(saved, 10) > 0) {
+      restoredRef.current = true;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
+      });
+    }
+  }, [loading, scrollKey]);
+  useEffect(() => {
+    sessionStorage.setItem("productlist_last_search", location.search);
+  }, [location.search]);
   const fetchFiltersData = async () => {
     try {
       const categoriesData = await cachedFetch(`${API_URL}/categories`);
@@ -164,6 +203,11 @@ export default function ProductList() {
   };
 
   const resetFilters = () => {
+    // Nettoie toutes les positions de scroll sauvegardées pour cette page
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith("productlist_scroll_"))
+      .forEach((k) => sessionStorage.removeItem(k));
+
     setSelectedCategory("");
     setSelectedBrand("");
     setSearchQuery("");
@@ -181,6 +225,11 @@ export default function ProductList() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Efface la position sauvegardée : sinon en revenant d'une fiche
+    // produit on retomberait sur la position de l'ancienne page.
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith("productlist_scroll_"))
+      .forEach((k) => sessionStorage.removeItem(k));
   };
 
   const toggleCategory = (id) =>
