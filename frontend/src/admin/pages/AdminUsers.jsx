@@ -38,7 +38,48 @@ import {
   PageHeader,
 } from "../components/AdminShared";
 import { STORAGE_URL } from "../../config/api";
-
+// ── Modal de confirmation custom ──
+const ConfirmModal = ({ title, message, onConfirm, onCancel, deleting }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <Trash2 size={22} className="text-red-500" />
+      </div>
+      <p className="text-[15px] font-bold text-gray-900 text-center mb-2">
+        Confirmer la suppression
+      </p>
+      <p className="text-[13.5px] text-gray-500 text-center mb-6">
+        {message || (
+          <>
+            Voulez-vous vraiment supprimer <strong>"{title}"</strong> ?
+          </>
+        )}
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Non, annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deleting && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          )}
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+);
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [meta, setMeta] = useState({});
@@ -52,6 +93,9 @@ export default function AdminUsers() {
   const [sortDir, setSortDir] = useState("asc");
   const [selected, setSelected] = useState(null);
   const [detailTab, setDetailTab] = useState("info");
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -60,6 +104,11 @@ export default function AdminUsers() {
   useEffect(() => {
     markAsSeen("users");
   }, []);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -119,10 +168,21 @@ export default function AdminUsers() {
     } catch {}
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Supprimer cet utilisateur ?")) return;
-    await deleteUser(id);
-    fetchUsers();
+  const requestDeleteUser = (user) => setConfirmDelete(user);
+
+  const confirmDeleteUser = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await deleteUser(confirmDelete.id);
+      setConfirmDelete(null);
+      fetchUsers();
+      showToast("Utilisateur supprimé.");
+    } catch {
+      showToast("Erreur lors de la suppression.", "error");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const totalSpent = (u) =>
@@ -159,6 +219,30 @@ export default function AdminUsers() {
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {toast && (
+        <div
+          className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-5 sm:top-5 z-[99999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-[13.5px] font-semibold ${
+            toast.type === "error"
+              ? "bg-red-50 text-red-700 border border-red-200"
+              : "bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+      {confirmDelete && (
+        <ConfirmModal
+          title={
+            `${confirmDelete.first_name || ""} ${confirmDelete.last_name || ""}`.trim() ||
+            confirmDelete.email
+          }
+          message="Cette action supprimera définitivement ce client et toutes ses données."
+          onConfirm={confirmDeleteUser}
+          onCancel={() => setConfirmDelete(null)}
+          deleting={deleting}
+        />
+      )}
+
       <PageHeader
         title="Clients"
         subtitle={`${meta.total ?? 0} utilisateurs`}
@@ -318,7 +402,7 @@ export default function AdminUsers() {
                     {user.role !== "admin" && (
                       <ActionBtn
                         type="danger"
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() => requestDeleteUser(user)}
                         title="Supprimer"
                       >
                         <Trash2 size={13} />

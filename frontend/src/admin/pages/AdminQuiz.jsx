@@ -55,7 +55,48 @@ const emptyQuestionForm = {
     { label: "", tags: [""], weight: 1 },
   ],
 };
-
+// ── Modal de confirmation custom ──
+const ConfirmModal = ({ title, message, onConfirm, onCancel, deleting }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <Trash2 size={22} className="text-red-500" />
+      </div>
+      <p className="text-[15px] font-bold text-gray-900 text-center mb-2">
+        Confirmer la suppression
+      </p>
+      <p className="text-[13.5px] text-gray-500 text-center mb-6">
+        {message || (
+          <>
+            Voulez-vous vraiment supprimer <strong>"{title}"</strong> ?
+          </>
+        )}
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Non, annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deleting && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          )}
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+);
 export default function AdminQuiz() {
   // ── Navigation à 2 niveaux ──
   const [view, setView] = useState("solutions"); // "solutions" | "questions"
@@ -82,7 +123,8 @@ export default function AdminQuiz() {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [questionForm, setQuestionForm] = useState(emptyQuestionForm);
   const [savingQuestion, setSavingQuestion] = useState(false);
-
+  const [confirmDelete, setConfirmDelete] = useState(null); // ← ajoute
+  const [deleting, setDeleting] = useState(false); // ← ajoute
   const [error, setError] = useState("");
   const [suggestedTags, setSuggestedTags] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
@@ -172,13 +214,20 @@ export default function AdminQuiz() {
     }
   };
 
-  const handleDeleteSolution = async (id) => {
-    if (!confirm("Supprimer ce parcours et toutes ses questions ?")) return;
+  const requestDeleteSolution = (solution) =>
+    setConfirmDelete({ type: "solution", item: solution });
+
+  const confirmDeleteSolution = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
     try {
-      await deleteQuizSolution(id);
+      await deleteQuizSolution(confirmDelete.item.id);
+      setConfirmDelete(null);
       fetchSolutions();
     } catch {
       setError("Erreur lors de la suppression.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -291,13 +340,20 @@ export default function AdminQuiz() {
     }
   };
 
-  const handleDeleteQuestion = async (id) => {
-    if (!confirm("Supprimer cette question ?")) return;
+  const requestDeleteQuestion = (question) =>
+    setConfirmDelete({ type: "question", item: question });
+
+  const confirmDeleteQuestion = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
     try {
-      await deleteQuizQuestion(id);
+      await deleteQuizQuestion(confirmDelete.item.id);
+      setConfirmDelete(null);
       fetchQuestions(activeSolution.id);
     } catch {
       setError("Erreur lors de la suppression.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -488,6 +544,15 @@ export default function AdminQuiz() {
   if (view === "questions" && activeSolution) {
     return (
       <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        {confirmDelete?.type === "question" && (
+          <ConfirmModal
+            title={confirmDelete.item.question}
+            onConfirm={confirmDeleteQuestion}
+            onCancel={() => setConfirmDelete(null)}
+            deleting={deleting}
+          />
+        )}
+
         <button
           onClick={() => setView("solutions")}
           className="flex items-center gap-2 text-[13px] font-semibold text-gray-500 hover:text-[#1a5242] mb-4 transition-colors"
@@ -594,7 +659,7 @@ export default function AdminQuiz() {
                     </ActionBtn>
                     <ActionBtn
                       type="danger"
-                      onClick={() => handleDeleteQuestion(q.id)}
+                      onClick={() => requestDeleteQuestion(q)}
                       title="Supprimer"
                     >
                       <Trash2 size={13} />
@@ -886,6 +951,16 @@ export default function AdminQuiz() {
   // ── Vue Solutions (parcours) ──
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {confirmDelete?.type === "solution" && (
+        <ConfirmModal
+          title={confirmDelete.item.name}
+          message="Cette action supprimera aussi toutes ses questions."
+          onConfirm={confirmDeleteSolution}
+          onCancel={() => setConfirmDelete(null)}
+          deleting={deleting}
+        />
+      )}
+
       <PageHeader
         title="Quiz de recommandation"
         subtitle={`${solutions.length} parcours configuré${solutions.length > 1 ? "s" : ""}`}
@@ -986,7 +1061,7 @@ export default function AdminQuiz() {
                 </ActionBtn>
                 <ActionBtn
                   type="danger"
-                  onClick={() => handleDeleteSolution(s.id)}
+                  onClick={() => requestDeleteSolution(s)}
                   title="Supprimer"
                 >
                   <Trash2 size={13} />

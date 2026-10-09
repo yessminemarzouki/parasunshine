@@ -52,6 +52,7 @@ export default function AdminHygieneSection() {
   const [saving, setSaving] = useState(false);
   const [loadingEditId, setLoadingEditId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -266,14 +267,18 @@ export default function AdminHygieneSection() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    setDeleting(true);
     try {
-      await deleteHygieneSection(id);
+      await deleteHygieneSection(deleteConfirm.id);
       showToast("Section supprimée.");
       setDeleteConfirm(null);
       fetchSections();
     } catch {
       showToast("Erreur lors de la suppression.", "error");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -413,13 +418,21 @@ export default function AdminHygieneSection() {
               Cette action est irréversible.
             </p>
             <div className="flex gap-3">
-              <Btn ghost onClick={() => setDeleteConfirm(null)}>
+              <Btn
+                ghost
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+              >
                 Annuler
               </Btn>
               <button
-                onClick={() => handleDelete(deleteConfirm.id)}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 disabled:opacity-60 flex items-center justify-center gap-2"
               >
+                {deleting && (
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
                 Supprimer
               </button>
             </div>

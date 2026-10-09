@@ -22,6 +22,45 @@ import {
   Input,
   Toast,
 } from "../components/AdminShared";
+// ── Modal de confirmation custom ──
+const ConfirmModal = ({ title, onConfirm, onCancel, deleting }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <Trash2 size={22} className="text-red-500" />
+      </div>
+      <p className="text-[15px] font-bold text-gray-900 text-center mb-2">
+        Retirer ce produit ?
+      </p>
+      <p className="text-[13.5px] text-gray-500 text-center mb-6">
+        Voulez-vous vraiment retirer <strong>"{title}"</strong> de la section
+        vedette ?
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Non, annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deleting && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          )}
+          Oui, retirer
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 export default function AdminFeaturedSection() {
   const [section, setSection] = useState(null);
@@ -34,6 +73,7 @@ export default function AdminFeaturedSection() {
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [addingId, setAddingId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
+  const [confirmRemove, setConfirmRemove] = useState(null); // ← ajoute
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -109,11 +149,15 @@ export default function AdminFeaturedSection() {
     }
   };
 
-  const handleRemove = async (productId) => {
-    setRemovingId(productId);
+  const requestRemove = (product) => setConfirmRemove(product);
+
+  const confirmRemoveProduct = async () => {
+    if (!confirmRemove) return;
+    setRemovingId(confirmRemove.id);
     try {
-      await removeFeaturedProduct(productId);
-      setIncluded((prev) => prev.filter((p) => p.id !== productId));
+      await removeFeaturedProduct(confirmRemove.id);
+      setIncluded((prev) => prev.filter((p) => p.id !== confirmRemove.id));
+      setConfirmRemove(null);
       showToast("Produit retiré de la section.");
     } catch {
       showToast("Erreur lors du retrait.", "error");
@@ -131,6 +175,14 @@ export default function AdminFeaturedSection() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+      {confirmRemove && (
+        <ConfirmModal
+          title={confirmRemove.name}
+          onConfirm={confirmRemoveProduct}
+          onCancel={() => setConfirmRemove(null)}
+          deleting={removingId === confirmRemove.id}
         />
       )}
 
@@ -291,7 +343,7 @@ export default function AdminFeaturedSection() {
                   </p>
                 </div>
                 <button
-                  onClick={() => handleRemove(p.id)}
+                  onClick={() => requestRemove(p)}
                   disabled={removingId === p.id}
                   className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Retirer de la section"

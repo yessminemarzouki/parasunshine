@@ -23,7 +23,43 @@ import {
   Spinner,
   Toast,
 } from "../components/AdminShared";
-
+const ConfirmModal = ({ title, onConfirm, onCancel, deleting }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <Trash2 size={22} className="text-red-500" />
+      </div>
+      <p className="text-[15px] font-bold text-gray-900 text-center mb-2">
+        Confirmer la suppression
+      </p>
+      <p className="text-[13.5px] text-gray-500 text-center mb-6">
+        Voulez-vous vraiment supprimer la vidéo de <strong>"{title}"</strong> ?
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Non, annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deleting && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          )}
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+);
 export default function AdminHomepageVideos() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +74,7 @@ export default function AdminHomepageVideos() {
   const [posterPreview, setPosterPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null); // ← ajoute
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -132,11 +169,14 @@ export default function AdminHomepageVideos() {
     }
   };
 
-  const handleDelete = async (slot) => {
-    if (!confirm(`Supprimer la vidéo de "${slot.label}" ?`)) return;
-    setBusyKey(`delete-${slot.key}`);
+  const requestDelete = (slot) => setConfirmDelete(slot);
+
+  const confirmDeleteVideo = async () => {
+    if (!confirmDelete) return;
+    setBusyKey(`delete-${confirmDelete.key}`);
     try {
-      await deleteHomepageVideo(slot.video.id);
+      await deleteHomepageVideo(confirmDelete.video.id);
+      setConfirmDelete(null);
       showToast("Vidéo supprimée.");
       fetchSlots();
     } catch {
@@ -155,7 +195,14 @@ export default function AdminHomepageVideos() {
           onClose={() => setToast(null)}
         />
       )}
-
+      {confirmDelete && (
+        <ConfirmModal
+          title={confirmDelete.label}
+          onConfirm={confirmDeleteVideo}
+          onCancel={() => setConfirmDelete(null)}
+          deleting={busyKey === `delete-${confirmDelete.key}`}
+        />
+      )}
       <PageHeader
         title="Vidéos de la page d'accueil"
         subtitle="Une vidéo par emplacement — lecture automatique, muette, en boucle"
@@ -233,7 +280,7 @@ export default function AdminHomepageVideos() {
                 </button>
                 {slot.video && (
                   <button
-                    onClick={() => handleDelete(slot)}
+                    onClick={() => requestDelete(slot)}
                     disabled={busyKey === `delete-${slot.key}`}
                     className="w-8 h-8 rounded-lg bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 flex items-center justify-center disabled:opacity-50"
                   >

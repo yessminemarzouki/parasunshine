@@ -69,6 +69,7 @@ export default function AdminOrders() {
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [toast, setToast] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     const urlStatus = searchParams.get("status");
     if (urlStatus !== null) {
@@ -150,16 +151,19 @@ export default function AdminOrders() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
     try {
-      await deleteOrder(id);
-      sessionStorage.removeItem(`order_${id}`);
-      setOrders((prev) => prev.filter((o) => o.id !== id));
+      await deleteOrder(confirmDelete);
+      sessionStorage.removeItem(`order_${confirmDelete}`);
+      setOrders((prev) => prev.filter((o) => o.id !== confirmDelete));
       setMeta((prev) => ({ ...prev, total: (prev.total || 1) - 1 }));
       showToast("Commande supprimée avec succès.");
     } catch {
       showToast("Erreur lors de la suppression.", "error");
     } finally {
+      setDeleting(false);
       setConfirmDelete(null);
     }
   };
@@ -207,14 +211,19 @@ export default function AdminOrders() {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors"
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Annuler
               </button>
               <button
-                onClick={() => handleDelete(confirmDelete)}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
+                {deleting && (
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                )}
                 Supprimer
               </button>
             </div>

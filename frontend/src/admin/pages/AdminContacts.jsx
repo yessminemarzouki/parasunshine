@@ -22,6 +22,45 @@ import {
   PageHeader,
 } from "../components/AdminShared";
 
+// ── Modal de confirmation custom ──
+const ConfirmModal = ({ title, onConfirm, onCancel, deleting }) => (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <Trash2 size={22} className="text-red-500" />
+      </div>
+      <p className="text-[15px] font-bold text-gray-900 text-center mb-2">
+        Confirmer la suppression
+      </p>
+      <p className="text-[13.5px] text-gray-500 text-center mb-6">
+        Voulez-vous vraiment supprimer <strong>"{title}"</strong> ?
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13.5px] font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          Non, annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={deleting}
+          className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[13.5px] font-semibold hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deleting && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          )}
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function AdminContacts() {
   const [contacts, setContacts] = useState([]);
   const [meta, setMeta] = useState({});
@@ -32,6 +71,8 @@ export default function AdminContacts() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkActing, setBulkActing] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -119,12 +160,22 @@ export default function AdminContacts() {
       setConfirmBulkDelete(false);
     }
   };
+  const requestDelete = (contact) => setConfirmDelete(contact);
 
-  const handleDelete = async (id) => {
-    if (!confirm("Supprimer ce message ?")) return;
-    await deleteContact(id);
-    fetchContacts();
-    if (selected?.id === id) setSelected(null);
+  const confirmDeleteContact = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      await deleteContact(confirmDelete.id);
+      setConfirmDelete(null);
+      fetchContacts();
+      if (selected?.id === confirmDelete.id) setSelected(null);
+      showToast("Message supprimé.");
+    } catch {
+      showToast("Erreur lors de la suppression.", "error");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -144,6 +195,15 @@ export default function AdminContacts() {
         >
           {toast.message}
         </div>
+      )}
+
+      {confirmDelete && (
+        <ConfirmModal
+          title={confirmDelete.subject || confirmDelete.name || "ce message"}
+          onConfirm={confirmDeleteContact}
+          onCancel={() => setConfirmDelete(null)}
+          deleting={deleting}
+        />
       )}
 
       <div className="flex gap-2.5 mb-5">
@@ -319,7 +379,7 @@ export default function AdminContacts() {
                     </ActionBtn>
                     <ActionBtn
                       type="danger"
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => requestDelete(c)}
                       title="Supprimer"
                     >
                       <Trash2 size={13} />
