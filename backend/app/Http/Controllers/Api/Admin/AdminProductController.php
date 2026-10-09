@@ -215,16 +215,23 @@ class AdminProductController extends Controller
             // arrivent en stock plein et disponibles.
             $stock = 999;
 
-            // ── Référence : auto-générée si absente, dédoublonnée si déjà prise ──
+            // ── Référence : auto-générée si absente ──
             $reference = !empty($data['reference']) ? trim($data['reference']) : null;
             if (!$reference) {
                 $reference = 'AUTO-' . strtoupper(\Illuminate\Support\Str::random(10));
                 $errors[] = "Ligne $row : référence manquante — '{$reference}' générée automatiquement.";
             }
-            if (\App\Models\Product::where('reference', $reference)->exists()) {
+
+            // Vérification par référence : si la référence existe déjà
+            //   → en mode upsert : on met à jour le produit existant
+            //   → en mode create : on dédoublonne la référence (nouveau produit)
+            $existing = $reference ? \App\Models\Product::where('reference', $reference)->first() : null;
+
+            if ($mode !== 'upsert' && $existing) {
                 $original = $reference;
                 $reference = $original . '-' . strtoupper(\Illuminate\Support\Str::random(4));
                 $errors[] = "Ligne $row : référence '{$original}' déjà utilisée — '{$reference}' utilisée à la place.";
+                $existing = null; // la nouvelle référence n'existe pas encore en base
             }
 
             // ── Catégorie (optionnelle, tolérante) ──
@@ -476,8 +483,6 @@ class AdminProductController extends Controller
                     $promoPrice = round($price - ($price * $promoPercent / 100), 3);
                 }
 
-                $productId = !empty($data['id']) && is_numeric($data['id']) ? (int) $data['id'] : null;
-                $existing = $productId ? \App\Models\Product::find($productId) : null;
 
                 $payload = [
                     'name'                => $data['name'],
@@ -559,14 +564,14 @@ class AdminProductController extends Controller
         $sheet->setTitle('Produits');
 
         $headers = [
-            'id', 'reference', 'name', 'price', 'promo_price', 'promo_percentage',
-            'promo_starts_at', 'promo_ends_at', 'stock',
-            'category', 'category2', 'brand', 'parent_brand',
-            'short_description', 'description', 'benefits', 'usage_tips',
-            'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
-            'display_category1', 'display_category2',
-            'has_sizes', 'sizes', 'has_colors', 'colors', 'has_age', 'ages',
-        ];
+    'reference', 'name', 'price', 'promo_price', 'promo_percentage',
+    'promo_starts_at', 'promo_ends_at', 'stock',
+    'category', 'category2', 'brand', 'parent_brand',
+    'short_description', 'description', 'benefits', 'usage_tips',
+    'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
+    'display_category1', 'display_category2',
+    'has_sizes', 'sizes', 'has_colors', 'colors', 'has_age', 'ages',
+];
 
         // Écriture des en-têtes (ligne 1)
         $col = 1;
@@ -612,7 +617,7 @@ class AdminProductController extends Controller
             }
 
             $values = [
-                $p->id,
+
                 $p->reference,
                 $p->name,
                 $p->price,

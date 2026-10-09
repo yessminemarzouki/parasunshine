@@ -1278,7 +1278,7 @@ export default function AdminProducts() {
               className="w-3.5 h-3.5 accent-[#1a4731]"
             />
             <span className="text-[12px] text-gray-600 font-medium whitespace-nowrap">
-              Mettre à jour les produits existants (par id)
+              Mettre à jour les produits existants (par référence)
             </span>
           </label>
           <Btn onClick={openAdd}>
