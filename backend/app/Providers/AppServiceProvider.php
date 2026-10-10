@@ -5,7 +5,10 @@ namespace App\Providers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Observers\OrderObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +32,20 @@ class AppServiceProvider extends ServiceProvider
 
         Product::deleted(function ($product) {
             $this->clearProductCaches($product);
+        });
+
+        // ────────────────────────────────────────────────
+        // Rate limiters nommés (utilisés dans routes/api.php)
+        // ────────────────────────────────────────────────
+
+        // Commandes : 5 tentatives / 10 minutes par utilisateur connecté
+        RateLimiter::for('orders', function (Request $request) {
+            return Limit::perMinutes(10, 5)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Inscription : 5 tentatives / heure par IP
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perHour(5)->by($request->ip());
         });
     }
 
