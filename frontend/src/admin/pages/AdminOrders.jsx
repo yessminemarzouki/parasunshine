@@ -305,6 +305,14 @@ export default function AdminOrders() {
                         🏷️ Code promo
                       </span>
                     )}
+                    {order.payment_method === "store_pickup" && (
+                      <span
+                        className="text-[9.5px] font-bold px-1.5 py-0.5 bg-purple-50 text-purple-600 border border-purple-200 rounded-full"
+                        title="Retrait en magasin"
+                      >
+                        🏬 Retrait magasin
+                      </span>
+                    )}
                   </div>
                 </TD>
                 <TD>
@@ -456,8 +464,14 @@ export default function AdminOrders() {
                     ],
                   },
                   {
-                    title: "Livraison",
-                    lines: [selected.shipping_address, selected.shipping_city],
+                    title:
+                      selected.payment_method === "store_pickup"
+                        ? "Retrait en magasin"
+                        : "Livraison",
+                    lines:
+                      selected.payment_method === "store_pickup"
+                        ? ["Le client viendra retirer sa commande en magasin"]
+                        : [selected.shipping_address, selected.shipping_city],
                   },
                 ].map(({ title, lines }) => (
                   <div key={title}>

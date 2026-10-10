@@ -104,6 +104,7 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [deliveryMethod, setDeliveryMethod] = useState("delivery");
   const [shipping, setShipping] = useState({
     free_shipping_enabled: true,
     free_shipping_threshold: 99,
@@ -213,23 +214,25 @@ export default function Checkout() {
     e.preventDefault();
     setError("");
 
-    // Validation de l'adresse
-    if (!useNewAddress && !selectedAddressId) {
-      setError("Veuillez sélectionner une adresse de livraison.");
-      return;
-    }
-    if (useNewAddress) {
-      if (!formData.governorate) {
-        setError("Veuillez sélectionner un gouvernorat.");
+    // Validation de l'adresse (uniquement si livraison à domicile)
+    if (deliveryMethod === "delivery") {
+      if (!useNewAddress && !selectedAddressId) {
+        setError("Veuillez sélectionner une adresse de livraison.");
         return;
       }
-      if (!formData.delegation) {
-        setError("Veuillez sélectionner une délégation.");
-        return;
-      }
-      if (!formData.address.trim()) {
-        setError("Veuillez entrer votre adresse complète.");
-        return;
+      if (useNewAddress) {
+        if (!formData.governorate) {
+          setError("Veuillez sélectionner un gouvernorat.");
+          return;
+        }
+        if (!formData.delegation) {
+          setError("Veuillez sélectionner une délégation.");
+          return;
+        }
+        if (!formData.address.trim()) {
+          setError("Veuillez entrer votre adresse complète.");
+          return;
+        }
       }
     }
 
@@ -256,17 +259,27 @@ export default function Checkout() {
             item.selectedColor?.name || item.selectedAgeColor || null,
           selected_age: item.selectedAge || null,
         })),
-        shipping_address: shippingAddress,
+        delivery_method: deliveryMethod,
+        shipping_address:
+          deliveryMethod === "store_pickup"
+            ? "Retrait en magasin"
+            : shippingAddress,
         phone: shippingPhone,
         promo_code: promoCode?.code || null,
-        shipping_city: useNewAddress
-          ? formData.governorate
-          : savedAddresses.find((a) => a.id === selectedAddressId)
-              ?.governorate || "",
-        shipping_postal_code: useNewAddress
-          ? formData.postalCode
-          : savedAddresses.find((a) => a.id === selectedAddressId)
-              ?.postal_code || "",
+        shipping_city:
+          deliveryMethod === "store_pickup"
+            ? ""
+            : useNewAddress
+              ? formData.governorate
+              : savedAddresses.find((a) => a.id === selectedAddressId)
+                  ?.governorate || "",
+        shipping_postal_code:
+          deliveryMethod === "store_pickup"
+            ? ""
+            : useNewAddress
+              ? formData.postalCode
+              : savedAddresses.find((a) => a.id === selectedAddressId)
+                  ?.postal_code || "",
       };
 
       const response = await createOrder(orderData);
@@ -309,9 +322,11 @@ export default function Checkout() {
   const promoDiscount = promoCode?.discount_amount || 0;
   const subtotalAfterPromo = Math.max(0, subtotal - promoDiscount);
   const shippingCost =
-    freeShippingEnabled && subtotalAfterPromo >= freeShippingThreshold
+    deliveryMethod === "store_pickup"
       ? 0
-      : shippingCostValue;
+      : freeShippingEnabled && subtotalAfterPromo >= freeShippingThreshold
+        ? 0
+        : shippingCostValue;
   const total = subtotalAfterPromo + shippingCost;
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
@@ -414,26 +429,139 @@ export default function Checkout() {
                 </div>
               </FormSection>
 
-              {/* Adresse de livraison */}
-              <FormSection icon={MapPin} title="Adresse de livraison">
-                {loadingAddresses ? (
-                  <div className="flex items-center gap-2 text-[13px] text-gray-400 py-4">
-                    <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                    Chargement des adresses...
-                  </div>
-                ) : (
-                  <>
-                    {/* Adresses sauvegardées */}
-                    {savedAddresses.length > 0 && (
-                      <div className="space-y-3 mb-5">
-                        <p className="text-[13px] font-semibold text-gray-600 mb-3">
-                          Choisir une adresse enregistrée :
-                        </p>
-                        {savedAddresses.map((addr) => (
+              {/* Mode de réception */}
+              <FormSection icon={Truck} title="Mode de réception">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Livraison à domicile */}
+                  <label
+                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      deliveryMethod === "delivery"
+                        ? "border-[#1a5242] bg-[#1a5242]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="delivery_method"
+                      checked={deliveryMethod === "delivery"}
+                      onChange={() => setDeliveryMethod("delivery")}
+                      className="mt-1 accent-[#1a5242]"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck size={15} className="text-[#1a5242]" />
+                        <span className="text-[13.5px] font-bold text-gray-800">
+                          Livraison à domicile
+                        </span>
+                      </div>
+                      <p className="text-[12.5px] text-gray-500">
+                        {freeShippingEnabled &&
+                        subtotalAfterPromo >= freeShippingThreshold
+                          ? "Gratuite"
+                          : `${shippingCostValue.toFixed(3)} DT`}
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Retrait magasin */}
+                  <label
+                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      deliveryMethod === "store_pickup"
+                        ? "border-[#1a5242] bg-[#1a5242]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="delivery_method"
+                      checked={deliveryMethod === "store_pickup"}
+                      onChange={() => setDeliveryMethod("store_pickup")}
+                      className="mt-1 accent-[#1a5242]"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Home size={15} className="text-[#1a5242]" />
+                        <span className="text-[13.5px] font-bold text-gray-800">
+                          Retrait en magasin
+                        </span>
+                      </div>
+                      <p className="text-[12.5px] text-emerald-600 font-semibold">
+                        Gratuit
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </FormSection>
+
+              {/* Adresse de livraison — UNIQUEMENT si livraison à domicile */}
+              {deliveryMethod === "delivery" && (
+                <FormSection icon={MapPin} title="Adresse de livraison">
+                  {loadingAddresses ? (
+                    <div className="flex items-center gap-2 text-[13px] text-gray-400 py-4">
+                      <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                      Chargement des adresses...
+                    </div>
+                  ) : (
+                    <>
+                      {/* Adresses sauvegardées */}
+                      {savedAddresses.length > 0 && (
+                        <div className="space-y-3 mb-5">
+                          <p className="text-[13px] font-semibold text-gray-600 mb-3">
+                            Choisir une adresse enregistrée :
+                          </p>
+                          {savedAddresses.map((addr) => (
+                            <label
+                              key={addr.id}
+                              className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                selectedAddressId === addr.id && !useNewAddress
+                                  ? "border-[#1a5242] bg-[#1a5242]/5"
+                                  : "border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="address_choice"
+                                checked={
+                                  selectedAddressId === addr.id &&
+                                  !useNewAddress
+                                }
+                                onChange={() => {
+                                  setSelectedAddressId(addr.id);
+                                  setUseNewAddress(false);
+                                }}
+                                className="mt-1 accent-[#1a5242]"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Home size={13} className="text-[#1a5242]" />
+                                  <span className="text-[13px] font-bold text-gray-800">
+                                    {addr.label}
+                                  </span>
+                                  {addr.is_default && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">
+                                      Par défaut
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[13px] text-gray-700 font-semibold">
+                                  {addr.first_name} {addr.last_name}
+                                </p>
+                                <p className="text-[12.5px] text-gray-500 mt-0.5">
+                                  {addr.address}, {addr.delegation},{" "}
+                                  {addr.governorate}
+                                  {addr.postal_code && ` — ${addr.postal_code}`}
+                                </p>
+                                <p className="text-[12.5px] text-gray-500">
+                                  {addr.phone}
+                                </p>
+                              </div>
+                            </label>
+                          ))}
+
+                          {/* Option nouvelle adresse */}
                           <label
-                            key={addr.id}
-                            className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                              selectedAddressId === addr.id && !useNewAddress
+                            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                              useNewAddress
                                 ? "border-[#1a5242] bg-[#1a5242]/5"
                                 : "border-gray-200 hover:border-gray-300"
                             }`}
@@ -441,161 +569,115 @@ export default function Checkout() {
                             <input
                               type="radio"
                               name="address_choice"
-                              checked={
-                                selectedAddressId === addr.id && !useNewAddress
-                              }
+                              checked={useNewAddress}
                               onChange={() => {
-                                setSelectedAddressId(addr.id);
-                                setUseNewAddress(false);
+                                setUseNewAddress(true);
+                                setSelectedAddressId(null);
                               }}
-                              className="mt-1 accent-[#1a5242]"
+                              className="accent-[#1a5242]"
                             />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Home size={13} className="text-[#1a5242]" />
-                                <span className="text-[13px] font-bold text-gray-800">
-                                  {addr.label}
-                                </span>
-                                {addr.is_default && (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full">
-                                    Par défaut
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[13px] text-gray-700 font-semibold">
-                                {addr.first_name} {addr.last_name}
-                              </p>
-                              <p className="text-[12.5px] text-gray-500 mt-0.5">
-                                {addr.address}, {addr.delegation},{" "}
-                                {addr.governorate}
-                                {addr.postal_code && ` — ${addr.postal_code}`}
-                              </p>
-                              <p className="text-[12.5px] text-gray-500">
-                                {addr.phone}
-                              </p>
-                            </div>
-                          </label>
-                        ))}
-
-                        {/* Option nouvelle adresse */}
-                        <label
-                          className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                            useNewAddress
-                              ? "border-[#1a5242] bg-[#1a5242]/5"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="address_choice"
-                            checked={useNewAddress}
-                            onChange={() => {
-                              setUseNewAddress(true);
-                              setSelectedAddressId(null);
-                            }}
-                            className="accent-[#1a5242]"
-                          />
-                          <Plus size={15} className="text-[#1a5242]" />
-                          <span className="text-[13px] font-semibold text-gray-700">
-                            Utiliser une nouvelle adresse
-                          </span>
-                        </label>
-                      </div>
-                    )}
-
-                    {/* Formulaire nouvelle adresse */}
-                    {(useNewAddress || savedAddresses.length === 0) && (
-                      <div className="space-y-4">
-                        {/* Gouvernorat */}
-                        <div>
-                          <Label required>Gouvernorat</Label>
-                          <SelectField
-                            icon={MapPin}
-                            name="governorate"
-                            value={formData.governorate}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="">
-                              Sélectionner un gouvernorat...
-                            </option>
-                            {GOVERNORATES.map((g) => (
-                              <option key={g} value={g}>
-                                {g}
-                              </option>
-                            ))}
-                          </SelectField>
-                        </div>
-
-                        {/* Délégation */}
-                        <div>
-                          <Label required>Délégation</Label>
-                          <SelectField
-                            name="delegation"
-                            value={formData.delegation}
-                            onChange={handleChange}
-                            required
-                            disabled={!formData.governorate}
-                          >
-                            <option value="">
-                              {formData.governorate
-                                ? "Sélectionner une délégation..."
-                                : "Choisissez d'abord un gouvernorat"}
-                            </option>
-                            {delegations.map((d) => (
-                              <option key={d} value={d}>
-                                {d}
-                              </option>
-                            ))}
-                          </SelectField>
-                        </div>
-
-                        {/* Adresse complète */}
-                        <div>
-                          <Label required>Adresse complète</Label>
-                          <InputField
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="N° rue, nom de la rue, appartement..."
-                            required
-                          />
-                        </div>
-
-                        {/* Code postal */}
-                        <div>
-                          <Label>Code postal</Label>
-                          <InputField
-                            type="text"
-                            name="postalCode"
-                            value={formData.postalCode}
-                            onChange={handleChange}
-                            placeholder="Ex: 1000"
-                          />
-                        </div>
-
-                        {/* Sauvegarder l'adresse */}
-                        {savedAddresses.length > 0 && (
-                          <label className="flex items-center gap-2 cursor-pointer mt-1">
-                            <input
-                              type="checkbox"
-                              checked={saveNewAddress}
-                              onChange={(e) =>
-                                setSaveNewAddress(e.target.checked)
-                              }
-                              className="w-4 h-4 accent-[#1a5242]"
-                            />
-                            <span className="text-[13px] text-gray-600">
-                              Sauvegarder cette adresse dans mon compte
+                            <Plus size={15} className="text-[#1a5242]" />
+                            <span className="text-[13px] font-semibold text-gray-700">
+                              Utiliser une nouvelle adresse
                             </span>
                           </label>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </FormSection>
+                        </div>
+                      )}
+
+                      {/* Formulaire nouvelle adresse */}
+                      {(useNewAddress || savedAddresses.length === 0) && (
+                        <div className="space-y-4">
+                          {/* Gouvernorat */}
+                          <div>
+                            <Label required>Gouvernorat</Label>
+                            <SelectField
+                              icon={MapPin}
+                              name="governorate"
+                              value={formData.governorate}
+                              onChange={handleChange}
+                              required
+                            >
+                              <option value="">
+                                Sélectionner un gouvernorat...
+                              </option>
+                              {GOVERNORATES.map((g) => (
+                                <option key={g} value={g}>
+                                  {g}
+                                </option>
+                              ))}
+                            </SelectField>
+                          </div>
+
+                          {/* Délégation */}
+                          <div>
+                            <Label required>Délégation</Label>
+                            <SelectField
+                              name="delegation"
+                              value={formData.delegation}
+                              onChange={handleChange}
+                              required
+                              disabled={!formData.governorate}
+                            >
+                              <option value="">
+                                {formData.governorate
+                                  ? "Sélectionner une délégation..."
+                                  : "Choisissez d'abord un gouvernorat"}
+                              </option>
+                              {delegations.map((d) => (
+                                <option key={d} value={d}>
+                                  {d}
+                                </option>
+                              ))}
+                            </SelectField>
+                          </div>
+
+                          {/* Adresse complète */}
+                          <div>
+                            <Label required>Adresse complète</Label>
+                            <InputField
+                              type="text"
+                              name="address"
+                              value={formData.address}
+                              onChange={handleChange}
+                              placeholder="N° rue, nom de la rue, appartement..."
+                              required
+                            />
+                          </div>
+
+                          {/* Code postal */}
+                          <div>
+                            <Label>Code postal</Label>
+                            <InputField
+                              type="text"
+                              name="postalCode"
+                              value={formData.postalCode}
+                              onChange={handleChange}
+                              placeholder="Ex: 1000"
+                            />
+                          </div>
+
+                          {/* Sauvegarder l'adresse */}
+                          {savedAddresses.length > 0 && (
+                            <label className="flex items-center gap-2 cursor-pointer mt-1">
+                              <input
+                                type="checkbox"
+                                checked={saveNewAddress}
+                                onChange={(e) =>
+                                  setSaveNewAddress(e.target.checked)
+                                }
+                                className="w-4 h-4 accent-[#1a5242]"
+                              />
+                              <span className="text-[13px] text-gray-600">
+                                Sauvegarder cette adresse dans mon compte
+                              </span>
+                            </label>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </FormSection>
+              )}
             </form>
           </div>
 

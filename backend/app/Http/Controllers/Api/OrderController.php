@@ -56,24 +56,25 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'items' => 'required|array|min:1|max:50',
-            'items.*.product_id' => 'nullable|exists:products,id',
-            'items.*.bundle_id' => 'nullable|exists:bundles,id',
-            'items.*.quantity' => 'required|integer|min:1|max:100',
-            'shipping_address' => 'required|string|max:500|min:10',
-            'phone' => [
-         'required',
-         'string',
-         'max:20',
-         'regex:/^[0-9\s\-\+\(\)]+$/',
-            ],
-                     'promo_code' => 'nullable|string|max:50',
-                    'items.*.selected_size' => 'nullable|string|max:50',
-            'items.*.selected_color' => 'nullable|string|max:100',
-         'items.*.selected_age' => 'nullable|string|max:50',
-            'shipping_city' => 'nullable|string|max:100',
-            'shipping_postal_code' => 'nullable|string|max:20',
-        ]);
+    'items' => 'required|array|min:1|max:50',
+    'items.*.product_id' => 'nullable|exists:products,id',
+    'items.*.bundle_id' => 'nullable|exists:bundles,id',
+    'items.*.quantity' => 'required|integer|min:1|max:100',
+    'delivery_method' => 'nullable|in:delivery,store_pickup',
+    'shipping_address' => 'required_unless:delivery_method,store_pickup|nullable|string|max:500|min:10',
+    'phone' => [
+           'required',
+           'string',
+           'max:20',
+           'regex:/^[0-9\s\-\+\(\)]+$/',
+    ],
+    'promo_code' => 'nullable|string|max:50',
+    'items.*.selected_size' => 'nullable|string|max:50',
+    'items.*.selected_color' => 'nullable|string|max:100',
+    'items.*.selected_age' => 'nullable|string|max:50',
+    'shipping_city' => 'nullable|string|max:100',
+    'shipping_postal_code' => 'nullable|string|max:20',
+]);
 
         foreach ($validated['items'] as $item) {
             if (empty($item['product_id']) && empty($item['bundle_id'])) {
@@ -194,28 +195,36 @@ class OrderController extends Controller
 
             $subtotalAfterDiscount = $subtotal - $promoDiscountAmount;
 
-            // Frais de livraison (calculés dynamiquement selon les paramètres admin)
-            $shippingCost = ShippingSetting::calculateShippingCost($subtotalAfterDiscount);
+            // Mode de réception : livraison à domicile ou retrait magasin
+            $deliveryMethod = $validated['delivery_method'] ?? 'delivery';
+
+            // Frais de livraison : 0 si retrait magasin, sinon calcul dynamique
+            if ($deliveryMethod === 'store_pickup') {
+                $shippingCost = 0;
+            } else {
+                $shippingCost = ShippingSetting::calculateShippingCost($subtotalAfterDiscount);
+            }
+
             $total = $subtotalAfterDiscount + $shippingCost;
 
             // Créer la commande
             $order = Order::create([
-                'user_id' => $user->id,
-                'order_number' => 'CMD-' . date('Ymd') . '-' . strtoupper(Str::random(6)),
-                'status' => 'pending',
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'total' => $total,
-                'shipping_address' => $validated['shipping_address'],
-             'shipping_phone' => $validated['phone'],
-                'shipping_city' => $validated['shipping_city'] ?? '',
-                'shipping_postal_code' => $validated['shipping_postal_code'] ?? '',
-                'payment_method' => 'cash_on_delivery',// 🆕 FIXÉ À PAIEMENT À LA LIVRAISON
-                'payment_status' => 'pending',
-                'promo_code' => $promoDiscountPercentage ? strtoupper(trim($validated['promo_code'])) : null,
-                'promo_discount_percentage' => $promoDiscountPercentage,
-                'promo_discount_amount' => $promoDiscountPercentage ? $promoDiscountAmount : null,
-            ]);
+    'user_id' => $user->id,
+    'order_number' => 'CMD-' . date('Ymd') . '-' . strtoupper(Str::random(6)),
+    'status' => 'pending',
+    'subtotal' => $subtotal,
+    'shipping_cost' => $shippingCost,
+    'total' => $total,
+    'shipping_address' => $validated['shipping_address'] ?? 'Retrait en magasin',
+    'shipping_phone' => $validated['phone'],
+    'shipping_city' => $validated['shipping_city'] ?? '',
+    'shipping_postal_code' => $validated['shipping_postal_code'] ?? '',
+    'payment_method' => $deliveryMethod, // 'delivery' ou 'store_pickup'
+    'payment_status' => 'pending',
+    'promo_code' => $promoDiscountPercentage ? strtoupper(trim($validated['promo_code'])) : null,
+    'promo_discount_percentage' => $promoDiscountPercentage,
+    'promo_discount_amount' => $promoDiscountPercentage ? $promoDiscountAmount : null,
+]);
 
             // Créer les items de la commande — le stock n'est décrémenté
             // qu'au passage en statut "livré" par l'admin, pas à la commande
