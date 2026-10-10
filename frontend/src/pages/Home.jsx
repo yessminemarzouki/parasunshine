@@ -652,11 +652,11 @@ export default function Home() {
                               ? `Cliquez à nouveau pour voir les produits ${brand.name}`
                               : `Voir les produits ${brand.name}`
                           }
-                          className={`group flex-none w-32 h-20 md:w-44 md:h-28 flex items-center justify-center p-2 cursor-pointer transition-all duration-300
-                            bg-transparent border-0 rounded-none
+                          className={`group flex-none w-44 h-20 md:w-44 md:h-28 flex items-center justify-center p-2 cursor-pointer transition-all duration-300
+                            bg-white border border-gray-200 rounded-lg
                             md:bg-white md:border md:border-gray-200 md:rounded-xl md:p-3
                             hover:shadow-md hover:border-[#1a5242]/20
-                            ${isClicked ? "md:shadow-md md:border-[#1a5242]/20" : ""}
+                            ${isClicked ? "shadow-md border-[#1a5242]/20" : ""}
                           `}
                         >
                           <img
