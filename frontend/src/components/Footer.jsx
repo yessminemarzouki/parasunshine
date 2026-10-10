@@ -210,6 +210,7 @@ export default function Footer() {
                 {[
                   { to: "/about", label: "Qui sommes-nous ?" },
                   { to: "/engagement", label: "Nos engagements" },
+                  { to: "/blog", label: "Notre blog" },
                   { to: "/faq", label: "Questions fréquentes" },
                   { to: "/contact", label: "Nous contacter" },
                 ].map(({ to, label }) => (

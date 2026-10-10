@@ -165,8 +165,11 @@ export default function Home() {
     return () => mq.removeEventListener("change", update);
   }, []);
   const fetchedRef = useRef(false);
-  const [blogPosts, setBlogPosts] = useState([]); // ← ajoute
-  const [blogSectionVisible, setBlogSectionVisible] = useState(true); // ← ajoute
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogSectionVisible, setBlogSectionVisible] = useState(true);
+  const [blogSlide, setBlogSlide] = useState(0); // ← index de page courante
+  const blogScrollRef = useRef(null); // ← ref pour le scroll mobile
+  const [mobileBlogActive, setMobileBlogActive] = useState(0); // ← page mobile
   const [promoSection, setPromoSection] = useState(null);
   const isLoggedIn = !!localStorage.getItem("auth_token");
   const [brands, setBrands] = useState([]);
@@ -231,7 +234,7 @@ export default function Home() {
       ]);
 
       setBrands(brandsData);
-      setBlogPosts((blogData.posts || []).slice(0, 3));
+      setBlogPosts(blogData.posts || []);
       setBlogSectionVisible(blogData.section_visible ?? true);
       setPromoSection(promoData);
       setCategoryShowcase(showcaseData);
@@ -284,6 +287,31 @@ export default function Home() {
       }
     }, 4000);
   };
+  // ── Navigation blog carrousel ──
+  const CARDS_PER_PAGE_DESKTOP = 3;
+  const CARDS_PER_PAGE_MOBILE = 1;
+
+  const blogTotalPages = Math.ceil(blogPosts.length / CARDS_PER_PAGE_DESKTOP);
+
+  const handleBlogScroll = () => {
+    const el = blogScrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstChild?.offsetWidth || 1;
+    const gap = 20;
+    const cardIndex = Math.round(el.scrollLeft / (cardWidth + gap));
+    const pageIndex = Math.round(cardIndex / CARDS_PER_PAGE_MOBILE);
+    setMobileBlogActive(pageIndex);
+  };
+
+  const scrollToBlogPage = (pageIndex) => {
+    const el = blogScrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstChild?.offsetWidth || 1;
+    const gap = 20;
+    const cardIndex = pageIndex * CARDS_PER_PAGE_MOBILE;
+    el.scrollTo({ left: cardIndex * (cardWidth + gap), behavior: "smooth" });
+  };
+
   const promoProducts = data.promotions || [];
   const featuredProducts = data.featured || [];
   const bestsellers = data.bestsellers || [];
@@ -652,50 +680,169 @@ export default function Home() {
       <HomeVideoSection video={videoFor("after_brands")} />
 
       {blogSectionVisible && blogPosts.length > 0 && (
-        <section className="py-20 bg-white">
-          <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-            <SectionTitle>Actualités & Conseils</SectionTitle>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-              {blogPosts.map((post) => (
-                <article key={post.id} className="flex flex-col">
-                  <div className="h-60 rounded overflow-hidden mb-5">
-                    <img
-                      src={
-                        post.image ? `${STORAGE_URL}/${post.image}` : post.image
-                      }
-                      alt={post.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
+        <section className="py-16 md:py-20 bg-white">
+          <div
+            className="relative mx-auto px-5 md:px-14"
+            style={{ maxWidth: 1400 }}
+          >
+            {/* Titre + lien "Voir tous" */}
+            <div className="flex items-end justify-between mb-8 md:mb-10 flex-wrap gap-3">
+              <div>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: "#f0f7f4" }}
+                  >
+                    <Sparkles size={16} style={{ color: "#1a5242" }} />
                   </div>
-                  <span className="text-[#1a5242] text-[0.75rem] font-bold uppercase tracking-widest mb-3">
-                    {post.category}
+                  <span
+                    className="text-[11.5px] font-bold uppercase tracking-widest"
+                    style={{ color: "#1a5242" }}
+                  >
+                    Notre blog
                   </span>
-                  <h3 className="mb-3 leading-snug">
-                    <Link
-                      to={`/blog/${post.id}`}
-                      className="text-gray-900 text-[1.2rem] font-bold hover:text-[#1a5242] transition-colors"
-                    >
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <p className="text-gray-500 text-[0.95rem] leading-relaxed mb-5 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-200">
-                    <time className="text-[0.8rem] text-gray-400 font-medium">
-                      {new Date(post.created_at).toLocaleDateString("fr-FR")}
-                    </time>
-                    <Link
-                      to={`/blog/${post.id}`}
-                      className="text-[0.85rem] font-bold uppercase tracking-wide text-gray-900 hover:text-[#1a5242] relative group transition-colors"
-                    >
-                      Lire l'article
-                      <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-[#f4c430] group-hover:w-full transition-all duration-300" />
-                    </Link>
+                </div>
+                <h2
+                  className="text-[1.5rem] md:text-[1.6rem] font-bold text-gray-900"
+                  style={{ fontFamily: "Segoe UI, sans-serif" }}
+                >
+                  Actualités & Conseils
+                </h2>
+              </div>
+              <Link
+                to="/blog"
+                className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
+                style={{ color: "#1a5242" }}
+              >
+                Voir tous les articles <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* Flèche gauche (desktop) */}
+            {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
+              <button
+                onClick={() => setBlogSlide((p) => Math.max(p - 1, 0))}
+                disabled={blogSlide === 0}
+                className="hidden md:flex absolute left-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Articles précédents"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
+
+            {/* Carrousel */}
+            <div
+              ref={blogScrollRef}
+              onScroll={handleBlogScroll}
+              className="overflow-x-auto md:overflow-hidden w-full pt-2 pb-4 md:py-3 snap-x snap-mandatory md:snap-none scrollbar-hide"
+            >
+              <div
+                className="flex gap-5 md:gap-6 transition-transform duration-500"
+                style={
+                  isDesktop
+                    ? {
+                        transform: `translateX(-${blogSlide * (100 / CARDS_PER_PAGE_DESKTOP)}%)`,
+                      }
+                    : undefined
+                }
+              >
+                {blogPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="flex-none w-[85%] sm:w-[60%] md:w-auto snap-start"
+                    style={
+                      isDesktop
+                        ? {
+                            width: `calc((100% - ${(CARDS_PER_PAGE_DESKTOP - 1) * 24}px) / ${CARDS_PER_PAGE_DESKTOP})`,
+                          }
+                        : undefined
+                    }
+                  >
+                    <article className="flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden h-full transition-all hover:-translate-y-1 hover:shadow-lg">
+                      <Link
+                        to={`/blog/${post.id}`}
+                        className="block h-52 overflow-hidden bg-gray-50 group"
+                      >
+                        <img
+                          src={
+                            post.image
+                              ? `${STORAGE_URL}/${post.image}`
+                              : post.image
+                          }
+                          alt={post.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </Link>
+                      <div className="p-5 md:p-6 flex flex-col flex-1">
+                        <span
+                          className="inline-block w-fit text-[10.5px] font-bold uppercase tracking-widest mb-3 px-2.5 py-1 rounded-full"
+                          style={{ background: "#f0f7f4", color: "#1a5242" }}
+                        >
+                          {post.category}
+                        </span>
+                        <h3 className="mb-3 leading-snug">
+                          <Link
+                            to={`/blog/${post.id}`}
+                            className="text-gray-900 text-[1.1rem] font-bold hover:text-[#1a5242] transition-colors line-clamp-2"
+                          >
+                            {post.title}
+                          </Link>
+                        </h3>
+                        <p className="text-gray-500 text-[13.5px] leading-relaxed mb-5 line-clamp-3 flex-1">
+                          {post.excerpt}
+                        </p>
+                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                          <time className="text-[0.8rem] text-gray-400 font-medium">
+                            {new Date(post.created_at).toLocaleDateString(
+                              "fr-FR",
+                            )}
+                          </time>
+                          <Link
+                            to={`/blog/${post.id}`}
+                            className="inline-flex items-center gap-1.5 text-[0.82rem] font-bold uppercase tracking-wide hover:gap-2 transition-all"
+                            style={{ color: "#1a5242" }}
+                          >
+                            Lire <ArrowRight size={13} />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
                   </div>
-                </article>
+                ))}
+              </div>
+            </div>
+
+            {/* Flèche droite (desktop) */}
+            {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
+              <button
+                onClick={() =>
+                  setBlogSlide((p) => Math.min(p + 1, blogTotalPages - 1))
+                }
+                disabled={blogSlide >= blogTotalPages - 1}
+                className="hidden md:flex absolute right-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Articles suivants"
+              >
+                <ChevronRight size={20} />
+              </button>
+            )}
+
+            {/* Dots mobile */}
+            <div className="md:hidden flex justify-center gap-1.5 mt-4">
+              {Array.from({
+                length: Math.ceil(blogPosts.length / CARDS_PER_PAGE_MOBILE),
+              }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollToBlogPage(i)}
+                  aria-label={`Aller à la page ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    mobileBlogActive === i
+                      ? "w-5 bg-[#1a5242]"
+                      : "w-1.5 bg-[#1a5242]/25"
+                  }`}
+                />
               ))}
             </div>
           </div>
