@@ -30,6 +30,67 @@ class AdminProductController extends Controller
         return is_numeric($value) ? (float) $value : null;
     }
 
+    /**
+     * Génère un nom de fichier SEO-friendly à partir du nom du produit
+     * et de sa référence, avec un suffixe court pour éviter les collisions.
+     * Ex: "creme-hydratante-avene-REF001-a3f2.webp"
+     */
+    private function buildImageFilename(string $name, ?string $reference = null, string $suffix = ''): string
+    {
+        $slug = Str::slug($name) ?: 'image';
+        $slug = substr($slug, 0, 80); // limite la longueur
+
+        $parts = [$slug];
+        if (!empty($reference)) {
+            $refSlug = Str::slug($reference);
+            if ($refSlug) {
+                $parts[] = $refSlug;
+            }
+        }
+        if (!empty($suffix)) {
+            $parts[] = $suffix;
+        }
+        // Suffixe aléatoire pour éviter les collisions
+        $parts[] = Str::lower(Str::random(5));
+
+        return implode('-', $parts);
+    }
+
+    /**
+     * Stocke une image uploadée avec un nom de fichier SEO-friendly.
+     * Optimise l'image en WebP si nécessaire.
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $folder     Dossier de destination (ex: 'products')
+     * @param  string  $name       Nom du produit (pour le slug)
+     * @param  string|null  $reference  Référence produit
+     * @param  string  $suffix     Suffixe (ex: 'galerie-0', 'couleur-rouge')
+     * @return string  Chemin relatif (ex: 'products/creme-avene-a3f2.webp')
+     */
+    private function storeImageWithSlug($file, string $folder, string $name, ?string $reference = null, string $suffix = ''): string
+    {
+        $baseName = $this->buildImageFilename($name, $reference, $suffix);
+
+        // Optimisation WebP
+        try {
+            $optimized = Image::read($file->getRealPath())
+                ->scaleDown(width: 800, height: 800)
+                ->toWebp(quality: 85);
+
+            $filename = $baseName . '.webp';
+            $fullPath = $folder . '/' . $filename;
+
+            Storage::disk('public')->put($fullPath, (string) $optimized);
+
+            return $fullPath;
+        } catch (\Exception $e) {
+            // Fallback : store classique si l'optimisation échoue
+            $ext = $file->getClientOriginalExtension() ?: 'jpg';
+            $filename = $baseName . '.' . $ext;
+            return $file->storeAs($folder, $filename, 'public');
+        }
+    }
+
     private function extractImagesFromExcel(\PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet, array $header): array
     {
         $sheet = $spreadsheet->getActiveSheet();
@@ -91,7 +152,10 @@ class AdminProductController extends Controller
                     ->scaleDown(width: 800, height: 800)
                     ->toWebp(quality: 85);
 
-                $filename = uniqid() . '.webp';
+                // À ce stade, le nom du produit n'est pas encore connu —
+                // on garde un nom temporaire, il sera renommé plus tard si
+                // besoin. Le champ $fieldName indique la couleur visée.
+                $filename = 'color-' . $fieldName . '-' . Str::lower(Str::random(8)) . '.webp';
                 $fullPath = 'products/' . $filename;
                 Storage::disk('public')->put($fullPath, (string) $optimized);
 
@@ -713,12 +777,24 @@ class AdminProductController extends Controller
     {
         $oldImages = $product?->images ?? [];
         $newImages = [];
+
+        // Nom et référence : soit depuis la requête (création), soit depuis
+        // le produit existant (édition)
+        $name = $request->input('name') ?: $product?->name ?: 'produit';
+        $reference = $request->input('reference') ?: $product?->reference;
+
         for ($i = 0; $i < 3; $i++) {
             if ($request->hasFile("gallery_image_{$i}")) {
                 if (!empty($oldImages[$i])) {
                     Storage::disk('public')->delete($oldImages[$i]);
                 }
-                $newImages[$i] = $request->file("gallery_image_{$i}")->store('products', 'public');
+                $newImages[$i] = $this->storeImageWithSlug(
+                    $request->file("gallery_image_{$i}"),
+                    'products',
+                    $name,
+                    $reference,
+                    'galerie-' . ($i + 1),
+                );
             } elseif ($request->filled("existing_image_{$i}")) {
                 $newImages[$i] = $request->input("existing_image_{$i}");
             } elseif (!empty($oldImages[$i])) {
@@ -793,13 +869,22 @@ class AdminProductController extends Controller
         return null;
     }
 
-    private function storeOptimizedImageFromPath(string $path): ?string
+    private function storeOptimizedImageFromPath(string $path, ?string $name = null, ?string $reference = null, string $suffix = ''): ?string
     {
         try {
             $optimized = Image::read(file_get_contents($path))
                 ->scaleDown(width: 800, height: 800)
                 ->toWebp(quality: 85);
-            $filename = uniqid() . '.webp';
+
+            if ($name) {
+                $baseName = $this->buildImageFilename($name, $reference, $suffix);
+            } else {
+                // Fallback : garde l'ancien comportement (nom aléatoire) si
+                // le nom du produit n'est pas fourni
+                $baseName = uniqid();
+            }
+
+            $filename = $baseName . '.webp';
             $fullPath = 'products/' . $filename;
             Storage::disk('public')->put($fullPath, (string) $optimized);
             return $fullPath;
@@ -897,7 +982,12 @@ class AdminProductController extends Controller
                     }
                     [$base, $path] = $found;
 
-                    $stored = $this->storeOptimizedImageFromPath($path);
+                    $stored = $this->storeOptimizedImageFromPath(
+                        $path,
+                        $product->name,
+                        $product->reference,
+                        $mode === 'main' ? '' : 'galerie-1',
+                    );
                     if (!$stored) {
                         continue;
                     }
@@ -1136,12 +1226,23 @@ class AdminProductController extends Controller
         $data['images'] = $this->handleGalleryImages($request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = $this->storeImageWithSlug(
+                $request->file('image'),
+                'products',
+                $data['name'],
+                $data['reference'],
+            );
         }
         if (!empty($data['colors'])) {
             foreach ($data['colors'] as $idx => $color) {
                 if ($request->hasFile("color_image_{$idx}")) {
-                    $data['colors'][$idx]['image'] = $request->file("color_image_{$idx}")->store('products/colors', 'public');
+                    $data['colors'][$idx]['image'] = $this->storeImageWithSlug(
+                        $request->file("color_image_{$idx}"),
+                        'products/colors',
+                        $data['name'],
+                        $data['reference'],
+                        'couleur-' . Str::slug($color['name'] ?? "c{$idx}"),
+                    );
                 }
             }
         }
@@ -1181,12 +1282,23 @@ class AdminProductController extends Controller
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = $this->storeImageWithSlug(
+                $request->file('image'),
+                'products',
+                $data['name'],
+                $data['reference'],
+            );
         }
         if (!empty($data['colors'])) {
             foreach ($data['colors'] as $idx => $color) {
                 if ($request->hasFile("color_image_{$idx}")) {
-                    $data['colors'][$idx]['image'] = $request->file("color_image_{$idx}")->store('products/colors', 'public');
+                    $data['colors'][$idx]['image'] = $this->storeImageWithSlug(
+                        $request->file("color_image_{$idx}"),
+                        'products/colors',
+                        $data['name'],
+                        $data['reference'],
+                        'couleur-' . Str::slug($color['name'] ?? "c{$idx}"),
+                    );
                 }
             }
         }
