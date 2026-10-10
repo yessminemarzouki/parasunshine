@@ -176,10 +176,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Hero Slides (Carrousel)
     Route::get('/hero-slides', [AdminHeroSlideController::class, 'index']);
     Route::post('/hero-slides', [AdminHeroSlideController::class, 'store']);
+    Route::post('/hero-slides/reorder', [AdminHeroSlideController::class, 'reorder']); // ← DOIT être AVANT {heroSlide}
     Route::post('/hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'update']);
     Route::delete('/hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'destroy']);
     Route::patch('/hero-slides/{heroSlide}/toggle', [AdminHeroSlideController::class, 'toggle']);
-    Route::post('/hero-slides/reorder', [AdminHeroSlideController::class, 'reorder']);
 
     // Commandes
     Route::get('/orders', [AdminOrderController::class, 'index']);
@@ -223,11 +223,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Newsletter
     Route::get('/newsletter', [AdminContactController::class, 'newsletter']);
 
-    // Catégories
     Route::get('/categories', [AdminCategoryController::class, 'categories']);
     Route::post('/categories', [AdminCategoryController::class, 'storeCategory']);
+    Route::post('/categories/reorder', [AdminCategoryController::class, 'reorderCategories']); // ← AVANT {category}
     Route::put('/categories/{category}', [AdminCategoryController::class, 'updateCategory']);
-    Route::post('/categories/reorder', [AdminCategoryController::class, 'reorderCategories']);
     Route::put('/categories/{category}/brands', [AdminCategoryController::class, 'syncCategoryBrands']);
 
     // Marques
@@ -261,10 +260,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
 
     // Hygiene Section
     Route::get('/hygiene-section', [AdminHygieneSectionController::class, 'index']);
-    Route::get('/hygiene-section/{hygieneSection}', [AdminHygieneSectionController::class, 'show']);
     Route::post('/hygiene-section', [AdminHygieneSectionController::class, 'store']);
+    Route::post('/hygiene-section/reorder', [AdminHygieneSectionController::class, 'reorder']); // ← AVANT {hygieneSection}
+    Route::get('/hygiene-section/{hygieneSection}', [AdminHygieneSectionController::class, 'show']);
     Route::post('/hygiene-section/{hygieneSection}', [AdminHygieneSectionController::class, 'update']);
-    Route::post('/hygiene-section/reorder', [AdminHygieneSectionController::class, 'reorder']);
 
     // Promo Section
     Route::get('/promo-section', [AdminPromoSectionController::class, 'show']);
