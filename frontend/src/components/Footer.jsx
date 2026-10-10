@@ -366,7 +366,7 @@ export default function Footer() {
                     label: "Facebook",
                   },
                   {
-                    href: "https://instagram.com",
+                    href: "https://www.instagram.com/para_sunshine_tunisie",
                     icon: Instagram,
                     label: "Instagram",
                   },
