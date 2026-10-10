@@ -652,7 +652,7 @@ export default function Home() {
                               ? `Cliquez à nouveau pour voir les produits ${brand.name}`
                               : `Voir les produits ${brand.name}`
                           }
-                          className={`group flex-none w-36 h-24 md:w-44 md:h-28 flex items-center justify-center bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md hover:border-[#1a5242]/20 ${
+                          className={`group flex-none w-36 h-24 md:w-44 md:h-28 flex items-center justify-center bg-white border border-gray-200 rounded-xl p-3 cursor-pointer transition-all duration-300 hover:shadow-md hover:border-[#1a5242]/20 ${
                             isClicked ? "shadow-md border-[#1a5242]/20" : ""
                           }`}
                         >
@@ -661,7 +661,7 @@ export default function Home() {
                             alt={brand.name}
                             loading="lazy"
                             decoding="async"
-                            className={`w-full h-full object-contain transition-opacity duration-300 scale-[1.3] md:scale-100 ${
+                            className={`max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-300 ${
                               isClicked
                                 ? "grayscale-0 opacity-100"
                                 : "grayscale-0 opacity-100 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100"
