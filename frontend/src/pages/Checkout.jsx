@@ -120,7 +120,6 @@ export default function Checkout() {
   }, []);
   const [saveNewAddress, setSaveNewAddress] = useState(false);
   const [setAsDefault, setSetAsDefault] = useState(false);
-  s;
 
   // ── Rappel code promo (au cas où le client aurait manqué le champ dans le panier) ──
   const [promoInput, setPromoInput] = useState("");

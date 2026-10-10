@@ -205,7 +205,13 @@ export default function Cart() {
         padding: isDesktop ? "40px 0 64px" : "20px 0 100px",
       }}
     >
-      <div style={{ maxWidth: 1330, margin: "0 auto", padding: "0 20px" }}>
+      <div
+        style={{
+          maxWidth: 1330,
+          margin: "0 auto",
+          padding: isDesktop ? "0 20px" : "0 12px",
+        }}
+      >
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-[13px] text-gray-400 mb-6">
           <Link to="/" className="hover:text-[#1a5242] transition-colors">
@@ -698,7 +704,7 @@ export default function Cart() {
                 <div
                   key={item.id}
                   style={{
-                    margin: "10px 12px",
+                    margin: "10px 0",
                     padding: "14px",
                     background: "#f9fafb",
                     borderRadius: 14,
@@ -707,7 +713,13 @@ export default function Cart() {
                     gap: 12,
                   }}
                 >
-                  <div style={{ display: "flex", gap: 12 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <div
                       style={{
                         position: "relative",
@@ -832,6 +844,8 @@ export default function Cart() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      paddingTop: 4,
+                      borderTop: "1px solid #f3f4f6",
                     }}
                   >
                     <div
@@ -940,7 +954,7 @@ export default function Cart() {
                 alignItems: isDesktop ? "center" : "stretch",
                 justifyContent: "space-between",
                 gap: isDesktop ? 0 : 10,
-                padding: isDesktop ? "0 24px 20px" : "4px 20px 20px",
+                padding: isDesktop ? "0 24px 20px" : "16px 12px 20px",
               }}
             >
               <Link
@@ -1012,24 +1026,25 @@ export default function Cart() {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 16,
+              gap: isDesktop ? 16 : 12,
               position: isDesktop ? "sticky" : "static",
               top: isDesktop ? 20 : undefined,
               marginTop: isDesktop ? 0 : 8,
+              padding: isDesktop ? 0 : "0 12px",
             }}
           >
             <div
               style={{
                 background: "white",
-                borderRadius: 20,
+                borderRadius: isDesktop ? 20 : 16,
                 border: "1px solid #f3f4f6",
-                padding: 24,
+                padding: isDesktop ? 24 : 18,
                 boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
               }}
             >
               <p
                 style={{
-                  fontSize: 16,
+                  fontSize: isDesktop ? 16 : 15,
                   fontWeight: 700,
                   color: "#111827",
                   margin: "0 0 20px",
