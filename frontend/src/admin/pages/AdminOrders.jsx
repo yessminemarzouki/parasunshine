@@ -467,11 +467,21 @@ export default function AdminOrders() {
                     title:
                       selected.payment_method === "store_pickup"
                         ? "Retrait en magasin"
-                        : "Livraison",
+                        : "Adresse de livraison",
                     lines:
                       selected.payment_method === "store_pickup"
                         ? ["Le client viendra retirer sa commande en magasin"]
-                        : [selected.shipping_address, selected.shipping_city],
+                        : [
+                            selected.shipping_address,
+                            selected.shipping_city &&
+                              `${selected.shipping_city}${
+                                selected.shipping_postal_code
+                                  ? `, ${selected.shipping_postal_code}`
+                                  : ""
+                              }`,
+                            selected.shipping_phone &&
+                              `Tél : ${selected.shipping_phone}`,
+                          ].filter(Boolean),
                   },
                 ].map(({ title, lines }) => (
                   <div key={title}>

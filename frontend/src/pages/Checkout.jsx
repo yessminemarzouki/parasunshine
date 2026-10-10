@@ -24,6 +24,7 @@ import {
   Check,
   Loader2,
   X,
+  Briefcase,
 } from "lucide-react";
 import {
   createOrder,
@@ -117,6 +118,8 @@ export default function Checkout() {
       .catch(() => {});
   }, []);
   const [saveNewAddress, setSaveNewAddress] = useState(false);
+  const [setAsDefault, setSetAsDefault] = useState(false);
+  s;
 
   // ── Rappel code promo (au cas où le client aurait manqué le champ dans le panier) ──
   const [promoInput, setPromoInput] = useState("");
@@ -150,6 +153,7 @@ export default function Checkout() {
     delegation: "",
     address: "",
     postalCode: "",
+    addressLabel: "Domicile",
   });
 
   const delegations = getDelegations(formData.governorate);
@@ -287,7 +291,7 @@ export default function Checkout() {
       if (useNewAddress && saveNewAddress) {
         try {
           await createAddress({
-            label: "Domicile",
+            label: formData.addressLabel || "Domicile",
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone,
@@ -295,7 +299,8 @@ export default function Checkout() {
             delegation: formData.delegation,
             address: formData.address,
             postal_code: formData.postalCode,
-            is_default: savedAddresses.length === 0,
+            // Si c'est la 1ère adresse OU si l'utilisateur a coché "Définir comme principale"
+            is_default: setAsDefault || savedAddresses.length === 0,
           });
         } catch {
           // On ne bloque pas la confirmation de commande si la sauvegarde échoue
@@ -587,6 +592,67 @@ export default function Checkout() {
                       {/* Formulaire nouvelle adresse */}
                       {(useNewAddress || savedAddresses.length === 0) && (
                         <div className="space-y-4">
+                          {/* Type d'adresse */}
+                          <div>
+                            <Label>Type d'adresse</Label>
+                            <div className="grid grid-cols-3 gap-2 mt-1.5">
+                              {[
+                                {
+                                  value: "Domicile",
+                                  label: "Domicile",
+                                  icon: Home,
+                                },
+                                {
+                                  value: "Bureau",
+                                  label: "Bureau",
+                                  icon: Briefcase,
+                                },
+                                {
+                                  value: "Autre",
+                                  label: "Autre",
+                                  icon: MapPin,
+                                },
+                              ].map(({ value, label, icon: Icon }) => (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  onClick={() =>
+                                    setFormData((p) => ({
+                                      ...p,
+                                      addressLabel: value,
+                                    }))
+                                  }
+                                  className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border-2 transition-all ${
+                                    (formData.addressLabel || "Domicile") ===
+                                    value
+                                      ? "border-[#1a5242] bg-[#1a5242]/5"
+                                      : "border-gray-200 hover:border-gray-300"
+                                  }`}
+                                >
+                                  <Icon
+                                    size={16}
+                                    className={
+                                      (formData.addressLabel || "Domicile") ===
+                                      value
+                                        ? "text-[#1a5242]"
+                                        : "text-gray-400"
+                                    }
+                                  />
+                                  <span
+                                    className={`text-[12px] font-semibold ${
+                                      (formData.addressLabel || "Domicile") ===
+                                      value
+                                        ? "text-[#1a5242]"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    {label}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                           {/* Gouvernorat */}
                           <div>
                             <Label required>Gouvernorat</Label>
@@ -656,22 +722,51 @@ export default function Checkout() {
                             />
                           </div>
 
-                          {/* Sauvegarder l'adresse */}
-                          {savedAddresses.length > 0 && (
-                            <label className="flex items-center gap-2 cursor-pointer mt-1">
+                          {/* Sauvegarder l'adresse + Définir comme principale */}
+                          <div className="space-y-3 mt-2 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <label className="flex items-start gap-3 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={saveNewAddress}
-                                onChange={(e) =>
-                                  setSaveNewAddress(e.target.checked)
-                                }
-                                className="w-4 h-4 accent-[#1a5242]"
+                                onChange={(e) => {
+                                  setSaveNewAddress(e.target.checked);
+                                  if (!e.target.checked) setSetAsDefault(false);
+                                }}
+                                className="w-4 h-4 mt-0.5 accent-[#1a5242] flex-shrink-0"
                               />
-                              <span className="text-[13px] text-gray-600">
-                                Sauvegarder cette adresse dans mon compte
-                              </span>
+                              <div>
+                                <span className="text-[13.5px] font-semibold text-gray-800 block">
+                                  Sauvegarder cette adresse dans mon compte
+                                </span>
+                                <span className="text-[11.5px] text-gray-500 mt-0.5 block">
+                                  Elle sera disponible pour vos prochaines
+                                  commandes
+                                </span>
+                              </div>
                             </label>
-                          )}
+
+                            {saveNewAddress && (
+                              <label className="flex items-start gap-3 cursor-pointer pt-3 border-t border-gray-200">
+                                <input
+                                  type="checkbox"
+                                  checked={setAsDefault}
+                                  onChange={(e) =>
+                                    setSetAsDefault(e.target.checked)
+                                  }
+                                  className="w-4 h-4 mt-0.5 accent-[#1a5242] flex-shrink-0"
+                                />
+                                <div>
+                                  <span className="text-[13.5px] font-semibold text-gray-800 block">
+                                    Définir comme adresse principale
+                                  </span>
+                                  <span className="text-[11.5px] text-gray-500 mt-0.5 block">
+                                    Elle sera sélectionnée automatiquement à
+                                    l'avenir
+                                  </span>
+                                </div>
+                              </label>
+                            )}
+                          </div>
                         </div>
                       )}
                     </>
