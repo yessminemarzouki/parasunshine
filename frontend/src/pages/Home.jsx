@@ -645,7 +645,7 @@ export default function Home() {
                               ? `Cliquez à nouveau pour voir les produits ${brand.name}`
                               : `Voir les produits ${brand.name}`
                           }
-                          className={`group flex-none w-36 h-24 md:w-44 md:h-28 flex items-center justify-center bg-white border border-gray-200 rounded-xl px-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md hover:border-[#1a5242]/20 ${
+                          className={`group flex-none w-36 h-24 md:w-44 md:h-28 flex items-center justify-center bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md hover:border-[#1a5242]/20 ${
                             isClicked
                               ? "-translate-y-1.5 shadow-md border-[#1a5242]/20"
                               : ""
@@ -656,10 +656,10 @@ export default function Home() {
                             alt={brand.name}
                             loading="lazy"
                             decoding="async"
-                            className={`max-w-full max-h-16 md:max-h-20 object-contain transition-all duration-300 ${
+                            className={`w-full h-full object-contain transition-transform duration-300 ${
                               isClicked
-                                ? "grayscale-0 opacity-100"
-                                : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100"
+                                ? "grayscale-0 opacity-100 scale-[1.4]"
+                                : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-[1.4]"
                             }`}
                           />
                         </button>
