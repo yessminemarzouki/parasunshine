@@ -290,6 +290,8 @@ export default function Account() {
       }
       resetAddressForm();
       setTimeout(() => setAddressMsg(null), 4000);
+      // Remonte en douceur après fermeture du formulaire
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setAddressMsg({
         type: "error",

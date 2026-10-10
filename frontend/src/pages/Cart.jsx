@@ -197,11 +197,12 @@ export default function Cart() {
 
   return (
     <div
+      className="cart-page"
       style={{
         fontFamily: "'Inter', sans-serif",
         background: "#f9fafb",
         minHeight: "100vh",
-        padding: "40px 0 64px",
+        padding: isDesktop ? "40px 0 64px" : "20px 0 100px",
       }}
     >
       <div style={{ maxWidth: 1330, margin: "0 auto", padding: "0 20px" }}>
@@ -229,8 +230,8 @@ export default function Cart() {
               background: "white",
               border: "1px solid #355847",
               borderRadius: 12,
-              padding: "16px 20px",
-              marginBottom: 24,
+              padding: isDesktop ? "16px 20px" : "14px 16px",
+              marginBottom: isDesktop ? 24 : 16,
               boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
             }}
           >
@@ -310,10 +311,11 @@ export default function Cart() {
           <div
             style={{
               background: "white",
-              borderRadius: 20,
+              borderRadius: isDesktop ? 20 : 16,
               border: "1px solid #f3f4f6",
               boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
               overflow: "hidden",
+              marginBottom: isDesktop ? 0 : 8,
             }}
           >
             {/* En-tête (desktop uniquement) */}
@@ -991,10 +993,11 @@ export default function Cart() {
                         fontWeight: 600,
                         color: "#ef4444",
                         background: "#fef2f2",
-                        border: "none",
+                        border: "1px solid #fee2e2",
                         borderRadius: 10,
-                        padding: "10px 0",
+                        padding: "12px 0",
                         cursor: "pointer",
+                        width: "100%",
                       }
                 }
               >
@@ -1005,12 +1008,14 @@ export default function Cart() {
 
           {/* ── Résumé ── */}
           <div
+            className="cart-summary"
             style={{
               display: "flex",
               flexDirection: "column",
               gap: 16,
               position: isDesktop ? "sticky" : "static",
               top: isDesktop ? 20 : undefined,
+              marginTop: isDesktop ? 0 : 8,
             }}
           >
             <div
@@ -1129,10 +1134,10 @@ export default function Cart() {
                   background:
                     "linear-gradient(135deg, #2d7a5f 0%, #3f9973 100%)",
                   color: "white",
-                  padding: "14px 24px",
+                  padding: isDesktop ? "14px 24px" : "16px 24px",
                   borderRadius: 12,
                   fontWeight: 700,
-                  fontSize: 14,
+                  fontSize: isDesktop ? 14 : 15,
                   border: "none",
                   cursor: "pointer",
                   transition: "opacity 0.2s",

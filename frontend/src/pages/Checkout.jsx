@@ -106,6 +106,7 @@ export default function Checkout() {
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [deliveryMethod, setDeliveryMethod] = useState("delivery");
+  const [ready, setReady] = useState(false);
   const [shipping, setShipping] = useState({
     free_shipping_enabled: true,
     free_shipping_threshold: 99,
@@ -165,6 +166,7 @@ export default function Checkout() {
       navigate("/login");
       return;
     }
+    setReady(true);
     // Arrivé ici connecté : la redirection en attente est consommée.
     clearPostLoginRedirect();
 
@@ -335,7 +337,39 @@ export default function Checkout() {
   const total = subtotalAfterPromo + shippingCost;
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
-  if (cart.length === 0) return null;
+  if (!ready) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <div
+          className="w-12 h-12 rounded-full animate-spin"
+          style={{ border: "3px solid #e5e7eb", borderTopColor: "#1a5242" }}
+        />
+        <p className="text-gray-400 text-[14px]">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
+        <div className="text-center max-w-md">
+          <p className="text-[18px] font-bold text-gray-800 mb-2">
+            Votre panier est vide
+          </p>
+          <p className="text-[14px] text-gray-500 mb-5">
+            Ajoutez des produits avant de passer commande.
+          </p>
+          <Link
+            to="/products"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-[14px] font-semibold hover:opacity-90 transition-opacity"
+            style={{ background: "#1a5242" }}
+          >
+            Découvrir nos produits
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
