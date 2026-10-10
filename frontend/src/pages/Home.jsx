@@ -656,10 +656,10 @@ export default function Home() {
                             alt={brand.name}
                             loading="lazy"
                             decoding="async"
-                            className={`w-full h-full object-contain transition-transform duration-300 ${
+                            className={`w-full h-full object-contain transition-transform duration-300 scale-[1.3] md:scale-100 ${
                               isClicked
-                                ? "grayscale-0 opacity-100 scale-[1.4]"
-                                : "grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-[1.4]"
+                                ? "grayscale-0 opacity-100 md:scale-[1.4]"
+                                : "grayscale-0 opacity-100 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-[1.4]"
                             }`}
                           />
                         </button>
