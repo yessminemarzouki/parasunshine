@@ -12,6 +12,8 @@ import {
   Phone,
   CreditCard,
   ChevronRight,
+  Home,
+  Store,
 } from "lucide-react";
 import { getOrder } from "../services/api";
 
@@ -62,13 +64,6 @@ const STATUS_MAP = {
     desc: "Cette commande a été annulée",
   },
 };
-
-const STEPS = [
-  { key: "pending", icon: Clock, label: "En attente" },
-  { key: "processing", icon: Package, label: "En préparation" },
-  { key: "shipped", icon: Truck, label: "Expédiée" },
-  { key: "delivered", icon: CheckCircle, label: "Livrée" },
-];
 
 const STEP_ORDER = ["pending", "processing", "shipped", "delivered"];
 
@@ -128,9 +123,27 @@ export default function OrderDetail() {
       </div>
     );
 
+  const isStorePickup = order.payment_method === "store_pickup";
+
   const s = STATUS_MAP[order.status] || STATUS_MAP.pending;
   const StatusIcon = s.icon;
   const currentStepIdx = STEP_ORDER.indexOf(order.status);
+
+  // Étapes dynamiques : le dernier step change selon le mode de réception
+  const STEPS = [
+    { key: "pending", icon: Clock, label: "En attente" },
+    { key: "processing", icon: Package, label: "En préparation" },
+    {
+      key: "shipped",
+      icon: Truck,
+      label: isStorePickup ? "Prête" : "Expédiée",
+    },
+    {
+      key: "delivered",
+      icon: CheckCircle,
+      label: isStorePickup ? "Retirée" : "Livrée",
+    },
+  ];
 
   return (
     <div
@@ -199,7 +212,13 @@ export default function OrderDetail() {
           </div>
           <div>
             <p className={`text-[15px] font-bold ${s.text}`}>{s.label}</p>
-            <p className="text-[13px] text-gray-500">{s.desc}</p>
+            <p className="text-[13px] text-gray-500">
+              {isStorePickup && order.status === "delivered"
+                ? "Votre commande a été retirée en magasin"
+                : isStorePickup && order.status === "shipped"
+                  ? "Votre commande est prête à être retirée en magasin"
+                  : s.desc}
+            </p>
           </div>
         </div>
 
@@ -344,13 +363,15 @@ export default function OrderDetail() {
                   </div>
                 )}
                 <div className="flex justify-between text-[13.5px] text-gray-500">
-                  <span>Livraison</span>
+                  <span>{isStorePickup ? "Retrait" : "Livraison"}</span>
                   <span
                     className={`font-semibold ${parseFloat(order.shipping_cost) === 0 ? "text-emerald-600" : "text-gray-700"}`}
                   >
-                    {parseFloat(order.shipping_cost) === 0
-                      ? "Gratuite"
-                      : `${parseFloat(order.shipping_cost).toFixed(3)} DT`}
+                    {isStorePickup
+                      ? "Gratuit"
+                      : parseFloat(order.shipping_cost) === 0
+                        ? "Gratuite"
+                        : `${parseFloat(order.shipping_cost).toFixed(3)} DT`}
                   </span>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-gray-100">
@@ -364,29 +385,51 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            {/* Adresse */}
+            {/* Adresse ou Retrait magasin */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-                <MapPin size={15} className="text-[#1a5242]" />
+                {isStorePickup ? (
+                  <Store size={15} className="text-[#1a5242]" />
+                ) : (
+                  <MapPin size={15} className="text-[#1a5242]" />
+                )}
                 <p className="text-[15px] font-bold text-gray-900">
-                  Adresse de livraison
+                  {isStorePickup
+                    ? "Retrait en magasin"
+                    : "Adresse de livraison"}
                 </p>
               </div>
-              <div className="space-y-1.5 text-[13.5px] text-gray-600">
-                <p className="font-semibold text-gray-800">
-                  {order.shipping_address}
-                </p>
-                <p>
-                  {order.shipping_city}
-                  {order.shipping_postal_code
-                    ? `, ${order.shipping_postal_code}`
-                    : ""}
-                </p>
-                <div className="flex items-center gap-1.5 mt-2 text-gray-500">
-                  <Phone size={13} />
-                  <span>{order.shipping_phone}</span>
+
+              {isStorePickup ? (
+                <div className="space-y-1.5 text-[13.5px] text-gray-600">
+                  <p className="font-semibold text-gray-800">
+                    Vous viendrez retirer votre commande en magasin
+                  </p>
+                  <p className="text-gray-500">
+                    Vous serez contacté par téléphone dès qu'elle sera prête.
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-2 text-gray-500">
+                    <Phone size={13} />
+                    <span>{order.shipping_phone}</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-1.5 text-[13.5px] text-gray-600">
+                  <p className="font-semibold text-gray-800">
+                    {order.shipping_address}
+                  </p>
+                  <p>
+                    {order.shipping_city}
+                    {order.shipping_postal_code
+                      ? `, ${order.shipping_postal_code}`
+                      : ""}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-2 text-gray-500">
+                    <Phone size={13} />
+                    <span>{order.shipping_phone}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Paiement */}
@@ -396,12 +439,14 @@ export default function OrderDetail() {
                 <p className="text-[15px] font-bold text-gray-900">Paiement</p>
               </div>
               <p className="text-[13.5px] text-gray-600 mb-3">
-                {order.payment_method === "cash" ||
-                order.payment_method === "cash_on_delivery"
-                  ? "Paiement à la livraison"
-                  : order.payment_method === "card"
-                    ? "Carte bancaire"
-                    : order.payment_method}
+                {isStorePickup
+                  ? "Paiement lors du retrait en magasin"
+                  : order.payment_method === "cash" ||
+                      order.payment_method === "cash_on_delivery"
+                    ? "Paiement à la livraison"
+                    : order.payment_method === "card"
+                      ? "Carte bancaire"
+                      : order.payment_method}
               </p>
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold border ${
@@ -410,7 +455,11 @@ export default function OrderDetail() {
                     : "bg-amber-50 text-amber-700 border-amber-200"
                 }`}
               >
-                {order.payment_status === "paid" ? "✓ Payé" : "⏳ En attente"}
+                {order.payment_status === "paid"
+                  ? "✓ Payé"
+                  : isStorePickup
+                    ? "⏳ À régler lors du retrait"
+                    : "⏳ En attente"}
               </span>
             </div>
           </div>
