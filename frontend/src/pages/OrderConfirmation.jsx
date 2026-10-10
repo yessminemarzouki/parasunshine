@@ -46,11 +46,14 @@ const OrderConfirmation = () => {
   if (!order) return null;
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStorePickup = order.payment_method === "store_pickup";
 
   const steps = [
     { icon: CheckCircle, label: "Confirmée", sub: "Validée", done: true },
     { icon: Package, label: "Préparation", sub: "En cours", done: false },
-    { icon: Truck, label: "Livraison", sub: "À venir", done: false },
+    isStorePickup
+      ? { icon: Home, label: "Retrait", sub: "En magasin", done: false }
+      : { icon: Truck, label: "Livraison", sub: "À venir", done: false },
   ];
 
   return (
@@ -72,8 +75,9 @@ const OrderConfirmation = () => {
               Commande confirmée !
             </h1>
             <p className="text-gray-500 text-[14px] md:text-[15px] leading-relaxed">
-              Merci pour votre confiance. Votre commande est en cours de
-              traitement.
+              {isStorePickup
+                ? "Merci pour votre confiance. Votre commande sera bientôt prête à être retirée en magasin."
+                : "Merci pour votre confiance. Votre commande est en cours de traitement."}
             </p>
           </div>
         </div>
@@ -100,9 +104,11 @@ const OrderConfirmation = () => {
                 Mode de paiement
               </p>
               <p className="text-[14px] font-bold text-gray-800">
-                {order.payment_method === "cash_on_delivery"
-                  ? "Paiement à la livraison"
-                  : order.payment_method || "—"}
+                {isStorePickup
+                  ? "Retrait en magasin"
+                  : order.payment_method === "cash_on_delivery"
+                    ? "Paiement à la livraison"
+                    : order.payment_method || "—"}
               </p>
               <span
                 className={`inline-flex mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
@@ -113,7 +119,9 @@ const OrderConfirmation = () => {
               >
                 {order.payment_status === "paid"
                   ? "Payé"
-                  : "En attente de paiement"}
+                  : isStorePickup
+                    ? "À régler lors du retrait"
+                    : "À régler à la livraison"}
               </span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0 text-lg">
@@ -163,28 +171,45 @@ const OrderConfirmation = () => {
           </div>
         </div>
 
-        {/* Adresse + Email + Actions */}
+        {/* Adresse / Retrait + Email + Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Adresse */}
+          {/* Adresse ou Retrait magasin */}
           <div className="bg-white rounded-2xl border border-gray-100 px-5 md:px-6 py-5 shadow-sm">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-8 h-8 rounded-lg bg-[#1a5242]/10 flex items-center justify-center">
-                <MapPin size={15} className="text-[#1a5242]" />
+                {isStorePickup ? (
+                  <Home size={15} className="text-[#1a5242]" />
+                ) : (
+                  <MapPin size={15} className="text-[#1a5242]" />
+                )}
               </div>
               <p className="text-[13.5px] font-bold text-gray-800">
-                Adresse de livraison
+                {isStorePickup ? "Retrait en magasin" : "Adresse de livraison"}
               </p>
             </div>
             <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-0.5">
-              <p className="text-[13.5px] font-semibold text-gray-800">
-                {order.shipping_address}
-              </p>
-              <p className="text-[13px] text-gray-500">
-                {order.shipping_city}
-                {order.shipping_postal_code
-                  ? `, ${order.shipping_postal_code}`
-                  : ""}
-              </p>
+              {isStorePickup ? (
+                <>
+                  <p className="text-[13.5px] font-semibold text-gray-800">
+                    Vous viendrez retirer votre commande en magasin
+                  </p>
+                  <p className="text-[13px] text-gray-500">
+                    Vous serez contacté par téléphone dès qu'elle sera prête.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[13.5px] font-semibold text-gray-800">
+                    {order.shipping_address}
+                  </p>
+                  <p className="text-[13px] text-gray-500">
+                    {order.shipping_city}
+                    {order.shipping_postal_code
+                      ? `, ${order.shipping_postal_code}`
+                      : ""}
+                  </p>
+                </>
+              )}
               {order.shipping_phone && (
                 <p className="text-[13px] text-gray-500">
                   Tél : {order.shipping_phone}
