@@ -30,7 +30,9 @@ export default function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get("category") || "",
   );
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState(
+    searchParams.get("brand") || "",
+  );
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || "",
   );
@@ -57,15 +59,18 @@ export default function ProductList() {
   }, []);
 
   useEffect(() => {
-    const category = searchParams.get("category");
-    if (category) setSelectedCategory(category);
-    const brand = searchParams.get("brand");
-    if (brand) setSelectedBrand(brand);
+    const category = searchParams.get("category") || "";
+    const brand = searchParams.get("brand") || "";
+    const search = searchParams.get("search") || "";
+
+    // Ne met à jour que si la valeur a changé (évite les boucles infinies)
+    setSelectedCategory((prev) => (prev === category ? prev : category));
+    setSelectedBrand((prev) => (prev === brand ? prev : brand));
+    setSearchQuery((prev) => (prev === search ? prev : search));
+
     setShowBestseller(searchParams.get("bestseller") === "true");
     setShowFeatured(searchParams.get("featured") === "true");
     setShowPromo(searchParams.get("promo") === "true");
-    // Lit le paramètre search de l'URL (recherche depuis le Header)
-    setSearchQuery(searchParams.get("search") || "");
   }, [searchParams]);
 
   useEffect(() => {
