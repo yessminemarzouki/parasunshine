@@ -209,7 +209,7 @@ export default function Cart() {
         style={{
           maxWidth: 1330,
           margin: "0 auto",
-          padding: isDesktop ? "0 20px" : "0 12px",
+          padding: isDesktop ? "0 20px" : "0 16px",
         }}
       >
         {/* Breadcrumb */}
@@ -321,7 +321,9 @@ export default function Cart() {
               border: "1px solid #f3f4f6",
               boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
               overflow: "hidden",
-              marginBottom: isDesktop ? 0 : 8,
+              marginBottom: isDesktop ? 0 : 12,
+              width: "100%",
+              boxSizing: "border-box",
             }}
           >
             {/* En-tête (desktop uniquement) */}
@@ -704,13 +706,15 @@ export default function Cart() {
                 <div
                   key={item.id}
                   style={{
-                    margin: "10px 0",
+                    margin: "8px 0",
                     padding: "14px",
                     background: "#f9fafb",
                     borderRadius: 14,
                     display: "flex",
                     flexDirection: "column",
                     gap: 12,
+                    width: "100%",
+                    boxSizing: "border-box",
                   }}
                 >
                   <div
@@ -954,7 +958,7 @@ export default function Cart() {
                 alignItems: isDesktop ? "center" : "stretch",
                 justifyContent: "space-between",
                 gap: isDesktop ? 0 : 10,
-                padding: isDesktop ? "0 24px 20px" : "16px 12px 20px",
+                padding: isDesktop ? "0 24px 20px" : "16px 16px 20px",
               }}
             >
               <Link
@@ -1029,8 +1033,9 @@ export default function Cart() {
               gap: isDesktop ? 16 : 12,
               position: isDesktop ? "sticky" : "static",
               top: isDesktop ? 20 : undefined,
-              marginTop: isDesktop ? 0 : 8,
-              padding: isDesktop ? 0 : "0 12px",
+              marginTop: isDesktop ? 0 : 4,
+              width: "100%",
+              boxSizing: "border-box",
             }}
           >
             <div
@@ -1040,6 +1045,8 @@ export default function Cart() {
                 border: "1px solid #f3f4f6",
                 padding: isDesktop ? 24 : 18,
                 boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             >
               <p

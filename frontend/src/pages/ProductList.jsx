@@ -53,17 +53,86 @@ export default function ProductList() {
   const [showFilters, setShowFilters] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [readyToFetch, setReadyToFetch] = useState(false);
 
+  // ── Clé de session unique pour la restauration ──
+  const SESSION_KEY = "productlist_state_v1";
+
+  // ── Restauration au montage ──
   useEffect(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        // Ne restaure que si on revient d'une fiche produit (flag dédié)
+        if (s.returnFromDetail) {
+          setSelectedCategory(s.selectedCategory ?? "");
+          setSelectedBrand(s.selectedBrand ?? "");
+          setSearchQuery(s.searchQuery ?? "");
+          setMinPrice(s.minPrice ?? 0);
+          setMaxPrice(s.maxPrice ?? 5000);
+          setShowPromo(s.showPromo ?? false);
+          setShowNew(s.showNew ?? false);
+          setShowBestseller(s.showBestseller ?? false);
+          setShowFeatured(s.showFeatured ?? false);
+          setSortBy(s.sortBy ?? "created_at");
+          setCurrentPage(s.currentPage ?? 1);
+          sessionStorage.removeItem(SESSION_KEY);
+          // Flag déjà consommé
+        }
+      } catch {}
+    }
+    setReadyToFetch(true);
     fetchFiltersData();
   }, []);
 
+  // ── Sauvegarde avant démontage (clic sur fiche produit) ──
   useEffect(() => {
+    return () => {
+      // Quand l'utilisateur quitte la page (clic fiche produit),
+      // on sauvegarde tout l'état pour pouvoir le restaurer au retour.
+      try {
+        const state = {
+          selectedCategory,
+          selectedBrand,
+          searchQuery,
+          minPrice,
+          maxPrice,
+          showPromo,
+          showNew,
+          showBestseller,
+          showFeatured,
+          sortBy,
+          currentPage,
+          returnFromDetail: true,
+        };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+      } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedCategory,
+    selectedBrand,
+    searchQuery,
+    minPrice,
+    maxPrice,
+    showPromo,
+    showNew,
+    showBestseller,
+    showFeatured,
+    sortBy,
+    currentPage,
+  ]);
+
+  useEffect(() => {
+    // Ne synchronise depuis l'URL que si on n'est PAS en train de restaurer
+    const isRestoring = sessionStorage.getItem(SESSION_KEY);
+    if (isRestoring) return;
+
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
     const search = searchParams.get("search") || "";
 
-    // Ne met à jour que si la valeur a changé (évite les boucles infinies)
     setSelectedCategory((prev) => (prev === category ? prev : category));
     setSelectedBrand((prev) => (prev === brand ? prev : brand));
     setSearchQuery((prev) => (prev === search ? prev : search));
@@ -74,8 +143,10 @@ export default function ProductList() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!readyToFetch) return;
     fetchProducts();
-  }, [currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, readyToFetch]);
   // Revient systématiquement à la page 1 dès qu'un filtre change, remonte
   // en haut de page, et affiche un état de chargement — évite de rester
   // bloqué sur une page qui n'existe plus après un filtrage (ex: page 3
@@ -86,6 +157,10 @@ export default function ProductList() {
       isFirstFilterRun.current = false;
       return;
     }
+    // Ne pas reset la page si on est en train de restaurer un état
+    const isRestoring = sessionStorage.getItem(SESSION_KEY);
+    if (isRestoring) return;
+
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (currentPage !== 1) {
       setCurrentPage(1);
@@ -140,12 +215,15 @@ export default function ProductList() {
   const restoredRef = useRef(false);
   useEffect(() => {
     if (restoredRef.current) return;
-    if (loading) return; // attend que les produits soient chargés
+    if (loading) return;
     const saved = sessionStorage.getItem(scrollKey);
     if (saved && parseInt(saved, 10) > 0) {
       restoredRef.current = true;
+      // Double rAF pour attendre que le DOM soit complètement peint
       requestAnimationFrame(() => {
-        window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
+        });
       });
     }
   }, [loading, scrollKey]);
