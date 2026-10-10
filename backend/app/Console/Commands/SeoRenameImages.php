@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -26,66 +27,50 @@ class SeoRenameImages extends Command
         $skipped = 0;
         $errors = 0;
 
-        Product::query()
-            ->select('id', 'name', 'reference', 'image', 'images')
-            ->chunkById(100, function ($products) use ($dryRun, $onlyMain, $onlyGallery, &$processed, &$skipped, &$errors) {
-                foreach ($products as $product) {
-                    // ── Image principale ──
-                    if (!$onlyGallery && $product->image && !$this->isSeoFriendly($product->image)) {
-                        $newPath = $this->renameImage(
-                            $product->image,
-                            $product->name,
-                            $product->reference,
-                            ''
-                        );
-                        if ($newPath) {
-                            if (!$dryRun) {
-                                $product->update(['image' => $newPath]);
-                            }
-                            $this->line("✓ Produit #{$product->id} : {$product->image} → {$newPath}");
-                            $processed++;
-                        } else {
-                            $this->warn("✗ Produit #{$product->id} : impossible de renommer {$product->image}");
-                            $errors++;
-                        }
-                    } else {
-                        $skipped++;
-                    }
+        // Récupère tous les IDs de produits à traiter
+        $productIds = Product::query()
+            ->whereNotNull('image')
+            ->orWhereNotNull('images')
+            ->pluck('id');
 
-                    // ── Images de galerie ──
-                    if (!$onlyMain && !empty($product->images)) {
-                        $newImages = [];
-                        $changed = false;
-                        foreach ($product->images as $i => $img) {
-                            if ($img && !$this->isSeoFriendly($img)) {
-                                $newPath = $this->renameImage(
-                                    $img,
-                                    $product->name,
-                                    $product->reference,
-                                    'galerie-' . ($i + 1)
-                                );
-                                if ($newPath) {
-                                    $newImages[$i] = $newPath;
-                                    $changed = true;
-                                    $this->line("✓ Produit #{$product->id} : {$img} → {$newPath}");
-                                    $processed++;
-                                } else {
-                                    $newImages[$i] = $img;
-                                    $errors++;
-                                }
-                            } else {
-                                $newImages[$i] = $img;
-                                $skipped++;
-                            }
-                        }
-                        if ($changed && !$dryRun) {
-                            $product->update(['images' => array_values($newImages)]);
-                        }
-                    }
+        $this->info("Produits à traiter : " . $productIds->count());
+
+        $bar = $this->output->createProgressBar($productIds->count());
+        $bar->start();
+
+        foreach ($productIds as $productId) {
+            $product = Product::find($productId);
+            if (!$product) {
+                $bar->advance();
+                continue;
+            }
+
+            // ── Image principale ──
+            if (!$onlyGallery && $product->image && !$this->isSeoFriendly($product->image)) {
+                $newPath = $this->processMainImage($product, $dryRun);
+                if ($newPath === true) {
+                    $processed++;
+                } elseif ($newPath === false) {
+                    $errors++;
+                } else {
+                    $skipped++;
                 }
-            });
+            } else {
+                $skipped++;
+            }
 
-        $this->newLine();
+            // ── Images de galerie ──
+            if (!$onlyMain && !empty($product->images)) {
+                $changed = $this->processGalleryImages($product, $dryRun);
+                $processed += $changed;
+            }
+
+            $bar->advance();
+        }
+
+        $bar->finish();
+        $this->newLine(2);
+
         $this->info("✅ Terminé.");
         $this->line("   Traité : {$processed}");
         $this->line("   Ignoré : {$skipped}");
@@ -101,72 +86,177 @@ class SeoRenameImages extends Command
 
     /**
      * Vérifie si le chemin d'image est déjà SEO-friendly.
-     * (contient le slug du nom ou de la référence)
      */
     private function isSeoFriendly(string $path): bool
     {
         $filename = pathinfo($path, PATHINFO_FILENAME);
-        // Si le nom contient au moins un tiret ET fait plus de 15 caractères
-        // → probablement déjà SEO-friendly
         return strlen($filename) > 15 && substr_count($filename, '-') >= 2;
     }
 
     /**
-     * Renomme une image sur le disque + retourne le nouveau chemin.
-     * Retourne null en cas d'erreur.
+     * Traite l'image principale d'un produit.
+     * Retourne true si succès, false si erreur, null si rien à faire.
      */
-    private function renameImage(string $oldPath, string $name, ?string $reference, string $suffix = ''): ?string
+    private function processMainImage(Product $product, bool $dryRun): ?bool
     {
-        try {
-            $disk = Storage::disk('public');
+        $oldPath = $product->image;
+        $newPath = $this->buildNewPath($oldPath, $product->name, $product->reference);
 
-            if (!$disk->exists($oldPath)) {
-                return null;
-            }
-
-            $ext = pathinfo($oldPath, PATHINFO_EXTENSION);
-            $folder = pathinfo($oldPath, PATHINFO_DIRNAME);
-
-            // Construit le nouveau nom
-            $slug = Str::slug($name) ?: 'image';
-            $slug = substr($slug, 0, 80);
-
-            $parts = [$slug];
-            if ($reference) {
-                $refSlug = Str::slug($reference);
-                if ($refSlug) {
-                    $parts[] = $refSlug;
-                }
-            }
-            if ($suffix) {
-                $parts[] = $suffix;
-            }
-            // Suffixe unique pour éviter les collisions
-            $parts[] = Str::lower(Str::random(5));
-
-            $newFilename = implode('-', $parts) . '.' . $ext;
-            $newPath = ($folder !== '.' ? $folder . '/' : '') . $newFilename;
-
-            // Si le nouveau chemin est identique à l'ancien, ne rien faire
-            if ($newPath === $oldPath) {
-                return null;
-            }
-
-            // Évite d'écraser un fichier existant
-            $counter = 1;
-            while ($disk->exists($newPath)) {
-                $newPath = ($folder !== '.' ? $folder . '/' : '')
-                    . implode('-', $parts) . '-' . $counter . '.' . $ext;
-                $counter++;
-            }
-
-            // Copie + suppression (plus sûr que rename cross-filesystem)
-            $disk->copy($oldPath, $newPath);
-            $disk->delete($oldPath);
-
-            return $newPath;
-        } catch (\Exception $e) {
+        if ($newPath === $oldPath) {
             return null;
         }
+
+        if ($dryRun) {
+            $this->line("✓ Produit #{$product->id} : {$oldPath} → {$newPath}");
+            return true;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Renomme le fichier sur le disque
+            $renamed = $this->renameFile($oldPath, $newPath);
+            if (!$renamed) {
+                DB::rollBack();
+                $this->warn("✗ Produit #{$product->id} : impossible de renommer {$oldPath}");
+                return false;
+            }
+
+            // 2. Met à jour la BDD
+            $product->update(['image' => $newPath]);
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->warn("✗ Produit #{$product->id} : " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Traite les images de galerie d'un produit.
+     * Retourne le nombre d'images traitées.
+     */
+    private function processGalleryImages(Product $product, bool $dryRun): int
+    {
+        $oldImages = $product->images ?? [];
+        $newImages = $oldImages;
+        $changed = 0;
+
+        foreach ($oldImages as $i => $img) {
+            if (!$img || $this->isSeoFriendly($img)) {
+                continue;
+            }
+
+            $newPath = $this->buildNewPath($img, $product->name, $product->reference, 'galerie-' . ($i + 1));
+            if ($newPath === $img) {
+                continue;
+            }
+
+            if ($dryRun) {
+                $this->line("✓ Produit #{$product->id} (galerie) : {$img} → {$newPath}");
+                $changed++;
+                continue;
+            }
+
+            try {
+                DB::beginTransaction();
+
+                $renamed = $this->renameFile($img, $newPath);
+                if (!$renamed) {
+                    DB::rollBack();
+                    $this->warn("✗ Produit #{$product->id} (galerie) : impossible de renommer {$img}");
+                    continue;
+                }
+
+                $newImages[$i] = $newPath;
+                $product->update(['images' => array_values($newImages)]);
+                DB::commit();
+                $changed++;
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->warn("✗ Produit #{$product->id} (galerie) : " . $e->getMessage());
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Construit le nouveau chemin SEO-friendly.
+     */
+    private function buildNewPath(string $oldPath, string $name, ?string $reference, string $suffix = ''): string
+    {
+        $folder = pathinfo($oldPath, PATHINFO_DIRNAME);
+        $ext = pathinfo($oldPath, PATHINFO_EXTENSION);
+
+        $slug = Str::slug($name) ?: 'image';
+        $slug = substr($slug, 0, 80);
+
+        $parts = [$slug];
+        if ($reference) {
+            $refSlug = Str::slug($reference);
+            if ($refSlug) {
+                $parts[] = $refSlug;
+            }
+        }
+        if ($suffix) {
+            $parts[] = $suffix;
+        }
+        $parts[] = Str::lower(Str::random(5));
+
+        $newFilename = implode('-', $parts) . '.' . $ext;
+
+        return ($folder !== '.' ? $folder . '/' : '') . $newFilename;
+    }
+
+    /**
+     * Renomme un fichier sur le disque (rename natif + fallback copy/delete).
+     */
+    private function renameFile(string $oldPath, string $newPath): bool
+    {
+        $disk = Storage::disk('public');
+
+        if (!$disk->exists($oldPath)) {
+            return false;
+        }
+
+        // Évite les collisions
+        $counter = 1;
+        while ($disk->exists($newPath)) {
+            $ext = pathinfo($newPath, PATHINFO_EXTENSION);
+            $base = pathinfo($newPath, PATHINFO_FILENAME);
+            $newPath = pathinfo($newPath, PATHINFO_DIRNAME) . '/' . $base . '-' . $counter . '.' . $ext;
+            $counter++;
+        }
+
+        $absoluteOld = $disk->path($oldPath);
+        $absoluteNew = $disk->path($newPath);
+
+        // Tentative 1 : rename() natif PHP
+        if (@rename($absoluteOld, $absoluteNew)) {
+            @chmod($absoluteNew, 0644);
+            return true;
+        }
+
+        // Tentative 2 : copy + unlink
+        if (@copy($absoluteOld, $absoluteNew)) {
+            @unlink($absoluteOld);
+            @chmod($absoluteNew, 0644);
+            return true;
+        }
+
+        // Tentative 3 : Storage
+        try {
+            if ($disk->copy($oldPath, $newPath)) {
+                $disk->delete($oldPath);
+                return true;
+            }
+        } catch (\Exception $e) {
+            // silently fail
+        }
+
+        return false;
     }
 }
