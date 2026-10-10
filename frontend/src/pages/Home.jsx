@@ -652,7 +652,7 @@ export default function Home() {
                               ? `Cliquez à nouveau pour voir les produits ${brand.name}`
                               : `Voir les produits ${brand.name}`
                           }
-                          className={`group flex-none w-40 h-14 md:w-44 md:h-24 flex items-center justify-center px-1 py-0.5 md:px-3 md:py-2 cursor-pointer transition-all duration-300
+                          className={`group flex-none w-48 h-20 md:w-52 md:h-28 flex items-center justify-center px-1 py-1 md:px-3 md:py-2 overflow-hidden cursor-pointer transition-all duration-300
                             bg-white border border-gray-200 rounded-lg
                             md:bg-white md:border md:border-gray-200 md:rounded-xl
                             hover:shadow-md hover:border-[#1a5242]/20
@@ -664,7 +664,7 @@ export default function Home() {
                             alt={brand.name}
                             loading="lazy"
                             decoding="async"
-                            className={`max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-300 ${
+                            className={`max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 scale-105 md:scale-100 ${
                               isClicked
                                 ? "grayscale-0 opacity-100"
                                 : "grayscale-0 opacity-100 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100"
