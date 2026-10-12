@@ -1,24 +1,61 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Montserrat (moderne et clean) -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap"
-      rel="stylesheet"
-    />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ParaSunshine - Votre Parapharmacie en Ligne</title>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SEO PRINCIPAL -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <title>ParaSunshine - Votre Parapharmacie en Ligne en Tunisie</title>
     <meta
       name="description"
-      content="Parapharmacie en ligne - Produits de qualité, livraison rapide et paiement sécurisé"
+      content="Parapharmacie en ligne en Tunisie - Plus de 2900 produits : soins visage, solaire, capillaire, bébé & maman, hygiène, compléments alimentaires. Livraison rapide 24-48h. Produits 100% authentiques."
+    />
+    <link rel="canonical" href="https://www.parasunshine.tn/" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- OPEN GRAPH (Facebook, WhatsApp, LinkedIn) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ParaSunshine" />
+    <meta
+      property="og:title"
+      content="ParaSunshine - Parapharmacie en ligne en Tunisie"
+    />
+    <meta
+      property="og:description"
+      content="Découvrez plus de 2900 produits de parapharmacie : soins visage, solaire, capillaire, bébé & maman. Livraison rapide partout en Tunisie."
+    />
+    <meta
+      property="og:image"
+      content="https://www.parasunshine.tn/android-chrome-512x512.png"
+    />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:url" content="https://www.parasunshine.tn/" />
+    <meta property="og:locale" content="fr_TN" />
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TWITTER CARD -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="ParaSunshine - Parapharmacie en ligne en Tunisie"
+    />
+    <meta
+      name="twitter:description"
+      content="Découvrez plus de 2900 produits de parapharmacie. Livraison rapide partout en Tunisie."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.parasunshine.tn/android-chrome-512x512.png"
     />
 
-    <!-- Favicon ParaSunshine -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- FAVICON -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -26,12 +63,91 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#1a4731" />
 
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SCHEMAS JSON-LD (Organization + LocalBusiness + WebSite) -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ParaSunshine",
+        "url": "https://www.parasunshine.tn",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.parasunshine.tn/products?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ParaSunshine",
+        "url": "https://www.parasunshine.tn",
+        "logo": "https://www.parasunshine.tn/android-chrome-512x512.png",
+        "sameAs": [
+          "https://www.facebook.com/ParaSunShine",
+          "https://www.instagram.com/para_sunshine_tunisie"
+        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+21694169416",
+          "contactType": "customer service",
+          "areaServed": "TN",
+          "availableLanguage": ["French", "Arabic"]
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Route Gremda Km3, en face Clinique Chams",
+          "addressLocality": "Sfax",
+          "addressCountry": "TN"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://www.parasunshine.tn/#store",
+        "name": "ParaSunshine",
+        "image": "https://www.parasunshine.tn/android-chrome-512x512.png",
+        "telephone": "+21694169416",
+        "priceRange": "DT",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Route Gremda Km3",
+          "addressLocality": "Sfax",
+          "addressCountry": "TN"
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday"
+            ],
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ]
+      }
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- FONTS -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Montserrat:wght@700;800&family=Playfair+Display:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+
     <script src="/preload.js" async></script>
   </head>
 
