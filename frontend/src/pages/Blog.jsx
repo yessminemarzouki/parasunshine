@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Clock, Tag, ArrowRight, Search } from "lucide-react";
 import { STORAGE_URL } from "../config/api";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 const CATEGORIES = [
   "Tous",
@@ -69,6 +70,11 @@ const Blog = () => {
       className="bg-[#fafaf8] min-h-screen"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
+      <Seo
+        title="Blog beauté & conseils parapharmacie"
+        description="Conseils d'experts, routines soins, guides produits et actualités parapharmacie par ParaSunshine — votre parapharmacie en ligne en Tunisie."
+        url="/blog"
+      />
       {/* ── Hero ── */}
       <div
         className="border-b border-gray-100"

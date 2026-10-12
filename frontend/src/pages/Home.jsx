@@ -25,6 +25,7 @@ import ProductCard from "../components/ProductCard";
 import HeroCarousel from "../components/HeroCarousel";
 import HygieneSection from "../components/HygieneSection";
 import HomeVideoSection from "../components/HomeVideoSection";
+import Seo from "../components/Seo";
 
 const CONCERNS = [
   {
@@ -350,6 +351,23 @@ export default function Home() {
 
   return (
     <div className="bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <Seo
+        title="Parapharmacie en ligne en Tunisie"
+        description="Découvrez ParaSunshine, votre parapharmacie en ligne à Sfax et partout en Tunisie : soins visage, solaire, capillaire, bébé & maman, hygiène, compléments alimentaires. Livraison rapide 24-48h."
+        url="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "ParaSunshine",
+          url: "https://www.parasunshine.tn",
+          potentialAction: {
+            "@type": "SearchAction",
+            target:
+              "https://www.parasunshine.tn/products?search={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }}
+      />
       {/* ── Hero ── */}
       <HeroCarousel />
       <HomeVideoSection video={videoFor("after_hero")} />

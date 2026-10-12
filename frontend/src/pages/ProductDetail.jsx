@@ -35,6 +35,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import CartNotification from "../components/CartNotification";
 import ImageLightbox from "../components/ImageLightbox";
+import Seo from "../components/Seo";
 
 // ── Petite pastille "sonnette" affichée sous une variante indisponible ──
 const NotifyBell = ({ onClick, title }) => (
@@ -566,6 +567,44 @@ export default function ProductDetail() {
       ? notifyAgeObj?.colors || []
       : product.colors || [];
 
+  // ─── SEO : JSON-LD Schema.org pour Google ───
+  const productJsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    image: product.image ? `${STORAGE_URL}/${product.image}` : undefined,
+    description:
+      product.short_description?.replace(/<[^>]*>/g, "").substring(0, 300) ||
+      product.description?.replace(/<[^>]*>/g, "").substring(0, 300) ||
+      undefined,
+    sku: product.reference || `PS-${product.id}`,
+    brand: {
+      "@type": "Brand",
+      name: product.brand?.name || "ParaSunshine",
+    },
+    offers: {
+      "@type": "Offer",
+      url: `https://www.parasunshine.tn/products/${product.slug}`,
+      priceCurrency: "TND",
+      price: hasPromo ? promoPrice : price,
+      availability: isUnavailable
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+    },
+    ...(product.rating > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: product.rating,
+        reviewCount: product.reviews_count || 1,
+      },
+    }),
+  };
+
+  const seoDescription =
+    product.short_description?.replace(/<[^>]*>/g, "").substring(0, 155) ||
+    product.description?.replace(/<[^>]*>/g, "").substring(0, 155) ||
+    `Découvrez ${product.name} sur ParaSunshine, votre parapharmacie en ligne en Tunisie. Livraison rapide 24-48h.`;
+
   const faqs = [
     {
       q: "Quelle est la politique de retour ?",
@@ -586,6 +625,14 @@ export default function ProductDetail() {
       className="bg-gray-50 min-h-screen"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
+      <Seo
+        title={product.name}
+        description={seoDescription}
+        image={product.image ? `${STORAGE_URL}/${product.image}` : undefined}
+        url={`/products/${product.slug}`}
+        type="product"
+        jsonLd={productJsonLd}
+      />
       <div
         style={{ maxWidth: 1330, margin: "0 auto", padding: "24px 20px 60px" }}
       >

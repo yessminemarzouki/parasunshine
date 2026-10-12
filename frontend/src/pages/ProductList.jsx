@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, Link, useLocation } from "react-router-dom";
 import { cachedFetch } from "../utils/cache";
 import ProductCard from "../components/ProductCard";
+import Seo from "../components/Seo";
 import { API_URL } from "../config/api";
 import {
   ChevronDown,
@@ -11,6 +12,18 @@ import {
   RotateCcw,
   Search,
 } from "lucide-react";
+
+// ─── SEO : libellés par catégorie ───
+const CATEGORY_LABELS = {
+  visage: "Soins du visage",
+  corps: "Soins du corps",
+  capillaire: "Soins capillaires",
+  solaire: "Protection solaire",
+  "bebe-et-maman": "Bébé & Maman",
+  "complements-alimentaires": "Compléments alimentaires",
+  hygiene: "Hygiène",
+  paramedicaux: "Paramédicaux",
+};
 
 export default function ProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -456,6 +469,36 @@ export default function ProductList() {
     return "Tous nos produits";
   };
 
+  // ─── SEO dynamique ───
+  const getSeoTitle = () => {
+    if (searchQuery) return `Recherche : ${searchQuery}`;
+    if (selectedCategory && CATEGORY_LABELS[selectedCategory])
+      return CATEGORY_LABELS[selectedCategory];
+    if (currentCategoryName) return currentCategoryName;
+    if (selectedBrand) return `Produits ${getSelectedBrandName()}`;
+    if (showPromo) return "Promotions en cours";
+    if (showNew) return "Nouveautés";
+    if (showBestseller) return "Meilleures ventes";
+    if (showFeatured) return "Sélection ParaSunshine";
+    return "Tous nos produits";
+  };
+
+  const getSeoDescription = () => {
+    const label = getSeoTitle().toLowerCase();
+    return `Découvrez notre gamme ${label} — Produits de parapharmacie de qualité, livraison rapide partout en Tunisie.`;
+  };
+
+  const getSeoUrl = () => {
+    if (selectedCategory) return `/products?category=${selectedCategory}`;
+    if (selectedBrand) return `/products?brand=${selectedBrand}`;
+    if (searchQuery)
+      return `/products?search=${encodeURIComponent(searchQuery)}`;
+    if (showPromo) return "/products?promo=true";
+    if (showBestseller) return "/products?bestseller=true";
+    if (showFeatured) return "/products?featured=true";
+    return "/products";
+  };
+
   if (loading && products.length === 0)
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
@@ -474,6 +517,11 @@ export default function ProductList() {
       className="bg-white min-h-screen pb-16"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
+      <Seo
+        title={getSeoTitle()}
+        description={getSeoDescription()}
+        url={getSeoUrl()}
+      />
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px" }}>
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 py-5 text-[13px] text-gray-400 flex-wrap">

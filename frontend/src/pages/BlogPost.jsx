@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { STORAGE_URL } from "../config/api";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 const BlogPost = () => {
   const { id } = useParams();
@@ -102,11 +103,44 @@ const BlogPost = () => {
     { label: "Compléments alimentaires", slug: "complements-alimentaires" },
   ];
 
+  const seoDescription =
+    post.excerpt?.substring(0, 155) ||
+    post.content?.replace(/<[^>]*>/g, "").substring(0, 155) ||
+    `Découvrez notre article "${post.title}" sur le blog ParaSunshine.`;
+
   return (
     <div
       className="bg-[#fafaf8] min-h-screen"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
+      <Seo
+        title={post.title}
+        description={seoDescription}
+        image={post.image ? `${STORAGE_URL}/${post.image}` : undefined}
+        url={`/blog/${post.id}`}
+        type="article"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: post.title,
+          image: post.image ? `${STORAGE_URL}/${post.image}` : undefined,
+          datePublished: post.created_at,
+          dateModified: post.updated_at || post.created_at,
+          author: {
+            "@type": "Person",
+            name: post.author || "ParaSunshine",
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "ParaSunshine",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://www.parasunshine.tn/android-chrome-512x512.png",
+            },
+          },
+          description: seoDescription,
+        }}
+      />
       {/* ── Bouton retour en haut ── */}
       {showBackToTop && (
         <button
