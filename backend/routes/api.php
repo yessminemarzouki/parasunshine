@@ -37,6 +37,8 @@ use App\Http\Controllers\Api\HeroSlideController;
 use App\Http\Controllers\Api\Admin\AdminPromotionController;
 use App\Http\Controllers\Api\Admin\AdminShippingController;
 use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Api\SiteSettingsController;
+use App\Http\Controllers\Api\Admin\AdminSiteSettingsController;
 
 // ========================================
 // AUTHENTIFICATION (publiques)
@@ -152,6 +154,7 @@ Route::get('/blog', [AdminBlogController::class, 'publicIndex']);
 Route::get('/blog/{id}', [AdminBlogController::class, 'publicShow']);
 Route::get('/promo-section', [AdminPromoSectionController::class, 'public']);
 Route::get('/shipping-settings', [ShippingController::class, 'show']);
+Route::get('/site-settings', [SiteSettingsController::class, 'show']);
 Route::get('/quiz/solutions', [QuizController::class, 'solutions']);
 Route::get('/quiz/solutions/{slug}/questions', [QuizController::class, 'questions']);
 Route::middleware('throttle:20,1')->group(function () {
@@ -280,6 +283,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Livraison
     Route::get('/shipping-settings', [AdminShippingController::class, 'show']);
     Route::put('/shipping-settings', [AdminShippingController::class, 'update']);
+
+    // Informations du site (coordonnées, réseaux, légales)
+    Route::get('/site-settings', [AdminSiteSettingsController::class, 'show']);
+    Route::put('/site-settings', [AdminSiteSettingsController::class, 'update']);
 
     // Quiz — Solutions (parcours)
     Route::get('/quiz/solutions', [AdminQuizController::class, 'solutions']);
