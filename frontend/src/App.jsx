@@ -12,6 +12,7 @@ import { WishlistProvider } from "./context/WishlistContext";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
+import { CartNotificationProvider } from "./context/CartNotificationContext";
 import ScrollToTop from "./components/ScrollToTop";
 import GoogleCallback from "./pages/GoogleCallback";
 import FloatingQuizButton from "./components/FloatingQuizButton";
@@ -121,112 +122,120 @@ function App() {
       <WishlistProvider>
         <BrowserRouter>
           <NotificationProvider>
-            <ScrollToTop />
-            <LayoutWrapper>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/products" element={<ProductList />} />
-                  <Route path="/products/:slug" element={<ProductDetail />} />
-                  <Route path="coffrets" element={<BundleList />} />
-                  <Route path="coffrets/:slug" element={<BundleDetail />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route
-                    path="/order-confirmation/:orderId"
-                    element={<OrderConfirmation />}
-                  />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/account" element={<Account />} />
-                  <Route
-                    path="/account/orders/:orderId"
-                    element={<OrderDetail />}
-                  />
-                  <Route path="/favoris" element={<Wishlist />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/blog/:id" element={<BlogPost />} />
-                  <Route path="/quiz" element={<Quiz />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route
-                    path="/auth/google/callback"
-                    element={<GoogleCallback />}
-                  />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/mentions-legales" element={<LegalNotice />} />
-                  <Route
-                    path="/politique-confidentialite"
-                    element={<PrivacyPolicy />}
-                  />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/engagement" element={<Commitments />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/livraison" element={<Delivery />} />
-                  <Route path="/paiement" element={<HowToOrder />} />
-                  <Route path="/garantie" element={<Guarantee />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="orders" element={<AdminOrders />} />
-                    <Route path="products" element={<AdminProducts />} />
-                    <Route path="bundles" element={<AdminBundles />} />
+            <CartNotificationProvider>
+              <ScrollToTop />
+              <LayoutWrapper>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/products" element={<ProductList />} />
+                    <Route path="/products/:slug" element={<ProductDetail />} />
+                    <Route path="coffrets" element={<BundleList />} />
+                    <Route path="coffrets/:slug" element={<BundleDetail />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/checkout" element={<Checkout />} />
                     <Route
-                      path="bundle-categories"
-                      element={<AdminBundleCategories />}
+                      path="/order-confirmation/:orderId"
+                      element={<OrderConfirmation />}
                     />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/account" element={<Account />} />
                     <Route
-                      path="stock-requests"
-                      element={<AdminStockRequests />}
+                      path="/account/orders/:orderId"
+                      element={<OrderDetail />}
                     />
-                    <Route path="promo-codes" element={<AdminPromoCodes />} />
+                    <Route path="/favoris" element={<Wishlist />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:id" element={<BlogPost />} />
+                    <Route path="/quiz" element={<Quiz />} />
                     <Route
-                      path="homepage-videos"
-                      element={<AdminHomepageVideos />}
+                      path="/forgot-password"
+                      element={<ForgotPassword />}
                     />
-                    <Route path="users" element={<AdminUsers />} />
-                    <Route path="reviews" element={<AdminReviews />} />
-                    <Route path="contacts" element={<AdminContacts />} />
-                    <Route path="newsletter" element={<AdminNewsletter />} />
-                    <Route path="categories" element={<AdminCategories />} />
-                    <Route path="blog" element={<AdminBlog />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route
-                      path="hygiene-section"
-                      element={<AdminHygieneSection />}
+                      path="/auth/google/callback"
+                      element={<GoogleCallback />}
                     />
-                    <Route path="quiz" element={<AdminQuiz />} />
-                    <Route path="shipping" element={<AdminShipping />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/mentions-legales" element={<LegalNotice />} />
                     <Route
-                      path="category-showcase"
-                      element={<AdminCategoryShowcase />}
+                      path="/politique-confidentialite"
+                      element={<PrivacyPolicy />}
                     />
-                    <Route
-                      path="featured-section"
-                      element={<AdminFeaturedSection />}
-                    />
-                    <Route path="hero-slides" element={<AdminHeroSlides />} />
-                    <Route
-                      path="promotions"
-                      element={<AdminPromotionsLayout />}
-                    >
+                    <Route path="/about" element={<About />} />
+                    <Route path="/engagement" element={<Commitments />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/livraison" element={<Delivery />} />
+                    <Route path="/paiement" element={<HowToOrder />} />
+                    <Route path="/garantie" element={<Guarantee />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="orders" element={<AdminOrders />} />
+                      <Route path="products" element={<AdminProducts />} />
+                      <Route path="bundles" element={<AdminBundles />} />
                       <Route
-                        index
-                        element={<Navigate to="banniere" replace />}
+                        path="bundle-categories"
+                        element={<AdminBundleCategories />}
                       />
-                      <Route path="banniere" element={<AdminPromoBanner />} />
-                      <Route path="top-promo" element={<AdminPromoSection />} />
-                      <Route path="assistant" element={<AdminPromotions />} />
                       <Route
-                        path="campagnes"
-                        element={<AdminPromoCampaigns />}
+                        path="stock-requests"
+                        element={<AdminStockRequests />}
                       />
+                      <Route path="promo-codes" element={<AdminPromoCodes />} />
+                      <Route
+                        path="homepage-videos"
+                        element={<AdminHomepageVideos />}
+                      />
+                      <Route path="users" element={<AdminUsers />} />
+                      <Route path="reviews" element={<AdminReviews />} />
+                      <Route path="contacts" element={<AdminContacts />} />
+                      <Route path="newsletter" element={<AdminNewsletter />} />
+                      <Route path="categories" element={<AdminCategories />} />
+                      <Route path="blog" element={<AdminBlog />} />
+                      <Route
+                        path="hygiene-section"
+                        element={<AdminHygieneSection />}
+                      />
+                      <Route path="quiz" element={<AdminQuiz />} />
+                      <Route path="shipping" element={<AdminShipping />} />
+                      <Route
+                        path="category-showcase"
+                        element={<AdminCategoryShowcase />}
+                      />
+                      <Route
+                        path="featured-section"
+                        element={<AdminFeaturedSection />}
+                      />
+                      <Route path="hero-slides" element={<AdminHeroSlides />} />
+                      <Route
+                        path="promotions"
+                        element={<AdminPromotionsLayout />}
+                      >
+                        <Route
+                          index
+                          element={<Navigate to="banniere" replace />}
+                        />
+                        <Route path="banniere" element={<AdminPromoBanner />} />
+                        <Route
+                          path="top-promo"
+                          element={<AdminPromoSection />}
+                        />
+                        <Route path="assistant" element={<AdminPromotions />} />
+                        <Route
+                          path="campagnes"
+                          element={<AdminPromoCampaigns />}
+                        />
+                      </Route>
                     </Route>
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </LayoutWrapper>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </LayoutWrapper>
+            </CartNotificationProvider>
           </NotificationProvider>
         </BrowserRouter>
       </WishlistProvider>

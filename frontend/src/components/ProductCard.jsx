@@ -3,15 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { Heart, ShoppingCart, Bell, X, CheckCircle2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
-import CartNotification from "./CartNotification";
+import { useCartNotification } from "../context/CartNotificationContext";
 import { STORAGE_URL } from "../config/api";
 import api from "../services/api";
-
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
-  const [showNotification, setShowNotification] = useState(false);
+  const { showCartNotification } = useCartNotification();
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [notifyForm, setNotifyForm] = useState({
     first_name: "",
@@ -53,8 +52,7 @@ const ProductCard = ({ product }) => {
 
     if (product.stock > 0) {
       addToCart(product);
-      setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 5000);
+      showCartNotification(product, 1);
     }
   };
 
@@ -399,12 +397,6 @@ const ProductCard = ({ product }) => {
         </div>
       )}
 
-      <CartNotification
-        product={product}
-        quantity={1}
-        isVisible={showNotification}
-        onClose={() => setShowNotification(false)}
-      />
       <style>{`
         @keyframes bellRing {
           0%, 100% { transform: rotate(0deg); }
