@@ -2,9 +2,9 @@ import { Helmet } from "react-helmet-async";
 
 const SITE_URL = "https://www.parasunshine.tn";
 const SITE_NAME = "ParaSunshine";
-const DEFAULT_TITLE = "ParaSunshine - Votre Parapharmacie en Ligne";
+const DEFAULT_TITLE = "ParaSunshine - Parapharmacie en ligne en Tunisie";
 const DEFAULT_DESC =
-  "Parapharmacie en ligne en Tunisie - Produits de qualité, livraison rapide et paiement sécurisé.";
+  "ParaSunshine, votre parapharmacie en ligne en Tunisie : soins visage, solaire, capillaire, bébé & maman, hygiène. Produits 100% authentiques, livraison rapide.";
 const DEFAULT_IMAGE = `${SITE_URL}/android-chrome-512x512.png`;
 
 export default function Seo({
