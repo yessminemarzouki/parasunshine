@@ -61,4 +61,28 @@ class Category extends Model
     {
         return $this->belongsTo(Bundle::class);
     }
+
+    // ─── SEO : Accesseur pour breadcrumb complet ───
+    public function getFullPathAttribute(): string
+    {
+        $path = [$this->name];
+        $current = $this;
+
+        while ($current->parent_id && $current->parent) {
+            $parent = Category::find($current->parent_id);
+            if (!$parent) {
+                break;
+            }
+            array_unshift($path, $parent->name);
+            $current = $parent;
+        }
+
+        return implode(' > ', $path);
+    }
+
+    // ─── SEO : Scope pour ne récupérer que les catégories visibles ───
+    public function scopeVisible($query)
+    {
+        return $query->where('show_in_menu', true);
+    }
 }

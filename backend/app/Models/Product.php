@@ -51,6 +51,12 @@ class Product extends Model
     ];
 
     protected $casts = [
+     'rating'          => 'float',
+     'reviews_count'   => 'integer',
+     'price'           => 'float',
+     'promo_price'     => 'float',
+     'discount_percentage' => 'integer',
+     'stock'           => 'integer',
      'images'          => 'array',
      'is_featured'     => 'boolean',
      'is_promo'        => 'boolean',
