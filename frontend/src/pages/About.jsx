@@ -17,8 +17,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { getShippingSettings } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 export default function About() {
+  const { settings } = useSiteSettings();
   const [shipping, setShipping] = useState({
     free_shipping_enabled: false,
     free_shipping_threshold: null,
@@ -91,14 +93,10 @@ export default function About() {
   ];
 
   const contact = [
-    {
-      icon: MapPin,
-      label: "Adresse",
-      val: "Route Gremda Km3, en face Clinique Chams, Sfax, Tunisie",
-    },
-    { icon: Clock, label: "Horaires", val: "Lundi – Samedi : 9h – 20h" },
-    { icon: Phone, label: "Téléphone", val: "+216 94 169 416" },
-    { icon: Mail, label: "Email", val: "parasunshine25@gmail.com" },
+    { icon: MapPin, label: "Adresse", val: settings.address },
+    { icon: Clock, label: "Horaires", val: settings.opening_hours },
+    { icon: Phone, label: "Téléphone", val: settings.phone },
+    { icon: Mail, label: "Email", val: settings.email },
   ];
 
   return (

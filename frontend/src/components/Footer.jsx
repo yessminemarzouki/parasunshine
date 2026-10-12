@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { subscribeNewsletter } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 import {
   MapPin,
   Phone,
@@ -18,6 +19,7 @@ export default function Footer() {
   const [alreadySubscribed, setAlreadySubscribed] = useState(false);
   const [error, setError] = useState(null);
   const [userAlreadyOptedIn, setUserAlreadyOptedIn] = useState(false);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -320,20 +322,20 @@ export default function Footer() {
                 {[
                   {
                     icon: MapPin,
-                    text: "Route Gremda Km3, en face Clinique Chams, Sfax, Tunisie",
+                    text: settings.address,
                     href: null,
                   },
                   {
                     icon: Phone,
-                    text: "+216 94 169 416",
-                    href: "tel:+21694169416",
+                    text: settings.phone,
+                    href: `tel:${(settings.phone || "").replace(/\s/g, "")}`,
                   },
                   {
                     icon: Mail,
-                    text: "parasunshine25@gmail.com",
-                    href: "mailto:parasunshine25@gmail.com",
+                    text: settings.email,
+                    href: `mailto:${settings.email}`,
                   },
-                  { icon: Clock, text: "Lun – Sam : 9h – 20h", href: null },
+                  { icon: Clock, text: settings.opening_hours, href: null },
                 ].map(({ icon: Icon, text, href }) => (
                   <div key={text} className="flex items-start gap-3">
                     <Icon
@@ -361,27 +363,29 @@ export default function Footer() {
               <div className="flex gap-2.5">
                 {[
                   {
-                    href: "https://www.facebook.com/ParaSunShine",
+                    href: settings.facebook_url,
                     icon: Facebook,
                     label: "Facebook",
                   },
                   {
-                    href: "https://www.instagram.com/para_sunshine_tunisie",
+                    href: settings.instagram_url,
                     icon: Instagram,
                     label: "Instagram",
                   },
-                ].map(({ href, icon: Icon, label }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-200 text-gray-500 hover:border-[#1a5242] hover:text-white hover:bg-[#1a5242] transition-all duration-200"
-                    aria-label={label}
-                  >
-                    <Icon size={17} />
-                  </a>
-                ))}
+                ]
+                  .filter(({ href }) => !!href)
+                  .map(({ href, icon: Icon, label }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-200 text-gray-500 hover:border-[#1a5242] hover:text-white hover:bg-[#1a5242] transition-all duration-200"
+                      aria-label={label}
+                    >
+                      <Icon size={17} />
+                    </a>
+                  ))}
               </div>
             </div>
           </div>

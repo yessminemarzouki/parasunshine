@@ -313,4 +313,33 @@ export const updateReview = async (id, data) => {
   return response.data;
 };
 
+// ── INFORMATIONS DU SITE (coordonnées, réseaux, légales) ──
+let siteSettingsCache = null;
+let siteSettingsPromise = null;
+
+export const getSiteSettings = async () => {
+  if (siteSettingsCache) return siteSettingsCache;
+  if (siteSettingsPromise) return siteSettingsPromise;
+
+  siteSettingsPromise = api
+    .get("/site-settings")
+    .then((response) => {
+      siteSettingsCache = response.data;
+      siteSettingsPromise = null;
+      return response.data;
+    })
+    .catch((error) => {
+      siteSettingsPromise = null;
+      throw error;
+    });
+
+  return siteSettingsPromise;
+};
+
+// Invalider le cache (appelé après une modif admin)
+export const invalidateSiteSettingsCache = () => {
+  siteSettingsCache = null;
+  siteSettingsPromise = null;
+};
+
 export default api;

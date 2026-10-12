@@ -14,11 +14,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { sendContact } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const INPUT_CLS =
   "w-full h-10 px-3 border border-gray-200 rounded-xl text-[13.5px] text-gray-800 outline-none focus:border-[#1a5242] focus:ring-2 focus:ring-[#1a5242]/10 transition-all bg-white placeholder:text-gray-400";
 
 export default function Contact() {
+  const { settings } = useSiteSettings();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -165,26 +167,26 @@ export default function Contact() {
                 {
                   icon: MapPin,
                   title: "Adresse",
-                  main: "Route Gremda Km3, en face Clinique Chams",
-                  sub: "Sfax, Tunisie",
+                  main: settings.address,
+                  sub: null,
                 },
                 {
                   icon: Phone,
                   title: "Téléphone",
-                  main: "+216 94 169 416",
-                  sub: "Lun–Sam : 9h – 20h",
+                  main: settings.phone,
+                  sub: settings.opening_hours,
                 },
                 {
                   icon: Mail,
                   title: "Email",
-                  main: "parasunshine25@gmail.com",
+                  main: settings.email,
                   sub: "Réponse sous 24h",
                 },
                 {
                   icon: Clock,
                   title: "Horaires",
-                  main: "Lundi – Samedi",
-                  sub: "9h – 20h",
+                  main: settings.opening_hours,
+                  sub: null,
                 },
               ].map(({ icon: Icon, title, main, sub }) => (
                 <div key={title} className="flex items-start gap-3">
@@ -216,30 +218,36 @@ export default function Contact() {
                 Suivez-nous
               </p>
               <div className="flex gap-2.5">
-                <a
-                  href="https://www.facebook.com/ParaSunShine"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
-                >
-                  <Facebook size={17} />
-                </a>
-                <a
-                  href="https://www.instagram.com/para_sunshine_tunisie"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
-                >
-                  <Instagram size={17} />
-                </a>
-                <a
-                  href="https://wa.me/21624702829"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
-                >
-                  <MessageSquare size={17} />
-                </a>
+                {settings.facebook_url && (
+                  <a
+                    href={settings.facebook_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
+                  >
+                    <Facebook size={17} />
+                  </a>
+                )}
+                {settings.instagram_url && (
+                  <a
+                    href={settings.instagram_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
+                  >
+                    <Instagram size={17} />
+                  </a>
+                )}
+                {settings.whatsapp && (
+                  <a
+                    href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#1a5242] hover:text-[#1a5242] transition-colors"
+                  >
+                    <MessageSquare size={17} />
+                  </a>
+                )}
               </div>
             </div>
           </div>

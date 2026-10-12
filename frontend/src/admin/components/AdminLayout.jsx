@@ -26,6 +26,7 @@ import {
   Percent,
   Video,
   Image,
+  Building2,
 } from "lucide-react";
 import {
   getAdminUser,
@@ -56,6 +57,11 @@ const navItems = [
   { label: "Vidéos accueil", icon: Video, to: "/admin/homepage-videos" },
   { label: "Carrousel", icon: Image, to: "/admin/hero-slides" },
   { label: "Livraison", icon: Truck, to: "/admin/shipping" },
+  {
+    label: "Informations du site",
+    icon: Building2,
+    to: "/admin/site-settings",
+  },
   { label: "Bandeau Catégories", icon: Layers, to: "/admin/hygiene-section" },
   {
     label: "Catégories en vedette",

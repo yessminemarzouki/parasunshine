@@ -436,6 +436,17 @@ export const updateShippingSettings = async (data) => {
   const response = await adminApi.put("/admin/shipping-settings", data);
   return response.data;
 };
+
+// ── INFORMATIONS DU SITE ──
+export const getSiteSettingsAdmin = async () => {
+  const response = await adminApi.get("/admin/site-settings");
+  return response.data;
+};
+
+export const updateSiteSettings = async (data) => {
+  const response = await adminApi.put("/admin/site-settings", data);
+  return response.data;
+};
 export const bulkDeleteProducts = async (ids) => {
   const response = await adminApi.post("/admin/products/bulk-destroy", { ids });
   return response.data;
