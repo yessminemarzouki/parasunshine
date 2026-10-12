@@ -22,9 +22,14 @@ import {
   TrendingUp,
 } from "lucide-react";
 import ProductCard from "../components/ProductCard";
+import { lazy, Suspense } from "react";
+
+// Hero : CRUCIAL pour Rendertron → import direct (pas lazy)
 import HeroCarousel from "../components/HeroCarousel";
-import HygieneSection from "../components/HygieneSection";
-import HomeVideoSection from "../components/HomeVideoSection";
+
+// Sections du bas : lazy-loaded (Puppeteer n'a pas besoin de les attendre)
+const HygieneSection = lazy(() => import("../components/HygieneSection"));
+const HomeVideoSection = lazy(() => import("../components/HomeVideoSection"));
 import Seo from "../components/Seo";
 
 const CONCERNS = [
