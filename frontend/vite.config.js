@@ -24,7 +24,6 @@ export default defineConfig({
           // ─────────────────────────────────────────
           if (!id.includes("node_modules")) {
             if (id.includes("/admin/")) return "admin";
-            if (id.includes("/pages/ProductDetail")) return "page-product";
             if (id.includes("/pages/Blog")) return "page-blog";
             return undefined;
           }
