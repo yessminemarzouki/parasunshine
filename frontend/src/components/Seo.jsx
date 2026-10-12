@@ -39,9 +39,15 @@ export default function Seo({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {jsonLd && (
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      )}
+      {Array.isArray(jsonLd)
+        ? jsonLd.map((ld, i) => (
+            <script key={i} type="application/ld+json">
+              {JSON.stringify(ld)}
+            </script>
+          ))
+        : jsonLd && (
+            <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+          )}
     </Helmet>
   );
 }

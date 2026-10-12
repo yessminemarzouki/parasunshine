@@ -355,18 +355,74 @@ export default function Home() {
         title="Parapharmacie en ligne en Tunisie"
         description="Découvrez ParaSunshine, votre parapharmacie en ligne à Sfax et partout en Tunisie : soins visage, solaire, capillaire, bébé & maman, hygiène, compléments alimentaires. Livraison rapide 24-48h."
         url="/"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "ParaSunshine",
-          url: "https://www.parasunshine.tn",
-          potentialAction: {
-            "@type": "SearchAction",
-            target:
-              "https://www.parasunshine.tn/products?search={search_term_string}",
-            "query-input": "required name=search_term_string",
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "ParaSunshine",
+            url: "https://www.parasunshine.tn",
+            potentialAction: {
+              "@type": "SearchAction",
+              target:
+                "https://www.parasunshine.tn/products?search={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
           },
-        }}
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "ParaSunshine",
+            url: "https://www.parasunshine.tn",
+            logo: "https://www.parasunshine.tn/android-chrome-512x512.png",
+            sameAs: [
+              "https://www.facebook.com/ParaSunShine",
+              "https://www.instagram.com/para_sunshine_tunisie",
+            ],
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+21694169416",
+              contactType: "customer service",
+              areaServed: "TN",
+              availableLanguage: ["French", "Arabic"],
+            },
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Route Gremda Km3, en face Clinique Chams",
+              addressLocality: "Sfax",
+              addressCountry: "TN",
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": "https://www.parasunshine.tn/#store",
+            name: "ParaSunshine",
+            image: "https://www.parasunshine.tn/android-chrome-512x512.png",
+            telephone: "+21694169416",
+            priceRange: "DT",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Route Gremda Km3",
+              addressLocality: "Sfax",
+              addressCountry: "TN",
+            },
+            openingHoursSpecification: [
+              {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                ],
+                opens: "09:00",
+                closes: "20:00",
+              },
+            ],
+          },
+        ]}
       />
       {/* ── Hero ── */}
       <HeroCarousel />

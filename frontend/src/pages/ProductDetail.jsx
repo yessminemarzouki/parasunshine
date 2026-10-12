@@ -620,6 +620,80 @@ export default function ProductDetail() {
     },
   ];
 
+  // ─── SEO : Breadcrumb + FAQ + Reviews ───
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: "https://www.parasunshine.tn/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Produits",
+        item: "https://www.parasunshine.tn/products",
+      },
+      ...(product.category
+        ? [
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: product.category.name,
+              item: `https://www.parasunshine.tn/products?category=${product.category.slug}`,
+            },
+          ]
+        : []),
+      {
+        "@type": "ListItem",
+        position: product.category ? 4 : 3,
+        name: product.name,
+      },
+    ],
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.a,
+      },
+    })),
+  };
+
+  const reviewsJsonLd =
+    reviews && reviews.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          review: reviews.slice(0, 10).map((r) => ({
+            "@type": "Review",
+            author: {
+              "@type": "Person",
+              name: r.customer_name || "Client ParaSunshine",
+            },
+            datePublished: r.created_at
+              ? new Date(r.created_at).toISOString().split("T")[0]
+              : undefined,
+            reviewBody: r.comment || undefined,
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          })),
+        }
+      : null;
+
   return (
     <div
       className="bg-gray-50 min-h-screen"
@@ -631,7 +705,12 @@ export default function ProductDetail() {
         image={product.image ? `${STORAGE_URL}/${product.image}` : undefined}
         url={`/products/${product.slug}`}
         type="product"
-        jsonLd={productJsonLd}
+        jsonLd={[
+          productJsonLd,
+          breadcrumbJsonLd,
+          faqJsonLd,
+          ...(reviewsJsonLd ? [reviewsJsonLd] : []),
+        ]}
       />
       <div
         style={{ maxWidth: 1330, margin: "0 auto", padding: "24px 20px 60px" }}
