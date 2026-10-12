@@ -197,10 +197,35 @@ export const saveAbandonedCart = async (data) => {
   return response.data;
 };
 
-// ── PARAMÈTRES DE LIVRAISON ──
+// ── PARAMÈTRES DE LIVRAISON (avec cache + déduplication) ──
+let shippingSettingsCache = null;
+let shippingSettingsPromise = null;
+
 export const getShippingSettings = async () => {
-  const response = await api.get("/shipping-settings");
-  return response.data;
+  // 1. Retourne le cache s'il existe
+  if (shippingSettingsCache) {
+    return shippingSettingsCache;
+  }
+
+  // 2. Déduplique les appels simultanés
+  if (shippingSettingsPromise) {
+    return shippingSettingsPromise;
+  }
+
+  // 3. Premier appel : on lance la requête
+  shippingSettingsPromise = api
+    .get("/shipping-settings")
+    .then((response) => {
+      shippingSettingsCache = response.data;
+      shippingSettingsPromise = null;
+      return response.data;
+    })
+    .catch((error) => {
+      shippingSettingsPromise = null;
+      throw error;
+    });
+
+  return shippingSettingsPromise;
 };
 export const getCategoryShowcase = async () => {
   const response = await api.get("/category-showcase");
