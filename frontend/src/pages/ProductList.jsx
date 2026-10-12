@@ -521,6 +521,25 @@ export default function ProductList() {
         title={getSeoTitle()}
         description={getSeoDescription()}
         url={getSeoUrl()}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: getSeoTitle(),
+          description: getSeoDescription(),
+          url: `https://www.parasunshine.tn${getSeoUrl()}`,
+          ...(products.length > 0 && {
+            mainEntity: {
+              "@type": "ItemList",
+              numberOfItems: totalProducts,
+              itemListElement: products.slice(0, 10).map((p, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                url: `https://www.parasunshine.tn/products/${p.slug}`,
+                name: p.name,
+              })),
+            },
+          }),
+        }}
       />
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 24px" }}>
         {/* Breadcrumb */}

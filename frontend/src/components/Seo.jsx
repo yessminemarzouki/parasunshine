@@ -18,7 +18,33 @@ export default function Seo({
 }) {
   const fullTitle = title ? `${title} - ${SITE_NAME}` : DEFAULT_TITLE;
   const canonical = url ? `${SITE_URL}${url}` : SITE_URL;
-
+  // Après const canonical = ...
+  const breadcrumb =
+    url?.startsWith("/products") && url?.includes("category=")
+      ? {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Accueil",
+              item: SITE_URL,
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Produits",
+              item: `${SITE_URL}/products`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: title || "Catégorie",
+            },
+          ],
+        }
+      : null;
   return (
     <Helmet>
       <title>{fullTitle}</title>
@@ -39,15 +65,18 @@ export default function Seo({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {Array.isArray(jsonLd)
-        ? jsonLd.map((ld, i) => (
-            <script key={i} type="application/ld+json">
-              {JSON.stringify(ld)}
-            </script>
-          ))
-        : jsonLd && (
-            <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-          )}
+      {(() => {
+        const schemas = [];
+        if (Array.isArray(jsonLd)) schemas.push(...jsonLd);
+        else if (jsonLd) schemas.push(jsonLd);
+        if (breadcrumb) schemas.push(breadcrumb);
+
+        return schemas.map((ld, i) => (
+          <script key={i} type="application/ld+json">
+            {JSON.stringify(ld)}
+          </script>
+        ));
+      })()}
     </Helmet>
   );
 }
