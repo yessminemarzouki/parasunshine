@@ -297,8 +297,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Category Showcase
     Route::get('/category-showcase', [AdminCategoryShowcaseController::class, 'index']);
     Route::post('/category-showcase', [AdminCategoryShowcaseController::class, 'store']);
+    Route::post('/category-showcase/reorder', [AdminCategoryShowcaseController::class, 'reorder']); // ← AVANT {categoryShowcase}
     Route::post('/category-showcase/{categoryShowcase}', [AdminCategoryShowcaseController::class, 'update']);
-    Route::post('/category-showcase/reorder', [AdminCategoryShowcaseController::class, 'reorder']);
 
     // Featured Section
     Route::get('/featured-section', [AdminFeaturedSectionController::class, 'show']);

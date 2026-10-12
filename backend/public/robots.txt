@@ -1,15 +1,19 @@
-# Robots.txt pour ParaSunshine
+# ═══════════════════════════════════════════════════════════════
+# robots.txt pour ParaSunshine
 # Site : https://www.parasunshine.tn
+# ═══════════════════════════════════════════════════════════════
 
+# ── Tous les robots ──
 User-agent: *
 Allow: /
 
-# Pages privées / admin — NE PAS indexer
+# ── Pages privées / admin — NE PAS indexer ──
 Disallow: /admin/
 Disallow: /admin
 Disallow: /cart
 Disallow: /checkout
 Disallow: /account
+Disallow: /account/
 Disallow: /login
 Disallow: /register
 Disallow: /wishlist/
@@ -18,7 +22,23 @@ Disallow: /order-confirmation
 Disallow: /orders/
 Disallow: /api/
 
-# Bloquer les robots agressifs
+# ── Filtres qui créent du duplicate content ──
+# ⚠️ On AUTORISE ?category= car ce sont de vraies pages SEO
+# ⚠️ On AUTORISE ?brand= car ce sont de vraies pages SEO
+# ⚠️ On AUTORISE ?promo=true car c'est une vraie page SEO
+Disallow: /*?sort=
+Disallow: /*?min_price=
+Disallow: /*?max_price=
+Disallow: /*?page=
+Disallow: /*&sort=
+Disallow: /*&page=
+
+# ── Sitemap ──
+Sitemap: https://www.parasunshine.tn/sitemap.xml
+
+# ═══════════════════════════════════════════════════════════════
+# Bots agressifs (crawl excessif, pas de trafic) — BLOQUÉS
+# ═══════════════════════════════════════════════════════════════
 User-agent: AhrefsBot
 Disallow: /
 
@@ -31,5 +51,35 @@ Disallow: /
 User-agent: DotBot
 Disallow: /
 
-# Sitemap
-Sitemap: https://www.parasunshine.tn/sitemap.xml
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+# ═══════════════════════════════════════════════════════════════
+# Bots légitimes — AUTORISÉS explicitement
+# ═══════════════════════════════════════════════════════════════
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
