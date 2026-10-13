@@ -108,10 +108,10 @@ export default function ProductList() {
           setShowFeatured(s.showFeatured ?? false);
           setSortBy(s.sortBy ?? "created_at");
           setCurrentPage(s.currentPage ?? 1);
-          sessionStorage.removeItem(SESSION_KEY);
-          // Flag déjà consommé
         }
       } catch {}
+      // ✅ Toujours supprimer le flag après lecture
+      sessionStorage.removeItem(SESSION_KEY);
     }
     setReadyToFetch(true);
     fetchFiltersData();
@@ -173,33 +173,37 @@ export default function ProductList() {
     setShowPromo(searchParams.get("promo") === "true");
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!readyToFetch) return;
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, readyToFetch]);
-  // Revient systématiquement à la page 1 dès qu'un filtre change, remonte
-  // en haut de page, et affiche un état de chargement — évite de rester
-  // bloqué sur une page qui n'existe plus après un filtrage (ex: page 3
-  // alors que le nouveau filtre ne donne que 1 page de résultats).
+  // ═══════════════════════════════════════════════════════════════
+  // ✅ UN SEUL useEffect qui gère TOUT : reset page + fetch
+  //    Il se redéclenche à CHAQUE changement de filtre, SANS exception
+  // ═══════════════════════════════════════════════════════════════
   const isFirstFilterRun = useRef(true);
   useEffect(() => {
+    if (!readyToFetch) return;
+
+    // Premier run : on laisse le fetch initial se faire
     if (isFirstFilterRun.current) {
       isFirstFilterRun.current = false;
+      fetchProducts();
       return;
     }
-    // Ne pas reset la page si on est en train de restaurer un état
+
+    // Si on restaure un état depuis sessionStorage → pas de fetch
     const isRestoring = sessionStorage.getItem(SESSION_KEY);
     if (isRestoring) return;
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Reset à la page 1 si on était sur une autre page
     if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchProducts();
+      setCurrentPage(1); // ← va déclencher ce useEffect à nouveau
+      return;
     }
+
+    // Scroll top + fetch
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    readyToFetch,
     selectedCategory,
     selectedBrand,
     searchQuery,
@@ -208,6 +212,7 @@ export default function ProductList() {
     showBestseller,
     showFeatured,
     sortBy,
+    currentPage,
   ]);
 
   useEffect(() => {
@@ -289,6 +294,7 @@ export default function ProductList() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      setProducts([]); // ✅ Vider les anciens produits → overlay loader bien visible
       const params = new URLSearchParams();
       if (selectedCategory) params.append("category", selectedCategory);
       if (selectedBrand) params.append("brand", selectedBrand);
