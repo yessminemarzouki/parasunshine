@@ -62,10 +62,6 @@ class AdminUserController extends Controller
             'addresses',
         ]);
 
-        // ✅ Force l'accessor phone_history dans la réponse JSON
-        // (nécessaire car Laravel ignore $appends pour les vraies colonnes BDD)
-        $user->setAttribute('phone_history', $user->phone_history);
-
         // Un coffret n'est PAS en rupture au seul vu de son stock
         $user->wishlists->each(function ($w) {
             if ($w->bundle) {
@@ -73,7 +69,11 @@ class AdminUserController extends Controller
             }
         });
 
-        return response()->json($user);
+        // ✅ Construire la réponse manuellement pour garantir phone_history
+        $data = $user->toArray();
+        $data['phone_history'] = $user->phone_history;   // ← injecté APRÈS toArray()
+
+        return response()->json($data);
     }
 
     public function destroy(User $user)
