@@ -19,33 +19,23 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // ─────────────────────────────────────────
-          // 1. Code applicatif (src/)
-          // ─────────────────────────────────────────
-          if (!id.includes("node_modules")) {
-            if (id.includes("/admin/")) return "admin";
-            if (id.includes("/pages/Blog")) return "page-blog";
+          // Vendors uniquement — les pages restent dans le chunk par défaut
+          if (id.includes("node_modules")) {
+            if (id.includes("@tiptap")) return "tiptap";
+            if (id.includes("xlsx")) return "xlsx";
+            if (id.includes("react-router")) return "react-router";
+            if (id.includes("react-dom")) return "react-vendor";
+            if (id.includes("/react/")) return "react-vendor";
+            if (id.includes("lucide-react")) return "icons";
+            if (id.includes("axios")) return "axios";
+            if (id.includes("framer-motion")) return "motion";
             return undefined;
           }
 
-          // ─────────────────────────────────────────
-          // 2. Vendors — ordre important :
-          //    du plus spécifique au plus général
-          // ─────────────────────────────────────────
-          if (id.includes("@tiptap")) return "tiptap";
-          if (id.includes("xlsx")) return "xlsx";
-          if (id.includes("react-router")) return "react-router";
-          if (id.includes("react-dom")) return "react-vendor";
-          if (id.includes("/react/")) return "react-vendor";
-          if (id.includes("lucide-react")) return "icons";
-          if (id.includes("axios")) return "axios";
-          if (id.includes("framer-motion")) return "motion";
+          // Admin séparé
+          if (id.includes("/admin/")) return "admin";
 
-          // ─────────────────────────────────────────
-          // 3. Pas de catch-all "vendor" pour éviter les cycles.
-          //    Les modules non classifiés restent dans le chunk
-          //    par défaut de Vite (pas de dépendance circulaire).
-          // ─────────────────────────────────────────
+          // Pas de chunk par page
           return undefined;
         },
       },
