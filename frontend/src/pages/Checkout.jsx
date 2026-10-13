@@ -244,15 +244,15 @@ export default function Checkout() {
     setLoading(true);
     try {
       let shippingAddress;
-      let shippingPhone;
+      // ✅ TOUJOURS utiliser le téléphone saisi dans le formulaire
+      // (l'utilisateur peut changer de numéro même en utilisant une adresse enregistrée)
+      const shippingPhone = (formData.phone || "").trim();
 
       if (!useNewAddress && selectedAddressId) {
         const addr = savedAddresses.find((a) => a.id === selectedAddressId);
         shippingAddress = getShippingAddressString(addr);
-        shippingPhone = addr.phone;
       } else {
         shippingAddress = `${formData.address}, ${formData.delegation}, ${formData.governorate}${formData.postalCode ? " " + formData.postalCode : ""}`;
-        shippingPhone = formData.phone;
       }
 
       const orderData = {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -14,44 +15,71 @@ class User extends Authenticatable
     use CanResetPassword;
 
     protected $fillable = [
-         'name',
-         'first_name',
-         'last_name',
-         'email',
-         'password',
-         'phone',
-         'phone_history',
-         'role',
-         'google_id',
-         'birthdate',
-         'civility',
-         'newsletter_opt_in',
-         'last_seen_orders_at',
-         'last_seen_users_at',
-         'last_seen_reviews_at',
-         'last_seen_contacts_at',
-         'last_seen_newsletter_at',
-         'last_seen_stock_at',
-     ];
+        'name',
+        'first_name',
+        'last_name',
+        'email',
+        'password',
+        'phone',
+        'phone_history',
+        'role',
+        'google_id',
+        'birthdate',
+        'civility',
+        'newsletter_opt_in',
+        'last_seen_orders_at',
+        'last_seen_users_at',
+        'last_seen_reviews_at',
+        'last_seen_contacts_at',
+        'last_seen_newsletter_at',
+        'last_seen_stock_at',
+    ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-
     protected $casts = [
-         'email_verified_at'       => 'datetime',
-         'password'                => 'hashed',
-         'newsletter_opt_in'       => 'boolean',
-         'phone_history'           => 'array',
-         'last_seen_orders_at'     => 'datetime',
-         'last_seen_users_at'      => 'datetime',
-         'last_seen_reviews_at'    => 'datetime',
-         'last_seen_contacts_at'   => 'datetime',
-         'last_seen_newsletter_at' => 'datetime',
-         'last_seen_stock_at'      => 'datetime',
-     ];
+        'email_verified_at'       => 'datetime',
+        'password'                => 'hashed',
+        'newsletter_opt_in'       => 'boolean',
+        'last_seen_orders_at'     => 'datetime',
+        'last_seen_users_at'      => 'datetime',
+        'last_seen_reviews_at'    => 'datetime',
+        'last_seen_contacts_at'   => 'datetime',
+        'last_seen_newsletter_at' => 'datetime',
+        'last_seen_stock_at'      => 'datetime',
+    ];
+
+    /**
+     * phone_history : toujours un array, jamais null.
+     * (évite l'erreur "Cannot read length of null" côté admin)
+     */
+    protected function phoneHistory(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_array($value)) {
+                    return $value;
+                }
+                if (is_string($value) && $value !== '') {
+                    $decoded = json_decode($value, true);
+                    return is_array($decoded) ? $decoded : [];
+                }
+                return [];
+            },
+            set: function ($value) {
+                if (is_array($value)) {
+                    return json_encode(array_values($value));
+                }
+                if (is_string($value)) {
+                    return $value;
+                }
+                return json_encode([]);
+            },
+        );
+    }
 
     public function orders()
     {
@@ -72,6 +100,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(AbandonedCart::class);
     }
+
     public function addresses()
     {
         return $this->hasMany(Address::class);
@@ -90,6 +119,9 @@ class User extends Authenticatable
         }
 
         $history = $this->phone_history ?? [];
+        if (!is_array($history)) {
+            $history = [];
+        }
 
         // Ajoute tous les anciens numéros à l'historique s'ils n'y sont pas
         if ($this->phone && !in_array($this->phone, $history, true)) {

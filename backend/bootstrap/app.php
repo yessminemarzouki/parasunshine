@@ -1,5 +1,18 @@
 <?php
 
+// ✅ FIX : Forcer le répertoire temporaire vers storage/framework/tmp
+// Sans ce fix, tempnam() échoue pendant la compilation Blade des emails (erreur 500)
+$tmpDir = __DIR__ . '/../storage/framework/tmp';
+if (!is_dir($tmpDir)) {
+    @mkdir($tmpDir, 0775, true);
+}
+if (is_writable($tmpDir)) {
+    putenv("TMPDIR={$tmpDir}");
+    putenv("TMP={$tmpDir}");
+    putenv("TEMP={$tmpDir}");
+    ini_set('sys_temp_dir', $tmpDir);
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -38,6 +51,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
+
+        // 🆕 Ne jamais rediriger les routes API (renvoyer 401 JSON)
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null; // null = pas de redirect → renvoie 401
+            }
+            return route('login');
+        });
 
         // 🆕 AJOUTER SECURITY HEADERS ET SANITIZATION AUX ROUTES API
         $middleware->api(append: [
