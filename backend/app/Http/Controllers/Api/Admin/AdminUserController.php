@@ -62,13 +62,11 @@ class AdminUserController extends Controller
             'addresses',
         ]);
 
-        // Renvoie aussi l'historique des numéros de téléphone
+        // ✅ Force l'accessor phone_history dans la réponse JSON
+        // (nécessaire car Laravel ignore $appends pour les vraies colonnes BDD)
+        $user->setAttribute('phone_history', $user->phone_history);
 
-
-        // Un coffret n'est PAS en rupture au seul vu de son stock — sa
-        // disponibilité dépend de l'accesseur is_available (voir Bundle::
-        // getIsAvailableAttribute). On le calcule ici pour que la fiche
-        // client affiche le même statut que le site public.
+        // Un coffret n'est PAS en rupture au seul vu de son stock
         $user->wishlists->each(function ($w) {
             if ($w->bundle) {
                 $w->bundle->is_available = $w->bundle->is_available;
