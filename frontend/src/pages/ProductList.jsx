@@ -92,10 +92,10 @@ export default function ProductList() {
   // ── Restauration au montage ──
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
+
     if (saved) {
       try {
         const s = JSON.parse(saved);
-        // Ne restaure que si on revient d'une fiche produit (flag dédié)
         if (s.returnFromDetail) {
           setSelectedCategory(s.selectedCategory ?? "");
           setSelectedBrand(s.selectedBrand ?? "");
@@ -110,38 +110,19 @@ export default function ProductList() {
           setCurrentPage(s.currentPage ?? 1);
         }
       } catch {}
-      // ✅ Toujours supprimer le flag après lecture
-      sessionStorage.removeItem(SESSION_KEY);
     }
+
+    // ✅ CRUCIAL : supprimer SYSTÉMATIQUEMENT la clé, qu'on l'ait utilisée ou non
+    sessionStorage.removeItem(SESSION_KEY);
+
     setReadyToFetch(true);
     fetchFiltersData();
   }, []);
 
   // ── Sauvegarde avant démontage (clic sur fiche produit) ──
-  useEffect(() => {
-    return () => {
-      // Quand l'utilisateur quitte la page (clic fiche produit),
-      // on sauvegarde tout l'état pour pouvoir le restaurer au retour.
-      try {
-        const state = {
-          selectedCategory,
-          selectedBrand,
-          searchQuery,
-          minPrice,
-          maxPrice,
-          showPromo,
-          showNew,
-          showBestseller,
-          showFeatured,
-          sortBy,
-          currentPage,
-          returnFromDetail: true,
-        };
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
-      } catch {}
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
+  // ⚠️ Utilise des refs pour toujours avoir la dernière valeur au démontage
+  const stateRef = useRef({});
+  stateRef.current = {
     selectedCategory,
     selectedBrand,
     searchQuery,
@@ -153,13 +134,19 @@ export default function ProductList() {
     showFeatured,
     sortBy,
     currentPage,
-  ]);
+  };
 
   useEffect(() => {
-    // Ne synchronise depuis l'URL que si on n'est PAS en train de restaurer
-    const isRestoring = sessionStorage.getItem(SESSION_KEY);
-    if (isRestoring) return;
+    return () => {
+      try {
+        const state = { ...stateRef.current, returnFromDetail: true };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+      } catch {}
+    };
+  }, []);
 
+  // ✅ Synchronise TOUJOURS le state depuis l'URL (source de vérité unique)
+  useEffect(() => {
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
     const search = searchParams.get("search") || "";
@@ -177,24 +164,16 @@ export default function ProductList() {
   // ✅ UN SEUL useEffect qui gère TOUT : reset page + fetch
   //    Il se redéclenche à CHAQUE changement de filtre, SANS exception
   // ═══════════════════════════════════════════════════════════════
-  const isFirstFilterRun = useRef(true);
   useEffect(() => {
     if (!readyToFetch) return;
 
-    // Premier run : on laisse le fetch initial se faire
-    if (isFirstFilterRun.current) {
-      isFirstFilterRun.current = false;
-      fetchProducts();
-      return;
-    }
-
-    // Si on restaure un état depuis sessionStorage → pas de fetch
+    // Si on est en train de restaurer un état → pas de fetch (l'état va se restaurer)
     const isRestoring = sessionStorage.getItem(SESSION_KEY);
     if (isRestoring) return;
 
-    // Reset à la page 1 si on était sur une autre page
+    // Reset à la page 1 si on était sur une autre page → va redéclencher ce useEffect
     if (currentPage !== 1) {
-      setCurrentPage(1); // ← va déclencher ce useEffect à nouveau
+      setCurrentPage(1);
       return;
     }
 
