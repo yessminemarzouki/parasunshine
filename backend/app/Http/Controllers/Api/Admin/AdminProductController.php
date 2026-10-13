@@ -67,7 +67,7 @@ class AdminProductController extends Controller
      * @param  string  $suffix     Suffixe (ex: 'galerie-0', 'couleur-rouge')
      * @return string  Chemin relatif (ex: 'products/creme-avene-a3f2.webp')
      */
-    private function storeImageWithSlug($file, string $folder, string $name, ?string $reference = null, string $suffix = ''): string
+    private function storeImageWithSlug($file, string $folder, string $name, ?string $reference = null, string $suffix = ''): ?string
     {
         $baseName = $this->buildImageFilename($name, $reference, $suffix);
 
@@ -80,14 +80,36 @@ class AdminProductController extends Controller
             $filename = $baseName . '.webp';
             $fullPath = $folder . '/' . $filename;
 
-            Storage::disk('public')->put($fullPath, (string) $optimized);
+            $saved = Storage::disk('public')->put($fullPath, (string) $optimized);
+
+            if (!$saved) {
+                \Illuminate\Support\Facades\Log::error("❌ storeImageWithSlug: put() échoué", [
+                    'path' => $fullPath,
+                    'size' => strlen((string) $optimized),
+                    'disk_writable' => is_writable(storage_path('app/public/' . $folder)),
+                ]);
+                return null;
+            }
 
             return $fullPath;
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("❌ storeImageWithSlug exception: " . $e->getMessage());
+
             // Fallback : store classique si l'optimisation échoue
-            $ext = $file->getClientOriginalExtension() ?: 'jpg';
-            $filename = $baseName . '.' . $ext;
-            return $file->storeAs($folder, $filename, 'public');
+            try {
+                $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                $filename = $baseName . '.' . $ext;
+                $stored = $file->storeAs($folder, $filename, 'public');
+
+                if (!$stored) {
+                    \Illuminate\Support\Facades\Log::error("❌ fallback storeAs a échoué aussi");
+                    return null;
+                }
+                return $stored;
+            } catch (\Exception $e2) {
+                \Illuminate\Support\Facades\Log::error("❌ fallback exception: " . $e2->getMessage());
+                return null;
+            }
         }
     }
 
@@ -1226,23 +1248,32 @@ class AdminProductController extends Controller
         $data['images'] = $this->handleGalleryImages($request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $this->storeImageWithSlug(
+            $newImage = $this->storeImageWithSlug(
                 $request->file('image'),
                 'products',
                 $data['name'],
                 $data['reference'],
             );
+
+            if ($newImage) {
+                $data['image'] = $newImage;
+            } else {
+                \Illuminate\Support\Facades\Log::warning("Upload image échoué à la création du produit");
+            }
         }
         if (!empty($data['colors'])) {
             foreach ($data['colors'] as $idx => $color) {
                 if ($request->hasFile("color_image_{$idx}")) {
-                    $data['colors'][$idx]['image'] = $this->storeImageWithSlug(
+                    $stored = $this->storeImageWithSlug(
                         $request->file("color_image_{$idx}"),
                         'products/colors',
                         $data['name'],
                         $data['reference'],
                         'couleur-' . Str::slug($color['name'] ?? "c{$idx}"),
                     );
+                    if ($stored) {
+                        $data['colors'][$idx]['image'] = $stored;
+                    }
                 }
             }
         }
@@ -1279,26 +1310,44 @@ class AdminProductController extends Controller
         $data['images'] = $this->handleGalleryImages($request, $product);
 
         if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $data['image'] = $this->storeImageWithSlug(
+            $newImage = $this->storeImageWithSlug(
                 $request->file('image'),
                 'products',
                 $data['name'],
                 $data['reference'],
             );
+
+            if ($newImage) {
+                // ✅ Supprime l'ancienne SEULEMENT après succès de la nouvelle
+                if ($product->image && $product->image !== $newImage) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $data['image'] = $newImage;
+            } else {
+                // ❌ Échec — garde l'ancienne image
+                unset($data['image']);
+                \Illuminate\Support\Facades\Log::warning("Upload image échoué pour produit {$product->id}");
+            }
         }
         if (!empty($data['colors'])) {
             foreach ($data['colors'] as $idx => $color) {
                 if ($request->hasFile("color_image_{$idx}")) {
-                    $data['colors'][$idx]['image'] = $this->storeImageWithSlug(
+                    $stored = $this->storeImageWithSlug(
                         $request->file("color_image_{$idx}"),
                         'products/colors',
                         $data['name'],
                         $data['reference'],
                         'couleur-' . Str::slug($color['name'] ?? "c{$idx}"),
                     );
+
+                    if ($stored) {
+                        // ✅ Supprime l'ancienne image de cette couleur
+                        $oldColorImage = $product->colors[$idx]['image'] ?? null;
+                        if ($oldColorImage && $oldColorImage !== $stored) {
+                            Storage::disk('public')->delete($oldColorImage);
+                        }
+                        $data['colors'][$idx]['image'] = $stored;
+                    }
                 }
             }
         }
