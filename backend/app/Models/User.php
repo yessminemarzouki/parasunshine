@@ -20,6 +20,7 @@ class User extends Authenticatable
          'email',
          'password',
          'phone',
+         'phone_history',
          'role',
          'google_id',
          'birthdate',
@@ -38,10 +39,12 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+
     protected $casts = [
          'email_verified_at'       => 'datetime',
          'password'                => 'hashed',
          'newsletter_opt_in'       => 'boolean',
+         'phone_history'           => 'array',
          'last_seen_orders_at'     => 'datetime',
          'last_seen_users_at'      => 'datetime',
          'last_seen_reviews_at'    => 'datetime',
@@ -72,5 +75,36 @@ class User extends Authenticatable
     public function addresses()
     {
         return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Enregistre un nouveau numéro de téléphone.
+     * - Met à jour `phone` (numéro actuel)
+     * - Ajoute le numéro à `phone_history` (sans doublons)
+     */
+    public function recordPhone(?string $newPhone): void
+    {
+        $newPhone = trim((string) $newPhone);
+        if ($newPhone === '') {
+            return;
+        }
+
+        $history = $this->phone_history ?? [];
+
+        // Ajoute tous les anciens numéros à l'historique s'ils n'y sont pas
+        if ($this->phone && !in_array($this->phone, $history, true)) {
+            $history[] = $this->phone;
+        }
+
+        // Ajoute le nouveau numéro à l'historique s'il n'y est pas déjà
+        if (!in_array($newPhone, $history, true)) {
+            $history[] = $newPhone;
+        }
+
+        // Met à jour le numéro actuel + l'historique
+        $this->update([
+            'phone'         => $newPhone,
+            'phone_history' => $history,
+        ]);
     }
 }

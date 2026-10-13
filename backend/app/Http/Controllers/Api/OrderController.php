@@ -90,10 +90,10 @@ class OrderController extends Controller
             $user = $request->user();
 
             // ✅ Enregistrer le téléphone dans la fiche client
-            // (renseigne si vide, met à jour si différent)
+            // (met à jour le numéro actuel + garde l'historique)
             $submittedPhone = trim($validated['phone'] ?? '');
             if ($submittedPhone && $user->phone !== $submittedPhone) {
-                $user->update(['phone' => $submittedPhone]);
+                $user->recordPhone($submittedPhone);
             }
 
             // Calculer le total

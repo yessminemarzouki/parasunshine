@@ -525,7 +525,30 @@ export default function AdminUsers() {
                     <InfoRow label="Prénom" val={selected.first_name || "—"} />
                     <InfoRow label="Nom" val={selected.last_name || "—"} />
                     <InfoRow label="Email" val={selected.email} />
-                    <InfoRow label="Téléphone" val={selected.phone || "—"} />
+                    <InfoRow
+                      label="Téléphone actuel"
+                      val={selected.phone || "—"}
+                    />
+                    {selected.phone_history &&
+                      selected.phone_history.length > 1 && (
+                        <div className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="text-[12px] text-gray-500 font-medium">
+                            Historique
+                          </span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            {selected.phone_history
+                              .filter((p) => p !== selected.phone)
+                              .map((p, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[11.5px] text-gray-400 line-through"
+                                >
+                                  {p}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     <InfoRow
                       label="Date de naissance"
                       val={
