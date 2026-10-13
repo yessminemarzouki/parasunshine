@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
-const SECTIONS = [
+const getSections = (settings) => [
   {
     num: "1",
     title: "Objet",
@@ -246,20 +247,20 @@ const SECTIONS = [
         <p>
           <strong className="text-gray-800 font-semibold">Email :</strong>{" "}
           <a
-            href="mailto:parasunshine25@gmail.com"
+            href={`mailto:${settings.email}`}
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
             style={{ color: "#1a5242" }}
           >
-            parasunshine25@gmail.com
+            {settings.email}
           </a>
         </p>
         <p>
           <strong className="text-gray-800 font-semibold">Téléphone :</strong>{" "}
-          +216 94 169 416
+          {settings.phone}
         </p>
         <p>
           <strong className="text-gray-800 font-semibold">Adresse :</strong>{" "}
-          Route Gremda Km3 en face Clinique Chams, Sfax, Tunisie
+          {settings.address}
         </p>
       </div>
     ),
@@ -267,6 +268,8 @@ const SECTIONS = [
 ];
 
 export default function Terms() {
+  const { settings } = useSiteSettings();
+
   return (
     <div
       className="bg-white min-h-screen"
@@ -318,7 +321,7 @@ export default function Terms() {
         className="px-5 py-10 md:px-6 md:py-16"
       >
         <div className="space-y-4">
-          {SECTIONS.map(({ num, title, content }) => (
+          {getSections(settings).map(({ num, title, content }) => (
             <div
               key={num}
               className="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-sm transition-shadow"
