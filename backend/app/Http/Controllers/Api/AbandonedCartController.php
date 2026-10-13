@@ -84,4 +84,38 @@ class AbandonedCartController extends Controller
             'cart'    => $abandonedCart,
         ]);
     }
+
+    /**
+     * SUPPRIMER LE PANIER ABANDONNÉ
+     * Appelé quand le client vide son panier.
+     */
+    public function destroy(Request $request)
+    {
+        $user = Auth::guard('sanctum')->user();
+
+        // Filet de sécurité : résoudre manuellement l'utilisateur via le token
+        if (!$user) {
+            $bearerToken = $request->bearerToken();
+            if ($bearerToken) {
+                $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+                $user = $accessToken?->tokenable;
+            }
+        }
+
+        $sessionId = md5($request->ip() . $request->userAgent());
+
+        if ($user) {
+            // Supprime le panier abandonné rattaché au compte
+            AbandonedCart::where('user_id', $user->id)->delete();
+        } else {
+            // Supprime le panier abandonné invité lié à la session
+            AbandonedCart::where('session_id', $sessionId)
+                ->whereNull('user_id')
+                ->delete();
+        }
+
+        return response()->json([
+            'message' => 'Panier abandonné supprimé',
+        ]);
+    }
 }

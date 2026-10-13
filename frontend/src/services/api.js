@@ -192,6 +192,10 @@ export const setDefaultAddress = async (id) => {
 };
 
 // ── PANIER ABANDONNÉ ──
+export const deleteAbandonedCart = async () => {
+  return api.delete("/abandoned-carts");
+};
+
 export const saveAbandonedCart = async (data) => {
   const response = await api.post("/abandoned-cart", data);
   return response.data;

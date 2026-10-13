@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { saveAbandonedCart } from "../services/api";
+import {
+  saveAbandonedCart,
+  deleteAbandonedCart as deleteAbandonedCartApi,
+} from "../services/api";
 
 const CartContext = createContext();
 
@@ -38,7 +41,13 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Sauvegarde debounced — calcul du total fait localement dans la fonction
   useEffect(() => {
-    if (cart.length === 0) return;
+    // Panier vide → on supprime le panier abandonné côté backend
+    if (cart.length === 0) {
+      const timer = setTimeout(() => {
+        deleteAbandonedCart();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
 
     const timer = setTimeout(() => {
       saveCartToBackend(cart);
@@ -46,6 +55,14 @@ export const CartProvider = ({ children }) => {
 
     return () => clearTimeout(timer);
   }, [cart]);
+  // ✅ Supprime le panier abandonné côté backend (appelé quand le panier est vidé)
+  const deleteAbandonedCart = async () => {
+    try {
+      await deleteAbandonedCartApi();
+    } catch {
+      // Échec silencieux
+    }
+  };
 
   // ✅ CORRIGÉ : reçoit le cart en paramètre pour éviter la closure stale
   const saveCartToBackend = async (currentCart) => {

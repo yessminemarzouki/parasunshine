@@ -137,6 +137,7 @@ Route::middleware('throttle:10,1')->group(function () {
 // ========================================
 Route::middleware('throttle:30,1')->group(function () {
     Route::post('/abandoned-cart', [AbandonedCartController::class, 'store']);
+    Route::delete('/abandoned-cart', [AbandonedCartController::class, 'destroy']);
 });
 
 // ========================================
