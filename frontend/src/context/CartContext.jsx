@@ -20,6 +20,18 @@ export const CartProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  // ✅ Track si le panier a contenu quelque chose
+  // (évite de supprimer le panier abandonné quand on ouvre le site avec panier vide)
+  const [hadItems, setHadItems] = useState(() => {
+    const savedCart = localStorage.getItem("pharmasoin_cart");
+    const parsed = savedCart ? JSON.parse(savedCart) : [];
+    return parsed.length > 0;
+  });
+
+  useEffect(() => {
+    if (cart.length > 0) setHadItems(true);
+  }, [cart]);
+
   // Code promo appliqué : { code, discount_percentage, discount_amount, message }
   const [promoCode, setPromoCode] = useState(null);
 
@@ -41,20 +53,25 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Sauvegarde debounced — calcul du total fait localement dans la fonction
   useEffect(() => {
-    // Panier vide → on supprime le panier abandonné côté backend
-    if (cart.length === 0) {
+    // Panier vide ET a déjà contenu quelque chose → suppression côté backend
+    if (cart.length === 0 && hadItems) {
       const timer = setTimeout(() => {
-        deleteAbandonedCart();
+        deleteAbandonedCart().then(() => {
+          setHadItems(false); // ✅ Reset après suppression
+        });
       }, 1000);
       return () => clearTimeout(timer);
     }
+
+    // Panier vide dès le départ → rien à faire
+    if (cart.length === 0) return;
 
     const timer = setTimeout(() => {
       saveCartToBackend(cart);
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [cart]);
+  }, [cart, hadItems]);
   // ✅ Supprime le panier abandonné côté backend (appelé quand le panier est vidé)
   const deleteAbandonedCart = async () => {
     try {
