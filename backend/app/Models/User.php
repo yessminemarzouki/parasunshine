@@ -38,7 +38,7 @@ class User extends Authenticatable
     protected $hidden = [
      'password',
      'remember_token',
-     'phone_history',   // ← caché en tant que colonne brute
+
 ];
 
     protected $appends = [
