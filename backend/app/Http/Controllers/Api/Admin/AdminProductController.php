@@ -788,9 +788,16 @@ class AdminProductController extends Controller
                 ->toWebp(quality: 85);
             $filename = uniqid() . '.webp';
             $fullPath = $path . '/' . $filename;
-            Storage::disk('public')->put($fullPath, (string) $optimized);
+
+            $saved = Storage::disk('public')->put($fullPath, (string) $optimized);
+            if (!$saved) {
+                \Illuminate\Support\Facades\Log::error("❌ downloadImageFromUrl: put() échoué pour {$url}");
+                return null;
+            }
+
             return $fullPath;
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("❌ downloadImageFromUrl: " . $e->getMessage());
             return null;
         }
     }
@@ -901,16 +908,24 @@ class AdminProductController extends Controller
             if ($name) {
                 $baseName = $this->buildImageFilename($name, $reference, $suffix);
             } else {
-                // Fallback : garde l'ancien comportement (nom aléatoire) si
-                // le nom du produit n'est pas fourni
                 $baseName = uniqid();
             }
 
             $filename = $baseName . '.webp';
             $fullPath = 'products/' . $filename;
-            Storage::disk('public')->put($fullPath, (string) $optimized);
+
+            $saved = Storage::disk('public')->put($fullPath, (string) $optimized);
+            if (!$saved) {
+                \Illuminate\Support\Facades\Log::error("❌ storeOptimizedImageFromPath: put() échoué", [
+                    'path' => $fullPath,
+                    'size' => strlen((string) $optimized),
+                ]);
+                return null;
+            }
+
             return $fullPath;
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("❌ storeOptimizedImageFromPath: " . $e->getMessage());
             return null;
         }
     }
