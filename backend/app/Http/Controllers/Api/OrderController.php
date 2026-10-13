@@ -89,6 +89,13 @@ class OrderController extends Controller
         try {
             $user = $request->user();
 
+            // ✅ Enregistrer le téléphone dans la fiche client
+            // (renseigne si vide, met à jour si différent)
+            $submittedPhone = trim($validated['phone'] ?? '');
+            if ($submittedPhone && $user->phone !== $submittedPhone) {
+                $user->update(['phone' => $submittedPhone]);
+            }
+
             // Calculer le total
             $subtotal = 0;
             $itemsData = [];
