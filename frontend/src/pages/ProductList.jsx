@@ -89,58 +89,42 @@ export default function ProductList() {
   // ── Clé de session unique pour la restauration ──
   const SESSION_KEY = "productlist_state_v1";
 
-  // ── Restauration au montage ──
+  // ── Initialisation au montage ──
   useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY);
+    const category = searchParams.get("category") || "";
+    const brand = searchParams.get("brand") || "";
+    const search = searchParams.get("search") || "";
+    const pageParam = parseInt(searchParams.get("page") || "1", 10) || 1;
 
-    if (saved) {
-      try {
-        const s = JSON.parse(saved);
-        if (s.returnFromDetail) {
-          setSelectedCategory(s.selectedCategory ?? "");
-          setSelectedBrand(s.selectedBrand ?? "");
-          setSearchQuery(s.searchQuery ?? "");
-          setMinPrice(s.minPrice ?? 0);
-          setMaxPrice(s.maxPrice ?? 5000);
-          setShowPromo(s.showPromo ?? false);
-          setShowNew(s.showNew ?? false);
-          setShowBestseller(s.showBestseller ?? false);
-          setShowFeatured(s.showFeatured ?? false);
-          setSortBy(s.sortBy ?? "created_at");
-          setCurrentPage(s.currentPage ?? 1);
-        }
-      } catch {}
-    }
+    setSelectedCategory(category);
+    setSelectedBrand(brand);
+    setSearchQuery(search);
+    setCurrentPage(pageParam);
+    setShowBestseller(searchParams.get("bestseller") === "true");
+    setShowFeatured(searchParams.get("featured") === "true");
+    setShowPromo(searchParams.get("promo") === "true");
 
-    // ⚠️ On NE supprime PAS la clé ici — elle sera supprimée après le 1er fetch
-    // (dans fetchProducts, en finally)
+    // ⚠️ Ne PAS supprimer SESSION_KEY ici — le useEffect de scroll en a besoin
+    // Il sera supprimé après restauration du scroll.
 
     setReadyToFetch(true);
     fetchFiltersData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  s;
 
-  // ── Sauvegarde avant démontage (clic sur fiche produit) ──
-  // ⚠️ Utilise des refs pour toujours avoir la dernière valeur au démontage
-  const stateRef = useRef({});
-  stateRef.current = {
-    selectedCategory,
-    selectedBrand,
-    searchQuery,
-    minPrice,
-    maxPrice,
-    showPromo,
-    showNew,
-    showBestseller,
-    showFeatured,
-    sortBy,
-    currentPage,
-  };
-
+  // ── Sauvegarde avant démontage ──
+  // ⚠️ On ne sauvegarde QUE le scroll (les filtres sont déjà dans l'URL)
   useEffect(() => {
     return () => {
       try {
-        const state = { ...stateRef.current, returnFromDetail: true };
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+        sessionStorage.setItem(
+          SESSION_KEY,
+          JSON.stringify({
+            scrollY: window.scrollY,
+            returnFromDetail: true,
+          }),
+        );
       } catch {}
     };
   }, []);
@@ -163,20 +147,31 @@ export default function ProductList() {
   }, [searchParams]);
 
   // ═══════════════════════════════════════════════════════════════
-  // ✅ useEffect 1 : Réagit aux changements de FILTRES → reset page à 1
-  //    Ne se déclenche PAS si seul `currentPage` change
+  // ✅ useEffect 1 : Reset page à 1 quand les FILTRES changent
   // ═══════════════════════════════════════════════════════════════
-  const isFirstFilterRun = useRef(true);
   const prevFiltersRef = useRef(null);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
-    // Ne rien faire tant qu'on n'est pas prêt
     if (!readyToFetch) return;
 
-    // Si on restaure depuis sessionStorage → ne pas toucher
-    if (sessionStorage.getItem(SESSION_KEY)) return;
+    // ⚠️ Skip le 1er run (initialisation) → sinon on reset la page à 1
+    // lors du montage, ce qui casse la restauration de page 2
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      prevFiltersRef.current = JSON.stringify({
+        selectedCategory,
+        selectedBrand,
+        searchQuery,
+        showPromo,
+        showNew,
+        showBestseller,
+        showFeatured,
+        sortBy,
+      });
+      return;
+    }
 
-    // Clé unique des filtres
     const filtersKey = JSON.stringify({
       selectedCategory,
       selectedBrand,
@@ -188,24 +183,15 @@ export default function ProductList() {
       sortBy,
     });
 
-    // Premier run : initialiser la ref et sortir
-    if (prevFiltersRef.current === null) {
-      prevFiltersRef.current = filtersKey;
-      return;
-    }
-
-    // Aucun changement de filtre → ne rien faire
     if (prevFiltersRef.current === filtersKey) return;
 
-    // ✅ Les filtres ont changé → reset à la page 1
     prevFiltersRef.current = filtersKey;
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (currentPage !== 1) {
-      setCurrentPage(1); // va déclencher le useEffect 2 (fetch)
+      setCurrentPage(1);
+      updateUrlParams({ page: "" });
     }
-    // Si currentPage est déjà 1, c'est le useEffect 2 qui va fetch directement
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     readyToFetch,
     selectedCategory,
@@ -216,7 +202,6 @@ export default function ProductList() {
     showBestseller,
     showFeatured,
     sortBy,
-    // ⚠️ PAS de currentPage ici : on ne veut PAS reset à 1 quand l'user pagine
   ]);
 
   // ═══════════════════════════════════════════════════════════════
@@ -224,7 +209,6 @@ export default function ProductList() {
   // ═══════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!readyToFetch) return;
-    if (sessionStorage.getItem(SESSION_KEY)) return;
 
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,23 +256,32 @@ export default function ProductList() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [scrollKey]);
 
-  // Restauration au montage — seulement si on vient d'une autre page
-  // (fiche produit) et qu'on a une position sauvegardée.
-  const restoredRef = useRef(false);
+  // ✅ Restauration du scroll au retour depuis ProductDetail
+  const restoredScrollRef = useRef(false);
   useEffect(() => {
-    if (restoredRef.current) return;
+    if (restoredScrollRef.current) return;
     if (loading) return;
-    const saved = sessionStorage.getItem(scrollKey);
-    if (saved && parseInt(saved, 10) > 0) {
-      restoredRef.current = true;
-      // Double rAF pour attendre que le DOM soit complètement peint
-      requestAnimationFrame(() => {
+    if (products.length === 0) return;
+
+    // Lire le SESSION_KEY (scroll sauvegardé au démontage précédent)
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (!saved) return;
+
+    try {
+      const s = JSON.parse(saved);
+      if (s.returnFromDetail && s.scrollY > 0) {
+        restoredScrollRef.current = true;
+        // Double rAF pour attendre que le DOM soit peint
         requestAnimationFrame(() => {
-          window.scrollTo({ top: parseInt(saved, 10), behavior: "instant" });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: s.scrollY, behavior: "instant" });
+          });
         });
-      });
-    }
-  }, [loading, scrollKey]);
+        // ✅ Supprimer la clé après restauration
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+    } catch {}
+  }, [loading, products.length]);
   useEffect(() => {
     sessionStorage.setItem("productlist_last_search", location.search);
   }, [location.search]);
@@ -319,7 +312,9 @@ export default function ProductList() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      setProducts([]); // ✅ Vider les anciens produits → overlay loader bien visible
+      // ⚠️ Ne pas vider les produits ici — sinon au retour de ProductDetail,
+      // la condition `loading && products.length === 0` affiche le spinner
+      // PLEIN ÉCRAN et bloque l'UX.
       const params = new URLSearchParams();
       if (selectedCategory) params.append("category", selectedCategory);
       if (selectedBrand) params.append("brand", selectedBrand);
@@ -344,8 +339,6 @@ export default function ProductList() {
       setError("Impossible de charger les produits");
     } finally {
       setLoading(false);
-      // ✅ Supprimer la clé de restauration APRÈS le 1er fetch
-      sessionStorage.removeItem(SESSION_KEY);
     }
   };
 
