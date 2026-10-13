@@ -112,8 +112,8 @@ export default function ProductList() {
       } catch {}
     }
 
-    // ✅ CRUCIAL : supprimer SYSTÉMATIQUEMENT la clé, qu'on l'ait utilisée ou non
-    sessionStorage.removeItem(SESSION_KEY);
+    // ⚠️ On NE supprime PAS la clé ici — elle sera supprimée après le 1er fetch
+    // (dans fetchProducts, en finally)
 
     setReadyToFetch(true);
     fetchFiltersData();
@@ -150,10 +150,12 @@ export default function ProductList() {
     const category = searchParams.get("category") || "";
     const brand = searchParams.get("brand") || "";
     const search = searchParams.get("search") || "";
+    const pageParam = parseInt(searchParams.get("page") || "1", 10) || 1;
 
     setSelectedCategory((prev) => (prev === category ? prev : category));
     setSelectedBrand((prev) => (prev === brand ? prev : brand));
     setSearchQuery((prev) => (prev === search ? prev : search));
+    setCurrentPage((prev) => (prev === pageParam ? prev : pageParam));
 
     setShowBestseller(searchParams.get("bestseller") === "true");
     setShowFeatured(searchParams.get("featured") === "true");
@@ -161,24 +163,69 @@ export default function ProductList() {
   }, [searchParams]);
 
   // ═══════════════════════════════════════════════════════════════
-  // ✅ UN SEUL useEffect qui gère TOUT : reset page + fetch
-  //    Il se redéclenche à CHAQUE changement de filtre, SANS exception
+  // ✅ useEffect 1 : Réagit aux changements de FILTRES → reset page à 1
+  //    Ne se déclenche PAS si seul `currentPage` change
   // ═══════════════════════════════════════════════════════════════
+  const isFirstFilterRun = useRef(true);
+  const prevFiltersRef = useRef(null);
+
   useEffect(() => {
+    // Ne rien faire tant qu'on n'est pas prêt
     if (!readyToFetch) return;
 
-    // Si on est en train de restaurer un état → pas de fetch (l'état va se restaurer)
-    const isRestoring = sessionStorage.getItem(SESSION_KEY);
-    if (isRestoring) return;
+    // Si on restaure depuis sessionStorage → ne pas toucher
+    if (sessionStorage.getItem(SESSION_KEY)) return;
 
-    // Reset à la page 1 si on était sur une autre page → va redéclencher ce useEffect
-    if (currentPage !== 1) {
-      setCurrentPage(1);
+    // Clé unique des filtres
+    const filtersKey = JSON.stringify({
+      selectedCategory,
+      selectedBrand,
+      searchQuery,
+      showPromo,
+      showNew,
+      showBestseller,
+      showFeatured,
+      sortBy,
+    });
+
+    // Premier run : initialiser la ref et sortir
+    if (prevFiltersRef.current === null) {
+      prevFiltersRef.current = filtersKey;
       return;
     }
 
-    // Scroll top + fetch
+    // Aucun changement de filtre → ne rien faire
+    if (prevFiltersRef.current === filtersKey) return;
+
+    // ✅ Les filtres ont changé → reset à la page 1
+    prevFiltersRef.current = filtersKey;
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (currentPage !== 1) {
+      setCurrentPage(1); // va déclencher le useEffect 2 (fetch)
+    }
+    // Si currentPage est déjà 1, c'est le useEffect 2 qui va fetch directement
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    readyToFetch,
+    selectedCategory,
+    selectedBrand,
+    searchQuery,
+    showPromo,
+    showNew,
+    showBestseller,
+    showFeatured,
+    sortBy,
+    // ⚠️ PAS de currentPage ici : on ne veut PAS reset à 1 quand l'user pagine
+  ]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // ✅ useEffect 2 : Fetch les produits — se déclenche sur filtres OU page
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!readyToFetch) return;
+    if (sessionStorage.getItem(SESSION_KEY)) return;
+
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -269,7 +316,6 @@ export default function ProductList() {
       setAvailableBrands([]);
     }
   };
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -298,6 +344,8 @@ export default function ProductList() {
       setError("Impossible de charger les produits");
     } finally {
       setLoading(false);
+      // ✅ Supprimer la clé de restauration APRÈS le 1er fetch
+      sessionStorage.removeItem(SESSION_KEY);
     }
   };
 
@@ -323,9 +371,10 @@ export default function ProductList() {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    // ✅ Ajouter le paramètre page à l'URL (bonus : le bouton back fonctionne)
+    updateUrlParams({ page: page > 1 ? page : "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
-    // Efface la position sauvegardée : sinon en revenant d'une fiche
-    // produit on retomberait sur la position de l'ancienne page.
+    // Efface la position sauvegardée
     Object.keys(sessionStorage)
       .filter((k) => k.startsWith("productlist_scroll_"))
       .forEach((k) => sessionStorage.removeItem(k));
