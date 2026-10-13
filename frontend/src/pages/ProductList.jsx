@@ -67,6 +67,24 @@ export default function ProductList() {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [readyToFetch, setReadyToFetch] = useState(false);
+  // ✅ Helper : met à jour le state ET l'URL en même temps
+  // (évite que le state et l'URL se désynchronisent)
+  const updateUrlParams = (updates) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (
+        value === "" ||
+        value === null ||
+        value === undefined ||
+        value === false
+      ) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value === true ? "true" : value);
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  };
 
   // ── Clé de session unique pour la restauration ──
   const SESSION_KEY = "productlist_state_v1";
@@ -679,7 +697,10 @@ export default function ProductList() {
                 <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <Radio
                     checked={selectedCategory === ""}
-                    onChange={() => setSelectedCategory("")}
+                    onChange={() => {
+                      setSelectedCategory("");
+                      updateUrlParams({ category: "" });
+                    }}
                   />
                   <span className="text-[13px] text-gray-600 font-medium">
                     Toutes les catégories
@@ -702,7 +723,10 @@ export default function ProductList() {
                       >
                         <Radio
                           checked={selectedCategory === l1.slug}
-                          onChange={() => setSelectedCategory(l1.slug)}
+                          onChange={() => {
+                            setSelectedCategory(l1.slug);
+                            updateUrlParams({ category: l1.slug });
+                          }}
                         />
                         <span className="text-[13px] font-bold text-gray-800">
                           {l1.name}
@@ -732,7 +756,10 @@ export default function ProductList() {
                               >
                                 <Radio
                                   checked={selectedCategory === l2.slug}
-                                  onChange={() => setSelectedCategory(l2.slug)}
+                                  onChange={() => {
+                                    setSelectedCategory(l2.slug);
+                                    updateUrlParams({ category: l2.slug });
+                                  }}
                                 />
                                 <span className="text-[13px] text-gray-600">
                                   {l2.name}
@@ -750,9 +777,12 @@ export default function ProductList() {
                                     >
                                       <Radio
                                         checked={selectedCategory === l3.slug}
-                                        onChange={() =>
-                                          setSelectedCategory(l3.slug)
-                                        }
+                                        onChange={() => {
+                                          setSelectedCategory(l3.slug);
+                                          updateUrlParams({
+                                            category: l3.slug,
+                                          });
+                                        }}
                                       />
                                       <span className="text-[12.5px] text-gray-500">
                                         {l3.name}
@@ -776,7 +806,10 @@ export default function ProductList() {
                     <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                       <Radio
                         checked={selectedBrand === ""}
-                        onChange={() => setSelectedBrand("")}
+                        onChange={() => {
+                          setSelectedBrand("");
+                          updateUrlParams({ brand: "" });
+                        }}
                       />
                       <span className="text-[13px] text-gray-600 font-medium">
                         Toutes les marques
@@ -817,7 +850,10 @@ export default function ProductList() {
                               <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                                 <Radio
                                   checked={selectedBrand === parent.slug}
-                                  onChange={() => setSelectedBrand(parent.slug)}
+                                  onChange={() => {
+                                    setSelectedBrand(parent.slug);
+                                    updateUrlParams({ brand: parent.slug });
+                                  }}
                                 />
                                 <span className="text-[13px] text-gray-600 font-semibold">
                                   {parent.name}
@@ -832,9 +868,10 @@ export default function ProductList() {
                                     >
                                       <Radio
                                         checked={selectedBrand === c.slug}
-                                        onChange={() =>
-                                          setSelectedBrand(c.slug)
-                                        }
+                                        onChange={() => {
+                                          setSelectedBrand(c.slug);
+                                          updateUrlParams({ brand: c.slug });
+                                        }}
                                       />
                                       <span className="text-[12.5px] text-gray-500">
                                         {c.name}
@@ -1005,14 +1042,36 @@ export default function ProductList() {
             {/* Grille produits */}
             {products.length > 0 ? (
               <>
-                <div
-                  className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 transition-opacity duration-200 ${
-                    loading ? "opacity-40 pointer-events-none" : "opacity-100"
-                  }`}
-                >
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                <div className="relative">
+                  {/* ✅ Overlay de chargement visible pendant le fetch */}
+                  {loading && (
+                    <div className="absolute inset-0 z-10 flex items-start justify-center pt-20 pointer-events-none">
+                      <div className="flex flex-col items-center gap-3 bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-5 shadow-lg border border-gray-100">
+                        <div
+                          className="w-10 h-10 rounded-full animate-spin"
+                          style={{
+                            border: "3px solid #e5e7eb",
+                            borderTopColor: "#1a5242",
+                          }}
+                        />
+                        <p className="text-[13px] font-semibold text-gray-600">
+                          Chargement...
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 transition-all duration-200 ${
+                      loading
+                        ? "opacity-30 blur-[1px] pointer-events-none"
+                        : "opacity-100"
+                    }`}
+                  >
+                    {products.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
                 </div>
 
                 {totalPages > 1 && (
