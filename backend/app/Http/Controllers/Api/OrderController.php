@@ -271,8 +271,13 @@ class OrderController extends Controller
                 Log::info('Email de confirmation envoyé pour la commande #' . $order->order_number);
             } catch (\Exception $e) {
                 Log::error('Erreur envoi email confirmation commande: ' . $e->getMessage());
-                // On ne bloque pas la commande si l'email échoue
+                Log::error('Erreur envoi email confirmation commande: ' . $e->getMessage());
             }
+
+            // ✅ Marquer le panier abandonné comme récupéré (commande passée)
+            \App\Models\AbandonedCart::where('user_id', $user->id)
+                ->where('recovered', false)
+                ->update(['recovered' => true]);
 
             DB::commit();
 
