@@ -63,7 +63,7 @@ class AdminUserController extends Controller
         ]);
 
         // Renvoie aussi l'historique des numéros de téléphone
-        $user->append('phone_history');
+
 
         // Un coffret n'est PAS en rupture au seul vu de son stock — sa
         // disponibilité dépend de l'accesseur is_available (voir Bundle::

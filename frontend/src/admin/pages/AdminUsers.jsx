@@ -527,17 +527,33 @@ export default function AdminUsers() {
                     <InfoRow label="Email" val={selected.email} />
                     <InfoRow
                       label="Téléphone actuel"
-                      val={selected.phone || "—"}
-                    />
-                    {(selected.phone_history?.length ?? 0) > 1 && (
-                      <div className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
-                        <span className="text-[12px] text-gray-500 font-medium">
-                          Historique
+                      val={
+                        <span className="flex items-center gap-1.5">
+                          {selected.phone || "—"}
+                          {(selected.phone_history?.length ?? 0) > 1 && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-full">
+                              +{(selected.phone_history?.length ?? 0) - 1} autre
+                              {(selected.phone_history?.length ?? 0) > 2
+                                ? "s"
+                                : ""}
+                            </span>
+                          )}
                         </span>
-                        <div className="flex flex-col items-end gap-0.5">
-                          {selected.phone_history
-                            .filter((p) => p !== selected.phone)
-                            .map((p, i) => (
+                      }
+                    />
+                    {(() => {
+                      const history = selected.phone_history || [];
+                      const oldPhones = history.filter(
+                        (p) => p && p !== selected.phone,
+                      );
+                      if (oldPhones.length === 0) return null;
+                      return (
+                        <div className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="text-[12px] text-gray-500 font-medium">
+                            Historique
+                          </span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            {oldPhones.map((p, i) => (
                               <span
                                 key={i}
                                 className="text-[11.5px] text-gray-400 line-through"
@@ -545,9 +561,10 @@ export default function AdminUsers() {
                                 {p}
                               </span>
                             ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     <InfoRow
                       label="Date de naissance"
                       val={

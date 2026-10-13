@@ -36,8 +36,13 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
-        'password',
-        'remember_token',
+     'password',
+     'remember_token',
+     'phone_history',   // ← caché en tant que colonne brute
+];
+
+    protected $appends = [
+        'phone_history',   // ← ajouté via l'accessor
     ];
 
     protected $casts = [
