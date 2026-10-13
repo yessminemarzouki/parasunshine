@@ -111,7 +111,6 @@ export default function ProductList() {
     fetchFiltersData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  s;
 
   // ── Sauvegarde avant démontage ──
   // ⚠️ On ne sauvegarde QUE le scroll (les filtres sont déjà dans l'URL)
