@@ -11,6 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { getShippingSettings } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const GOVERNORATS = [
   "Tunis",
@@ -55,11 +56,11 @@ const STATUSES = [
   { label: "Livrée", text: "Votre commande a été livrée avec succès." },
 ];
 
-const RETURN_STEPS = [
+const getReturnSteps = (settings) => [
   {
     num: "01",
     title: "Contactez-nous",
-    text: "Appelez-nous au +216 94 169 416 ou écrivez à parasunshine25@gmail.com avec votre numéro de commande et le motif du retour.",
+    text: `Appelez-nous au ${settings.phone} ou écrivez à ${settings.email} avec votre numéro de commande et le motif du retour.`,
   },
   {
     num: "02",
@@ -77,8 +78,8 @@ const RETURN_STEPS = [
     text: "Une fois le produit reçu et vérifié, nous procédons au remboursement sous 7–10 jours ouvrables.",
   },
 ];
-
 export default function Delivery() {
+  const { settings } = useSiteSettings();
   const [shipping, setShipping] = useState({
     free_shipping_enabled: false,
     free_shipping_threshold: null,
@@ -380,7 +381,7 @@ export default function Delivery() {
               Comment effectuer un retour ?
             </p>
             <div className="space-y-0">
-              {RETURN_STEPS.map(({ num, title, text }, i) => (
+              {getReturnSteps(settings).map(({ num, title, text }, i) => (
                 <div
                   key={num}
                   className="grid gap-6 py-5"

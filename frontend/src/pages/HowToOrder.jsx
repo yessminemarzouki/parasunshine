@@ -15,6 +15,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { getShippingSettings } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const getSteps = (shipping) => [
   {
@@ -96,14 +97,14 @@ const ACCOUNT_BENEFITS = [
   },
 ];
 
-const FAQS = [
+const getFaqs = (settings) => [
   {
     q: "Puis-je commander sans créer de compte ?",
     a: "Oui, vous pouvez commander en tant qu'invité. Cependant, créer un compte vous permet de bénéficier de nombreux avantages.",
   },
   {
     q: "Puis-je modifier ma commande après validation ?",
-    a: "Vous avez 2 heures maximum après la validation pour modifier votre commande en nous contactant au +216 94 169 416.",
+    a: `Vous avez 2 heures maximum après la validation pour modifier votre commande en nous contactant au ${settings.phone}.`,
   },
   {
     q: "Quand ma commande sera-t-elle expédiée ?",
@@ -112,6 +113,7 @@ const FAQS = [
 ];
 
 export default function HowToOrder() {
+  const { settings } = useSiteSettings();
   const [shipping, setShipping] = useState({
     free_shipping_enabled: false,
     free_shipping_threshold: null,
@@ -348,7 +350,7 @@ export default function HowToOrder() {
             Questions fréquentes
           </h2>
           <div className="border-t border-gray-100">
-            {FAQS.map(({ q, a }) => (
+            {getFaqs(settings).map(({ q, a }) => (
               <div key={q} className="border-b border-gray-100 py-5">
                 <p className="text-[14px] font-semibold text-gray-900 mb-1.5">
                   {q}

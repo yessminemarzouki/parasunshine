@@ -9,8 +9,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { getShippingSettings } from "../services/api";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
-const getFaqData = (shipping) => [
+const getFaqData = (shipping, settings) => [
   {
     category: "Commandes",
     questions: [
@@ -20,7 +21,7 @@ const getFaqData = (shipping) => [
       },
       {
         q: "Puis-je modifier ma commande après validation ?",
-        a: "Vous pouvez modifier votre commande dans les 2 heures suivant sa validation en nous contactant au +216 94 169 416. Passé ce délai, la commande est en cours de préparation et ne peut plus être modifiée.",
+        a: `Vous pouvez modifier votre commande dans les 2 heures suivant sa validation en nous contactant au ${settings.phone}. Passé ce délai, la commande est en cours de préparation et ne peut plus être modifiée.`,
       },
       {
         q: "Comment suivre ma commande ?",
@@ -89,7 +90,7 @@ const getFaqData = (shipping) => [
       },
       {
         q: "Comment effectuer un retour ?",
-        a: "Contactez notre service client au +216 94 169 416 ou par email pour obtenir un numéro de retour. Renvoyez le produit dans son emballage d'origine à nos frais.",
+        a: `Contactez notre service client au ${settings.phone} ou par email (${settings.email}) pour obtenir un numéro de retour. Renvoyez le produit dans son emballage d'origine à nos frais.`,
       },
       {
         q: "Quel est le délai de remboursement ?",
@@ -146,6 +147,7 @@ const getFaqData = (shipping) => [
 ];
 
 export default function FAQ() {
+  const { settings } = useSiteSettings();
   const [openIndex, setOpenIndex] = useState(null);
   const [shipping, setShipping] = useState({
     free_shipping_enabled: false,
@@ -161,7 +163,7 @@ export default function FAQ() {
       .catch(() => {});
   }, []);
 
-  const FAQ_DATA = getFaqData(shipping);
+  const FAQ_DATA = getFaqData(shipping, settings);
 
   const toggle = (catIdx, qIdx) => {
     const key = `${catIdx}-${qIdx}`;
@@ -271,15 +273,15 @@ export default function FAQ() {
             {[
               {
                 icon: Mail,
-                label: "parasunshine25@gmail.com",
-                href: "mailto:parasunshine25@gmail.com",
+                label: settings.email,
+                href: `mailto:${settings.email}`,
               },
               {
                 icon: Phone,
-                label: "+216 94 169 416",
-                href: "tel:+21694169416",
+                label: settings.phone,
+                href: `tel:${settings.phone.replace(/\s/g, "")}`,
               },
-              { icon: Clock, label: "Lun – Sam : 9h – 20h", href: null },
+              { icon: Clock, label: settings.opening_hours, href: null },
             ].map(({ icon: Icon, label, href }) => (
               <div
                 key={label}

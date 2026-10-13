@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { useSiteSettings } from "../context/SiteSettingsContext";
+s;
 
-const SECTIONS = [
+const getSections = (settings) => [
   {
     num: "1",
     title: "Introduction",
@@ -211,11 +213,11 @@ const SECTIONS = [
         <p className="text-[13px] text-gray-600 mt-3">
           Pour exercer ces droits, contactez-nous à :{" "}
           <a
-            href="mailto:parasunshine25@gmail.com"
+            href={`mailto:${settings.email}`}
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
             style={{ color: "#1a5242" }}
           >
-            parasunshine25@gmail.com
+            {settings.email}
           </a>
         </p>
       </div>
@@ -272,16 +274,16 @@ const SECTIONS = [
         <p>
           <strong className="text-gray-800 font-semibold">Email :</strong>{" "}
           <a
-            href="mailto:parasunshine25@gmail.com"
+            href={`mailto:${settings.email}`}
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
             style={{ color: "#1a5242" }}
           >
-            parasunshine25@gmail.com
+            {settings.email}
           </a>
         </p>
         <p>
           <strong className="text-gray-800 font-semibold">Téléphone :</strong>{" "}
-          +216 94 169 416
+          {settings.phone}
         </p>
       </div>
     ),
@@ -289,6 +291,8 @@ const SECTIONS = [
 ];
 
 export default function PrivacyPolicy() {
+  const { settings } = useSiteSettings();
+
   return (
     <div
       className="bg-white min-h-screen"
@@ -340,7 +344,7 @@ export default function PrivacyPolicy() {
         className="px-5 py-10 md:px-6 md:py-16"
       >
         <div className="space-y-0">
-          {SECTIONS.map(({ num, title, content }, i) => (
+          {getSections(settings).map(({ num, title, content }, i) => (
             <div
               key={num}
               className="py-8"

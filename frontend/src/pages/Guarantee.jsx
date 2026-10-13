@@ -7,6 +7,7 @@ import {
   MessageSquare,
   ChevronRight,
 } from "lucide-react";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const GUARANTEE_STEPS = [
   {
@@ -94,6 +95,8 @@ const COUNTERFEIT_SIGNS = [
 ];
 
 export default function Guarantee() {
+  const { settings } = useSiteSettings();
+
   return (
     <div
       className="bg-white min-h-screen"
@@ -299,40 +302,42 @@ export default function Guarantee() {
               {
                 icon: Mail,
                 label: "Email",
-                val: "parasunshine25@gmail.com",
-                href: "mailto:parasunshine25@gmail.com",
+                val: settings.email,
+                href: `mailto:${settings.email}`,
               },
               {
                 icon: Phone,
                 label: "Téléphone",
-                val: "+216 94 169 416",
-                href: "tel:+21694169416",
+                val: settings.phone,
+                href: `tel:${settings.phone.replace(/\s/g, "")}`,
               },
               {
                 icon: MessageSquare,
                 label: "WhatsApp",
-                val: "+216 94 169 416",
-                href: "https://wa.me/21694169416",
+                val: settings.whatsapp,
+                href: `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`,
               },
-            ].map(({ icon: Icon, label, val, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="flex flex-col gap-2 p-4 border border-gray-100 rounded-xl hover:border-[#1a5242] transition-colors"
-              >
-                <Icon size={17} style={{ color: "#355847" }} />
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    {label}
-                  </p>
-                  <p className="text-[13px] font-semibold text-gray-800">
-                    {val}
-                  </p>
-                </div>
-              </a>
-            ))}
+            ]
+              .filter(({ val }) => !!val)
+              .map(({ icon: Icon, label, val, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex flex-col gap-2 p-4 border border-gray-100 rounded-xl hover:border-[#1a5242] transition-colors"
+                >
+                  <Icon size={17} style={{ color: "#355847" }} />
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      {label}
+                    </p>
+                    <p className="text-[13px] font-semibold text-gray-800">
+                      {val}
+                    </p>
+                  </div>
+                </a>
+              ))}
           </div>
         </section>
 
