@@ -54,14 +54,16 @@ export default function ProductList() {
   const [showPromo, setShowPromo] = useState(
     searchParams.get("promo") === "true",
   );
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(searchParams.get("new") === "true");
   const [showBestseller, setShowBestseller] = useState(
     searchParams.get("bestseller") === "true",
   );
   const [showFeatured, setShowFeatured] = useState(
     searchParams.get("featured") === "true",
   );
-  const [sortBy, setSortBy] = useState("created_at");
+  const [sortBy, setSortBy] = useState(
+    searchParams.get("sort") || "created_at",
+  );
 
   const [showFilters, setShowFilters] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -95,14 +97,17 @@ export default function ProductList() {
     const brand = searchParams.get("brand") || "";
     const search = searchParams.get("search") || "";
     const pageParam = parseInt(searchParams.get("page") || "1", 10) || 1;
+    const sortParam = searchParams.get("sort") || "created_at";
 
     setSelectedCategory(category);
     setSelectedBrand(brand);
     setSearchQuery(search);
     setCurrentPage(pageParam);
+    setSortBy(sortParam); // ✅ AJOUTÉ
     setShowBestseller(searchParams.get("bestseller") === "true");
     setShowFeatured(searchParams.get("featured") === "true");
     setShowPromo(searchParams.get("promo") === "true");
+    setShowNew(searchParams.get("new") === "true"); // ✅ AJOUTÉ
 
     // ⚠️ Ne PAS supprimer SESSION_KEY ici — le useEffect de scroll en a besoin
     // Il sera supprimé après restauration du scroll.
@@ -134,15 +139,18 @@ export default function ProductList() {
     const brand = searchParams.get("brand") || "";
     const search = searchParams.get("search") || "";
     const pageParam = parseInt(searchParams.get("page") || "1", 10) || 1;
+    const sortParam = searchParams.get("sort") || "created_at";
 
     setSelectedCategory((prev) => (prev === category ? prev : category));
     setSelectedBrand((prev) => (prev === brand ? prev : brand));
     setSearchQuery((prev) => (prev === search ? prev : search));
     setCurrentPage((prev) => (prev === pageParam ? prev : pageParam));
+    setSortBy((prev) => (prev === sortParam ? prev : sortParam));
 
     setShowBestseller(searchParams.get("bestseller") === "true");
     setShowFeatured(searchParams.get("featured") === "true");
     setShowPromo(searchParams.get("promo") === "true");
+    setShowNew(searchParams.get("new") === "true");
   }, [searchParams]);
 
   // ═══════════════════════════════════════════════════════════════
@@ -538,6 +546,7 @@ export default function ProductList() {
     if (searchQuery)
       return `/products?search=${encodeURIComponent(searchQuery)}`;
     if (showPromo) return "/products?promo=true";
+    if (showNew) return "/products?new=true";
     if (showBestseller) return "/products?bestseller=true";
     if (showFeatured) return "/products?featured=true";
     return "/products";
@@ -664,7 +673,12 @@ export default function ProductList() {
               <div className="relative flex-1 sm:flex-none">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSortBy(val);
+                    // "created_at" est la valeur par défaut → on le retire de l'URL
+                    updateUrlParams({ sort: val === "created_at" ? "" : val });
+                  }}
                   className="appearance-none w-full sm:w-auto h-10 pl-4 pr-10 border border-gray-300 rounded-xl text-[13px] text-gray-800 font-semibold outline-none focus:border-[#1a5242] transition-colors bg-white cursor-pointer shadow-sm"
                 >
                   <option value="created_at">Plus récents</option>
@@ -1000,7 +1014,11 @@ export default function ProductList() {
                 <label className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <Checkbox
                     checked={showPromo}
-                    onChange={(e) => setShowPromo(e.target.checked)}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setShowPromo(val);
+                      updateUrlParams({ promo: val ? "true" : "" });
+                    }}
                   />
                   <span className="text-[13px] text-gray-600 font-medium">
                     En promotion
@@ -1009,7 +1027,11 @@ export default function ProductList() {
                 <label className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <Checkbox
                     checked={showNew}
-                    onChange={(e) => setShowNew(e.target.checked)}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setShowNew(val);
+                      updateUrlParams({ new: val ? "true" : "" });
+                    }}
                   />
                   <span className="text-[13px] text-gray-600 font-medium">
                     Nouveautés
@@ -1018,7 +1040,11 @@ export default function ProductList() {
                 <label className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <Checkbox
                     checked={showBestseller}
-                    onChange={(e) => setShowBestseller(e.target.checked)}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setShowBestseller(val);
+                      updateUrlParams({ bestseller: val ? "true" : "" });
+                    }}
                   />
                   <span className="text-[13px] text-gray-600 font-medium">
                     Meilleures ventes
@@ -1027,7 +1053,11 @@ export default function ProductList() {
                 <label className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <Checkbox
                     checked={showFeatured}
-                    onChange={(e) => setShowFeatured(e.target.checked)}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setShowFeatured(val);
+                      updateUrlParams({ featured: val ? "true" : "" });
+                    }}
                   />
                   <span className="text-[13px] text-gray-600 font-medium">
                     Sélection ParaSunshine
