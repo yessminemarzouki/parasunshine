@@ -304,7 +304,6 @@ export default function ProductList() {
     updateUrlParams({ page: page > 1 ? page : "" });
     // ✅ ScrollToTop.jsx gère le scroll (PUSH → remonte en haut automatiquement)
   };
-  s;
 
   const toggleCategory = (id) =>
     setExpandedCategories((p) => ({ ...p, [id]: !p[id] }));
