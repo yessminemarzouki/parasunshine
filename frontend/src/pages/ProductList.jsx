@@ -264,30 +264,62 @@ export default function ProductList() {
   }, [scrollKey]);
 
   // ✅ Restauration du scroll au retour depuis ProductDetail
+  // ⚠️ Retry progressif : la page grandit au fur et à mesure que les
+  // images se chargent, donc on retente plusieurs fois pendant 1s
   const restoredScrollRef = useRef(false);
   useEffect(() => {
     if (restoredScrollRef.current) return;
     if (loading) return;
     if (products.length === 0) return;
 
-    // Lire le SESSION_KEY (scroll sauvegardé au démontage précédent)
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (!saved) return;
 
     try {
       const s = JSON.parse(saved);
-      if (s.returnFromDetail && s.scrollY > 0) {
-        restoredScrollRef.current = true;
-        // Double rAF pour attendre que le DOM soit peint
+      if (!s.returnFromDetail || !s.scrollY || s.scrollY <= 0) return;
+
+      restoredScrollRef.current = true;
+      const targetY = s.scrollY;
+
+      // Retry : 10 tentatives espacées de 150ms (total ~1.5s)
+      // → laisse le temps aux images de charger et à la page de s'allonger
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      const tryScroll = () => {
+        // Scroll à la position cible (ou au max si la page est trop courte)
+        window.scrollTo({ top: targetY, behavior: "instant" });
+
+        // Vérifie si on a bien atteint la position
+        const currentY = window.scrollY;
+        const docHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        const targetReached = currentY >= Math.min(targetY, docHeight) - 5;
+
+        attempts++;
+
+        // Si atteint OU max tentatives → on arrête
+        if (targetReached || attempts >= maxAttempts) {
+          // ✅ Supprimer la clé seulement quand on a fini
+          sessionStorage.removeItem(SESSION_KEY);
+          return;
+        }
+
+        // Sinon on retente
+        setTimeout(tryScroll, 150);
+      };
+
+      // Démarre après un premier rAF (DOM peint) + 100ms de sécurité
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: s.scrollY, behavior: "instant" });
-          });
+          setTimeout(tryScroll, 100);
         });
-        // ✅ Supprimer la clé après restauration
-        sessionStorage.removeItem(SESSION_KEY);
-      }
-    } catch {}
+      });
+    } catch {
+      // En cas d'erreur de parsing, on supprime la clé corrompue
+      sessionStorage.removeItem(SESSION_KEY);
+    }
   }, [loading, products.length]);
   useEffect(() => {
     sessionStorage.setItem("productlist_last_search", location.search);
