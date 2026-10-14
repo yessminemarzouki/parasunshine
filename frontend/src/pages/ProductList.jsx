@@ -88,9 +88,6 @@ export default function ProductList() {
     setSearchParams(newParams, { replace: true });
   };
 
-  // ── Clé de session unique pour la restauration ──
-  const SESSION_KEY = "productlist_state_v1";
-
   // ── Initialisation au montage ──
   useEffect(() => {
     const category = searchParams.get("category") || "";
@@ -115,22 +112,6 @@ export default function ProductList() {
     setReadyToFetch(true);
     fetchFiltersData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Sauvegarde avant démontage ──
-  // ⚠️ On ne sauvegarde QUE le scroll (les filtres sont déjà dans l'URL)
-  useEffect(() => {
-    return () => {
-      try {
-        sessionStorage.setItem(
-          SESSION_KEY,
-          JSON.stringify({
-            scrollY: window.scrollY,
-            returnFromDetail: true,
-          }),
-        );
-      } catch {}
-    };
   }, []);
 
   // ✅ Synchronise TOUJOURS le state depuis l'URL (source de vérité unique)
@@ -241,86 +222,7 @@ export default function ProductList() {
   useEffect(() => {
     if (selectedCategory && categories.length > 0) autoExpandSelectedCategory();
   }, [selectedCategory, categories]);
-  // ── Sauvegarde / restauration de la position de scroll ──
-  // Clé unique par combinaison de filtres → si l'utilisateur change de
-  // catégorie/marque/recherche, on repart de 0, mais s'il revient d'une
-  // fiche produit sur la même liste, on restaure sa position exacte.
-  const scrollKey = `productlist_scroll_${location.search || "default"}`;
 
-  // Sauvegarde à chaque scroll (throttlé via requestAnimationFrame)
-  useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          sessionStorage.setItem(scrollKey, String(window.scrollY));
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [scrollKey]);
-
-  // ✅ Restauration du scroll au retour depuis ProductDetail
-  // ⚠️ Retry progressif : la page grandit au fur et à mesure que les
-  // images se chargent, donc on retente plusieurs fois pendant 1s
-  const restoredScrollRef = useRef(false);
-  useEffect(() => {
-    if (restoredScrollRef.current) return;
-    if (loading) return;
-    if (products.length === 0) return;
-
-    const saved = sessionStorage.getItem(SESSION_KEY);
-    if (!saved) return;
-
-    try {
-      const s = JSON.parse(saved);
-      if (!s.returnFromDetail || !s.scrollY || s.scrollY <= 0) return;
-
-      restoredScrollRef.current = true;
-      const targetY = s.scrollY;
-
-      // Retry : 10 tentatives espacées de 150ms (total ~1.5s)
-      // → laisse le temps aux images de charger et à la page de s'allonger
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      const tryScroll = () => {
-        // Scroll à la position cible (ou au max si la page est trop courte)
-        window.scrollTo({ top: targetY, behavior: "instant" });
-
-        // Vérifie si on a bien atteint la position
-        const currentY = window.scrollY;
-        const docHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        const targetReached = currentY >= Math.min(targetY, docHeight) - 5;
-
-        attempts++;
-
-        // Si atteint OU max tentatives → on arrête
-        if (targetReached || attempts >= maxAttempts) {
-          // ✅ Supprimer la clé seulement quand on a fini
-          sessionStorage.removeItem(SESSION_KEY);
-          return;
-        }
-
-        // Sinon on retente
-        setTimeout(tryScroll, 150);
-      };
-
-      // Démarre après un premier rAF (DOM peint) + 100ms de sécurité
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setTimeout(tryScroll, 100);
-        });
-      });
-    } catch {
-      // En cas d'erreur de parsing, on supprime la clé corrompue
-      sessionStorage.removeItem(SESSION_KEY);
-    }
-  }, [loading, products.length]);
   useEffect(() => {
     sessionStorage.setItem("productlist_last_search", location.search);
   }, [location.search]);
@@ -382,11 +284,6 @@ export default function ProductList() {
   };
 
   const resetFilters = () => {
-    // Nettoie toutes les positions de scroll sauvegardées pour cette page
-    Object.keys(sessionStorage)
-      .filter((k) => k.startsWith("productlist_scroll_"))
-      .forEach((k) => sessionStorage.removeItem(k));
-
     setSelectedCategory("");
     setSelectedBrand("");
     setSearchQuery("");
@@ -399,18 +296,15 @@ export default function ProductList() {
     setSearchParams({});
     setShowBestseller(false);
     setShowFeatured(false);
+    // ✅ ScrollToTop.jsx va remonter en haut automatiquement (PUSH)
   };
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // ✅ Ajouter le paramètre page à l'URL (bonus : le bouton back fonctionne)
+    // ✅ Ajouter le paramètre page à l'URL
     updateUrlParams({ page: page > 1 ? page : "" });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    // Efface la position sauvegardée
-    Object.keys(sessionStorage)
-      .filter((k) => k.startsWith("productlist_scroll_"))
-      .forEach((k) => sessionStorage.removeItem(k));
+    // ✅ ScrollToTop.jsx gère le scroll (PUSH → remonte en haut automatiquement)
   };
+  s;
 
   const toggleCategory = (id) =>
     setExpandedCategories((p) => ({ ...p, [id]: !p[id] }));
