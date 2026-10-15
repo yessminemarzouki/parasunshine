@@ -26,6 +26,8 @@ const GoogleCallback = () => {
           return;
         }
 
+        const isNewUser = searchParams.get("new") === "1";
+
         const data = await exchangeGoogleCode(code);
 
         localStorage.setItem("auth_token", data.token);
@@ -33,9 +35,14 @@ const GoogleCallback = () => {
 
         const redirectTo =
           sessionStorage.getItem("redirect_after_login") || "/account";
+
+        const finalRedirect = isNewUser
+          ? `${redirectTo}${redirectTo.includes("?") ? "&" : "?"}welcome=1`
+          : redirectTo;
+
         sessionStorage.removeItem("redirect_after_login");
         setTimeout(() => {
-          navigate(redirectTo);
+          navigate(finalRedirect);
           window.location.reload();
         }, 1000);
       } catch (err) {

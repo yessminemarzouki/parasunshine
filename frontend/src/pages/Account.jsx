@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { STORAGE_URL } from "../config/api";
@@ -114,6 +114,10 @@ const Notif = ({ msg }) => {
 
 export default function Account() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showWelcome, setShowWelcome] = useState(
+    searchParams.get("welcome") === "1",
+  );
   const [activeTab, setActiveTab] = useState("orders");
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -486,6 +490,32 @@ export default function Account() {
             </button>
           </div>
         </div>
+
+        {/* Bandeau Bienvenue — nouveau compte Google */}
+        {showWelcome && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-6 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[14.5px] font-bold text-emerald-900">
+                Bienvenue chez ParaSunshine !
+              </p>
+              <p className="text-[13px] text-emerald-700 mt-1">
+                Votre compte a bien été créé via Google. Vous pouvez dès
+                maintenant découvrir nos produits.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowWelcome(false);
+                searchParams.delete("welcome");
+                setSearchParams(searchParams, { replace: true });
+              }}
+              className="text-emerald-700 hover:bg-emerald-100 rounded-lg p-1.5 flex-shrink-0"
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] gap-5 items-start">
@@ -1168,43 +1198,68 @@ export default function Account() {
                   <p className="text-[15px] font-bold text-gray-800 mb-5">
                     Changer mon mot de passe
                   </p>
-                  <Notif msg={passwordMsg} />
-                  <form
-                    onSubmit={handlePasswordSubmit}
-                    className="space-y-4 max-w-md"
-                  >
-                    {[
-                      { label: "Mot de passe actuel", key: "current_password" },
-                      { label: "Nouveau mot de passe", key: "password" },
-                      {
-                        label: "Confirmer le mot de passe",
-                        key: "password_confirmation",
-                      },
-                    ].map(({ label, key }) => (
-                      <FieldInput
-                        key={key}
-                        label={label}
-                        type="password"
-                        value={passwordForm[key]}
-                        onChange={(e) =>
-                          setPasswordForm((p) => ({
-                            ...p,
-                            [key]: e.target.value,
-                          }))
-                        }
-                      />
-                    ))}
-                    <button
-                      type="submit"
-                      disabled={savingPassword}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-[#1a5242] text-[#1a5242] text-[13.5px] font-semibold hover:bg-[#1a5242] hover:text-white transition-all disabled:opacity-50"
-                    >
-                      {savingPassword && (
-                        <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                      )}
-                      Mettre à jour le mot de passe
-                    </button>
-                  </form>
+
+                  {user?.google_id ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 max-w-md">
+                      <p className="text-[13.5px] text-blue-900 font-semibold mb-1">
+                        Compte lié à Google
+                      </p>
+                      <p className="text-[13px] text-blue-700 mb-4">
+                        Votre compte a été créé via Google. Vous n'avez pas
+                        encore de mot de passe ParaSunshine. Utilisez la
+                        procédure ci-dessous pour en définir un.
+                      </p>
+                      <Link
+                        to="/forgot-password"
+                        className="inline-block px-4 py-2 bg-[#1a5242] text-white rounded-lg text-[13px] font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        Définir un mot de passe
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      <Notif msg={passwordMsg} />
+                      <form
+                        onSubmit={handlePasswordSubmit}
+                        className="space-y-4 max-w-md"
+                      >
+                        {[
+                          {
+                            label: "Mot de passe actuel",
+                            key: "current_password",
+                          },
+                          { label: "Nouveau mot de passe", key: "password" },
+                          {
+                            label: "Confirmer le mot de passe",
+                            key: "password_confirmation",
+                          },
+                        ].map(({ label, key }) => (
+                          <FieldInput
+                            key={key}
+                            label={label}
+                            type="password"
+                            value={passwordForm[key]}
+                            onChange={(e) =>
+                              setPasswordForm((p) => ({
+                                ...p,
+                                [key]: e.target.value,
+                              }))
+                            }
+                          />
+                        ))}
+                        <button
+                          type="submit"
+                          disabled={savingPassword}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-[#1a5242] text-[#1a5242] text-[13.5px] font-semibold hover:bg-[#1a5242] hover:text-white transition-all disabled:opacity-50"
+                        >
+                          {savingPassword && (
+                            <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                          )}
+                          Mettre à jour le mot de passe
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             )}

@@ -196,7 +196,10 @@ class AuthController extends Controller
 
             // Chercher ou créer l'utilisateur
             $user = User::where('email', $googleUser->email)->first();
+            $isNewUser = false;
+
             if (!$user) {
+                $isNewUser = true;
                 // Découper le nom complet en first_name + last_name
                 // Google fournit généralement name="Prénom Nom"
                 $fullName = trim($googleUser->name ?? '');
@@ -243,9 +246,11 @@ class AuthController extends Controller
             // Génère un code d'échange à usage unique, valide 60 secondes
             $code = Str::random(48);
             Cache::put('google_auth_code:' . $code, $user->id, now()->addSeconds(60));
-
             $frontendUrl = rtrim(config('app.frontend_url'), '/') . '/auth/google/callback';
-            $redirectUrl = $frontendUrl . '?' . http_build_query(['code' => $code]);
+            $redirectUrl = $frontendUrl . '?' . http_build_query([
+                'code' => $code,
+                'new' => $isNewUser ? '1' : '0',
+            ]);
 
             return redirect($redirectUrl);
         } catch (\Exception $e) {
@@ -465,14 +470,22 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $request->validate([
-            'current_password' => 'required|string',
-            'password'         => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
-        ], [
+        // Les utilisateurs Google n'ont pas de mot de passe actuel à fournir
+        $isGoogleUser = !empty($user->google_id);
+
+        $rules = [
+            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+        ];
+
+        if (!$isGoogleUser) {
+            $rules['current_password'] = 'required|string';
+        }
+
+        $request->validate($rules, [
             'password.regex' => 'Le mot de passe doit contenir au moins une majuscule et un chiffre',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (!$isGoogleUser && !Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'Mot de passe actuel incorrect.',
             ], 422);
