@@ -160,12 +160,56 @@ export const TD = ({ children, className = "" }) => (
 // Pagination
 export const Pagination = ({ meta, page, setPage }) => {
   if (!meta?.last_page || meta.last_page <= 1) return null;
+
+  const currentPage = page;
+  const totalPages = meta.last_page;
+
+  // ✅ Calcule les pages visibles :
+  // - Toujours afficher les 2 pages autour de la page courante
+  // - Toujours afficher la première et la dernière page
+  // - Ajouter "..." pour les pages masquées
+  const getVisiblePages = () => {
+    const delta = 2; // nombre de pages à afficher avant/après la courante
+    const range = [];
+    const rangeWithDots = [];
+    let lastPageAdded = 0;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - delta && i <= currentPage + delta)
+      ) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((pageNum) => {
+      if (lastPageAdded) {
+        if (pageNum - lastPageAdded === 2) {
+          // Page juste après → on l'ajoute directement (pas de "...")
+          rangeWithDots.push(lastPageAdded + 1);
+        } else if (pageNum - lastPageAdded > 2) {
+          // Il y a un trou → on ajoute "..."
+          rangeWithDots.push("...");
+        }
+      }
+      rangeWithDots.push(pageNum);
+      lastPageAdded = pageNum;
+    });
+
+    return rangeWithDots;
+  };
+
+  const visiblePages = getVisiblePages();
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-[13px] text-gray-500">
       <span>
         Page {meta.current_page} sur {meta.last_page} — {meta.total} résultats
       </span>
-      <div className="flex gap-1">
+      <div className="flex gap-1 flex-wrap">
+        {/* Bouton précédent */}
         <button
           disabled={page <= 1}
           onClick={() => setPage(page - 1)}
@@ -173,22 +217,32 @@ export const Pagination = ({ meta, page, setPage }) => {
         >
           <ChevronLeft size={14} />
         </button>
-        {Array.from(
-          { length: Math.min(meta.last_page, 5) },
-          (_, i) => i + 1,
-        ).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPage(p)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors ${
-              p === page
-                ? "bg-[#1a4731] text-white border border-[#1a4731]"
-                : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
+
+        {/* Pages visibles avec "..." si nécessaire */}
+        {visiblePages.map((p, index) =>
+          p === "..." ? (
+            <span
+              key={`dots-${index}`}
+              className="w-8 h-8 flex items-center justify-center text-gray-400 text-[13px] font-medium select-none"
+            >
+              ...
+            </span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors ${
+                p === page
+                  ? "bg-[#1a4731] text-white border border-[#1a4731]"
+                  : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
+              }`}
+            >
+              {p}
+            </button>
+          ),
+        )}
+
+        {/* Bouton suivant */}
         <button
           disabled={page >= meta.last_page}
           onClick={() => setPage(page + 1)}
