@@ -1,7 +1,7 @@
 @component('mail::message')
 # Bonne nouvelle, {{ $firstName }} !
 
-Votre demande a bien été traitée — ParaSunshine a commandé l'article que vous attendiez, dans la quantité que vous avez demandée :
+Votre demande a bien été traitée. ParaSunshine a commandé l'article que vous attendiez, dans la quantité que vous avez demandée.
 
 **{{ $itemName }}**
 @if($variantLabel)
