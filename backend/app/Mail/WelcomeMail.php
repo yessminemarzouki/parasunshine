@@ -11,7 +11,8 @@ use Illuminate\Queue\SerializesModels;
 
 class WelcomeMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $user;
 
@@ -23,7 +24,7 @@ class WelcomeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🌟 Bienvenue chez ParaSunshine !',
+            subject: 'Bienvenue chez ParaSunshine',
         );
     }
 

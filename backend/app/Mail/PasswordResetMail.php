@@ -10,7 +10,8 @@ use Illuminate\Queue\SerializesModels;
 
 class PasswordResetMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $token;
     public $email;
@@ -24,7 +25,7 @@ class PasswordResetMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🔒 Réinitialisation de votre mot de passe',
+            subject: 'Réinitialisation de votre mot de passe',
         );
     }
 

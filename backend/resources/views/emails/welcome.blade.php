@@ -24,24 +24,25 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .header {
-            background: linear-gradient(135deg, #1a5242 0%, #2d7a5f 100%);
-            padding: 40px 30px;
+            background: #ffffff;
+            padding: 35px 30px 25px 30px;
             text-align: center;
+            border-bottom: 3px solid #1a5242;
         }
         .header img {
             max-height: 70px;
             margin-bottom: 15px;
         }
         .header h1 {
-            color: #ffffff;
+            color: #1a5242;
             margin: 0;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
         }
         .header p {
-            color: #fef3c7;
+            color: #6b7280;
             margin: 8px 0 0 0;
-            font-size: 16px;
+            font-size: 15px;
         }
         .content {
             padding: 35px 30px;

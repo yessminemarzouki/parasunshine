@@ -11,15 +11,13 @@ use Illuminate\Queue\SerializesModels;
 
 class OrderStatusChangedMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $order;
     public $oldStatus;
     public $newStatus;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Order $order, $oldStatus, $newStatus)
     {
         $this->order = $order;
@@ -27,9 +25,6 @@ class OrderStatusChangedMail extends Mailable
         $this->newStatus = $newStatus;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         $statusLabels = [
@@ -43,13 +38,10 @@ class OrderStatusChangedMail extends Mailable
         $statusLabel = $statusLabels[$this->newStatus] ?? 'Mise à jour';
 
         return new Envelope(
-            subject: '📦 Votre commande #' . $this->order->order_number . ' - ' . $statusLabel,
+            subject: 'Votre commande #' . $this->order->order_number . ' - ' . $statusLabel,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -57,9 +49,6 @@ class OrderStatusChangedMail extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     */
     public function attachments(): array
     {
         return [];

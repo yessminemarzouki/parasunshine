@@ -24,14 +24,14 @@ class StockRequestNotifiedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bonne nouvelle — votre produit est disponible !',
+            subject: 'Bonne nouvelle - votre produit est disponible',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.stock-request-notified',
+            view: 'emails.stock-request-notified',
         );
     }
 }
