@@ -256,10 +256,28 @@ export default function Home() {
   const handlePromoScroll = () => {
     const el = promoScrollRef.current;
     if (!el) return;
-    const cardWidth = el.firstChild?.offsetWidth || 1;
-    const gap = 12;
-    const cardIndex = Math.round(el.scrollLeft / (cardWidth + gap));
-    const pageIndex = Math.round(cardIndex / MOBILE_CARDS_PER_VIEW);
+
+    const totalWidth = el.scrollWidth - el.clientWidth;
+    if (totalWidth <= 0) return;
+
+    // Position de scroll en pourcentage (0 → 1)
+    const scrollRatio = el.scrollLeft / totalWidth;
+
+    // Nombre total de pages mobiles
+    const totalPages = Math.ceil(
+      promoSection.products.length / MOBILE_CARDS_PER_VIEW,
+    );
+    if (totalPages <= 1) {
+      setMobilePromoActive(0);
+      return;
+    }
+
+    // Mappe le ratio (0→1) sur les pages (0 → totalPages-1)
+    // On arrondit à la page la plus proche
+    const pageIndex = Math.min(
+      Math.round(scrollRatio * (totalPages - 1)),
+      totalPages - 1,
+    );
     setMobilePromoActive(pageIndex);
   };
 
@@ -309,10 +327,22 @@ export default function Home() {
   const handleBlogScroll = () => {
     const el = blogScrollRef.current;
     if (!el) return;
-    const cardWidth = el.firstChild?.offsetWidth || 1;
-    const gap = 20;
-    const cardIndex = Math.round(el.scrollLeft / (cardWidth + gap));
-    const pageIndex = Math.round(cardIndex / CARDS_PER_PAGE_MOBILE);
+
+    const totalWidth = el.scrollWidth - el.clientWidth;
+    if (totalWidth <= 0) return;
+
+    const scrollRatio = el.scrollLeft / totalWidth;
+    const totalPages = Math.ceil(blogPosts.length / CARDS_PER_PAGE_MOBILE);
+
+    if (totalPages <= 1) {
+      setMobileBlogActive(0);
+      return;
+    }
+
+    const pageIndex = Math.min(
+      Math.round(scrollRatio * (totalPages - 1)),
+      totalPages - 1,
+    );
     setMobileBlogActive(pageIndex);
   };
 
