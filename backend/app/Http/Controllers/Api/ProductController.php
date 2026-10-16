@@ -251,12 +251,31 @@ class ProductController extends Controller
         }
 
         if ($request->has('search') && $request->search !== '') {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('reference', 'LIKE', "%{$search}%")
-                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'LIKE', "%{$search}%"))
-                    ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$search}%"));
+            $search = trim($request->search);
+
+            // Découpe en mots-clés (>= 2 caractères, uniques)
+            $keywords = collect(preg_split('/\s+/', mb_strtolower($search)))
+                ->filter(fn ($w) => mb_strlen($w) >= 2)
+                ->unique()
+                ->values();
+
+            $query->where(function ($q) use ($search, $keywords) {
+                // 1. Correspondance exacte sur la phrase complète (prioritaire)
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('reference', 'LIKE', "%{$search}%");
+                });
+
+                // 2. ET chaque mot-clé doit matcher quelque part
+                foreach ($keywords as $kw) {
+                    $q->where(function ($sub) use ($kw) {
+                        $sub->where('name', 'LIKE', "%{$kw}%")
+                            ->orWhere('reference', 'LIKE', "%{$kw}%")
+                            ->orWhere('short_description', 'LIKE', "%{$kw}%")
+                            ->orWhereHas('brand', fn ($b) => $b->where('name', 'LIKE', "%{$kw}%"))
+                            ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$kw}%"));
+                    });
+                }
             });
         }
 
