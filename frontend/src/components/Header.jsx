@@ -307,7 +307,7 @@ function SearchResultsBody({
         </div>
       )}
 
-      {results.length > 0 && (
+      {(results.length > 0 || suggestions.length > 0) && (
         <button
           onClick={onSeeAll}
           style={{
