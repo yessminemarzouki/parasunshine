@@ -41,10 +41,10 @@ export default function Navigation() {
     timerRef.current = setTimeout(() => setActiveMenu(null), 120);
   };
   const NavLinkText = ({ children }) => (
-    <span className="relative inline-block transition-colors duration-200 group-hover:text-[#1a5242]">
+    <span className="relative inline-block transition-colors duration-200 group-hover:text-[#1a5242] whitespace-nowrap">
       {children}
       <span
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[3px] rounded-full transition-all duration-300 group-hover:w-full"
+        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-[2px] rounded-full transition-all duration-300 group-hover:w-full"
         style={{ background: "linear-gradient(90deg, #1a5242, #d4af37)" }}
       />
     </span>
@@ -260,12 +260,12 @@ export default function Navigation() {
         }
       `}</style>
       <div
-        className="main-nav max-w-[1300px] mx-auto flex justify-center items-center relative"
-        style={{ height: 60 }}
+        className="main-nav max-w-[1400px] mx-auto flex justify-center items-center relative gap-1"
+        style={{ height: 64 }}
       >
         <Link
           to="/"
-          className="group h-full px-4 flex items-center gap-1.5 text-gray-900 font-medium text-[0.92rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04]"
+          className="group h-full px-3.5 flex items-center gap-1.5 text-gray-900 font-medium text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04] whitespace-nowrap"
         >
           <NavLinkText>Accueil</NavLinkText>
         </Link>
@@ -279,13 +279,13 @@ export default function Navigation() {
           >
             <Link
               to={`/products?category=${cat.slug}`}
-              className="group h-full px-4 flex items-center gap-1.5 text-gray-900 font-medium text-[0.92rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04]"
+              className="group h-full px-3.5 flex items-center gap-1.5 text-gray-900 font-medium text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04] whitespace-nowrap"
             >
               <NavLinkText>{cat.name}</NavLinkText>
               {hasMegaMenu(cat) && (
                 <ChevronDown
-                  size={13}
-                  className="text-[#1a5242] transition-transform duration-200 group-hover:rotate-180"
+                  size={12}
+                  className="text-[#1a5242] transition-transform duration-200 group-hover:rotate-180 shrink-0 mt-0.5"
                 />
               )}
             </Link>
@@ -297,7 +297,7 @@ export default function Navigation() {
 
         <Link
           to="/products?promo=true"
-          className="group relative h-full px-4 flex items-center gap-1.5 font-semibold text-[0.92rem] no-underline transition-colors duration-200 hover:bg-[#c62828]/[0.05]"
+          className="group relative h-full px-3.5 flex items-center gap-1.5 font-semibold text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#c62828]/[0.05] whitespace-nowrap"
           style={{ color: "#c62828" }}
         >
           <Gift
@@ -312,7 +312,7 @@ export default function Navigation() {
 
         <Link
           to="/coffrets"
-          className="group h-full px-4 flex items-center gap-1.5 text-gray-900 font-medium text-[0.92rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04]"
+          className="group h-full px-3.5 flex items-center gap-1.5 text-gray-900 font-medium text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04] whitespace-nowrap"
         >
           <PackageOpen
             size={14}
