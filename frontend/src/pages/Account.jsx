@@ -1195,9 +1195,17 @@ export default function Account() {
                 </form>
 
                 <div className="mt-10 pt-8 border-t border-gray-100">
-                  <p className="text-[15px] font-bold text-gray-800 mb-5">
-                    Changer mon mot de passe
-                  </p>
+                  <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <p className="text-[15px] font-bold text-gray-800">
+                      Changer mon mot de passe
+                    </p>
+                    <Link
+                      to="/forgot-password"
+                      className="text-[12.5px] text-[#1a5242] font-semibold hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </Link>
+                  </div>
 
                   {user?.google_id && !user?.has_password ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 max-w-md">
