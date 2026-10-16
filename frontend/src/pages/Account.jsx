@@ -1199,7 +1199,7 @@ export default function Account() {
                     Changer mon mot de passe
                   </p>
 
-                  {user?.google_id ? (
+                  {user?.google_id && !user?.has_password ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 max-w-md">
                       <p className="text-[13.5px] text-blue-900 font-semibold mb-1">
                         Compte lié à Google

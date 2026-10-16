@@ -80,6 +80,7 @@ class AuthController extends Controller
              'email' => $request->email,
              'phone' => $request->phone,
              'password' => Hash::make($request->password),
+             'has_password' => true,   // ← AJOUT
              'role' => 'user',
              'newsletter_opt_in' => $request->boolean('newsletter_opt_in'),
          ]);
@@ -239,6 +240,7 @@ class AuthController extends Controller
                     'last_name' => $lastName ?: null,
                     'email' => $googleUser->email,
                     'password' => Hash::make(Str::random(16)),
+                    'has_password' => false,
                     'role' => 'user',
                     'phone' => null,
                     'google_id' => $googleUser->id,
@@ -402,6 +404,7 @@ class AuthController extends Controller
             // Mettre à jour le mot de passe
             $user = User::where('email', $validated['email'])->first();
             $user->password = Hash::make($validated['password']);
+            $user->has_password = true;   // ← AJOUT
             $user->save();
 
             // Supprimer le token utilisé
@@ -507,7 +510,10 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user->update(['password' => Hash::make($request->password)]);
+        $user->update([
+    'password' => Hash::make($request->password),
+    'has_password' => true,   // ← AJOUT
+]);
 
         try {
             Mail::to($user->email)->send(new PasswordChangedMail($user));

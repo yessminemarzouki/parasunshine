@@ -43,7 +43,14 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       await resetPassword(formData);
-      navigate("/login?reset=success");
+
+      // Si l'utilisateur était déjà connecté, on le renvoie sur son compte
+      const wasLoggedIn = !!localStorage.getItem("auth_token");
+      if (wasLoggedIn) {
+        navigate("/account?password_set=1", { replace: true });
+      } else {
+        navigate("/login?reset=success", { replace: true });
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "Une erreur est survenue");
     } finally {
