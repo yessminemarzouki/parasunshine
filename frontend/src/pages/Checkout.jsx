@@ -311,10 +311,22 @@ export default function Checkout() {
       clearCart();
       navigate(`/order-confirmation/${response.order.id}`);
     } catch (err) {
-      setError(
+      const msg =
         err?.response?.data?.message ||
-          "Une erreur est survenue lors de la création de la commande",
-      );
+        "Une erreur est survenue lors de la création de la commande";
+
+      // Si le code promo est refusé (limite atteinte, expiré, etc.),
+      // on le retire du panier pour forcer l'utilisateur à en saisir un autre.
+      if (
+        err?.response?.status === 422 &&
+        (msg.toLowerCase().includes("code promo") ||
+          msg.toLowerCase().includes("limite") ||
+          msg.toLowerCase().includes("déjà utilisé"))
+      ) {
+        removePromoCode();
+      }
+
+      setError(msg);
       setLoading(false);
     }
   };

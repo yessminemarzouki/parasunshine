@@ -182,27 +182,49 @@ class OrderController extends Controller
             if (!empty($validated['promo_code'])) {
                 $promoCode = \App\Models\PromoCode::where('code', strtoupper(trim($validated['promo_code'])))->first();
 
-                if ($promoCode) {
-                    [$isValid] = $promoCode->isCurrentlyValid();
-
-                    // 🆕 Vérifier la limite par utilisateur
-                    [$usableByUser] = $promoCode->isUsableByUser($user->id);
-
-                    $hasPromoItem = collect($itemsData)->contains(function ($item) {
-                        if ($item['type'] === 'bundle') {
-                            $b = $item['bundle'];
-                            return $b->promo_price && $b->promo_price < $b->price;
-                        }
-                        $p = $item['product'];
-                        return $p->promo_price && $p->promo_price < $p->price;
-                    });
-
-                    if ($isValid && $usableByUser && !($hasPromoItem && !$promoCode->allow_with_promo_items)) {
-                        $promoDiscountPercentage = $promoCode->discount_percentage;
-                        $promoDiscountAmount = round($subtotal * $promoCode->discount_percentage / 100, 3);
-                        $promoCode->increment('used_count');
-                    }
+                if (!$promoCode) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Code promo invalide.',
+                    ], 422);
                 }
+
+                [$isValid, $validError] = $promoCode->isCurrentlyValid();
+                if (!$isValid) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => $validError,
+                    ], 422);
+                }
+
+                // 🆕 Vérifier la limite par utilisateur — REFUSER la commande sinon
+                [$usableByUser, $userError] = $promoCode->isUsableByUser($user->id);
+                if (!$usableByUser) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => $userError,
+                    ], 422);
+                }
+
+                $hasPromoItem = collect($itemsData)->contains(function ($item) {
+                    if ($item['type'] === 'bundle') {
+                        $b = $item['bundle'];
+                        return $b->promo_price && $b->promo_price < $b->price;
+                    }
+                    $p = $item['product'];
+                    return $p->promo_price && $p->promo_price < $p->price;
+                });
+
+                if ($hasPromoItem && !$promoCode->allow_with_promo_items) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Ce code promo ne peut pas être utilisé car votre panier contient un ou plusieurs articles déjà en promotion.',
+                    ], 422);
+                }
+
+                $promoDiscountPercentage = $promoCode->discount_percentage;
+                $promoDiscountAmount = round($subtotal * $promoCode->discount_percentage / 100, 3);
+                $promoCode->increment('used_count');
             }
 
             $subtotalAfterDiscount = $subtotal - $promoDiscountAmount;

@@ -35,7 +35,7 @@ class PromoCodeController extends Controller
         }
 
         // 🆕 Vérifier la limite par utilisateur (si connecté)
-        $currentUser = $request->user();
+        $currentUser = $request->user('sanctum');
         if ($currentUser) {
             [$usableByUser, $userError] = $promoCode->isUsableByUser($currentUser->id);
             if (!$usableByUser) {
