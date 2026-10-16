@@ -259,14 +259,12 @@ class ProductController extends Controller
                 ->unique()
                 ->values();
 
-            $query->where(function ($q) use ($search, $keywords) {
-                // 1. Correspondance exacte sur la phrase complète (prioritaire)
+            // Bloc AND strict : chaque mot doit matcher quelque part
+            $strictMatch = function ($q) use ($search, $keywords) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'LIKE', "%{$search}%")
                         ->orWhere('reference', 'LIKE', "%{$search}%");
                 });
-
-                // 2. ET chaque mot-clé doit matcher quelque part
                 foreach ($keywords as $kw) {
                     $q->where(function ($sub) use ($kw) {
                         $sub->where('name', 'LIKE', "%{$kw}%")
@@ -276,7 +274,46 @@ class ProductController extends Controller
                             ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$kw}%"));
                     });
                 }
-            });
+            };
+
+            // Bloc OR permissif : AU MOINS UN mot doit matcher
+            $looseMatch = function ($q) use ($keywords) {
+                $q->where(function ($sub) use ($keywords) {
+                    foreach ($keywords as $kw) {
+                        $sub->orWhere('name', 'LIKE', "%{$kw}%")
+                            ->orWhere('reference', 'LIKE', "%{$kw}%")
+                            ->orWhere('short_description', 'LIKE', "%{$kw}%")
+                            ->orWhereHas('brand', fn ($b) => $b->where('name', 'LIKE', "%{$kw}%"))
+                            ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$kw}%"));
+                    }
+                });
+            };
+
+            // On clone la requête pour tester le AND strict sans perdre
+            // les autres filtres (catégorie, marque, prix...)
+            $strictTest = clone $query;
+            $strictTest->where($strictMatch);
+
+            // Si le AND strict renvoie au moins 1 résultat → on l'utilise.
+            // Sinon on retombe sur le OR permissif (beaucoup plus large).
+            if ($strictTest->limit(1)->exists()) {
+                $query->where($strictMatch);
+            } else {
+                $query->where($looseMatch);
+            }
+        }
+        if (isset($keywords) && $keywords->isNotEmpty()) {
+            $relevanceSQL = '(0';
+            $relevanceBindings = [];
+            foreach ($keywords as $kw) {
+                $relevanceSQL .= " + (CASE WHEN LOWER(name) LIKE ? THEN 3 ELSE 0 END)";
+                $relevanceBindings[] = "%{$kw}%";
+                $relevanceSQL .= " + (CASE WHEN LOWER(reference) LIKE ? THEN 2 ELSE 0 END)";
+                $relevanceBindings[] = "%{$kw}%";
+            }
+            $relevanceSQL .= ')';
+
+            $query->orderByRaw($relevanceSQL . ' DESC', $relevanceBindings);
         }
 
         $sortBy = $request->get('sort', 'created_at');
