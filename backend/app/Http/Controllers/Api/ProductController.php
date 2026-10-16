@@ -340,8 +340,8 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $search = trim($request->get('q', ''));
-        if (strlen($search) < 2) {
-            return response()->json(['results' => [], 'suggestions' => []]);
+        if (mb_strlen($search) < 2) {
+            return response()->json(['results' => [], 'suggestions' => [], 'brands' => []]);
         }
 
         $cols = $this->listColumns;
@@ -351,43 +351,52 @@ class ProductController extends Controller
             'brand.parent:id,name,slug',
         ];
 
-        $keywords = collect(explode(' ', strtolower($search)))
-            ->filter(fn ($w) => strlen($w) >= 3)
+        // Découpe la requête en mots-clés (>= 2 caractères, uniques)
+        $keywords = collect(preg_split('/\s+/', mb_strtolower($search)))
+            ->filter(fn ($w) => mb_strlen($w) >= 2)
             ->unique()
             ->values();
 
-        $relevanceSQL = "
-        CASE
-            WHEN LOWER(name) LIKE ? THEN 10
-            WHEN LOWER(name) LIKE ? THEN 8
-            ELSE 0
-        END
-        + (is_bestseller * 2)
-        + (is_featured * 1)
-    ";
-        $relevanceBindings = [
-            strtolower($search) . '%',
-            '%' . strtolower($search) . '%',
-        ];
+        // Bloc "tous les mots doivent matcher"
+        $buildMatch = function ($q) use ($keywords, $search) {
+            // 1. Correspondance exacte sur la phrase complète (prioritaire)
+            $q->where(function ($sub) use ($search) {
+                $sub->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('reference', 'LIKE', "%{$search}%");
+            });
 
+            // 2. ET chaque mot-clé doit apparaître quelque part
+            foreach ($keywords as $kw) {
+                $q->where(function ($sub) use ($kw) {
+                    $sub->where('name', 'LIKE', "%{$kw}%")
+                        ->orWhere('reference', 'LIKE', "%{$kw}%")
+                        ->orWhere('short_description', 'LIKE', "%{$kw}%")
+                        ->orWhereHas('brand', fn ($b) => $b->where('name', 'LIKE', "%{$kw}%"))
+                        ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$kw}%"));
+                });
+            }
+        };
+
+        // Score de pertinence : nb de mots dans le nom + bonus bestseller/featured
+        $relevanceSQL = '(0';
+        $relevanceBindings = [];
+        foreach ($keywords as $kw) {
+            $relevanceSQL .= " + (CASE WHEN LOWER(name) LIKE ? THEN 3 ELSE 0 END)";
+            $relevanceBindings[] = "%{$kw}%";
+        }
+        $relevanceSQL .= " + (CASE WHEN LOWER(name) LIKE ? THEN 5 ELSE 0 END))";
+        $relevanceBindings[] = mb_strtolower($search) . '%';
+        $relevanceSQL .= ' + (is_bestseller * 2) + (is_featured * 1)';
+
+        // ── Résultats principaux ──
         $results = Product::select($cols)->with($with)
-            ->where(function ($q) use ($search, $keywords) {
-                $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('reference', 'LIKE', "%{$search}%")
-                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'LIKE', "%{$search}%"))
-                    ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$search}%"));
-                foreach ($keywords as $kw) {
-                    $q->orWhere('name', 'LIKE', "%{$kw}%");
-                }
-            })
-            ->orderByRaw($relevanceSQL . " DESC", $relevanceBindings)
+            ->where($buildMatch)
+            ->orderByRaw($relevanceSQL . ' DESC', $relevanceBindings)
             ->limit(10)
             ->get();
 
-        $excludeIds = $results->pluck('id');
-
+        // ── Suggestions (si 0 résultats exacts) ──
         $suggestions = collect([]);
-
         if ($results->isEmpty() && $keywords->isNotEmpty()) {
             $suggestions = Product::select($cols)->with($with)
                 ->where(function ($q) use ($keywords) {
@@ -397,18 +406,19 @@ class ProductController extends Controller
                             ->orWhereHas('category', fn ($c) => $c->where('name', 'LIKE', "%{$kw}%"));
                     }
                 })
-                ->orderByRaw($relevanceSQL . " DESC", $relevanceBindings)
+                ->orderByRaw($relevanceSQL . ' DESC', $relevanceBindings)
                 ->limit(3)
                 ->get();
-
-            $excludeIds = $excludeIds->merge($suggestions->pluck('id'));
         }
 
-        // Supprimé : ne plus proposer de bestsellers aléatoires sans rapport avec la recherche
-
+        // ── Marques correspondantes ──
         $matchedBrands = Brand::select('id', 'name', 'slug', 'logo', 'parent_id')
             ->with('parent:id,name,slug,logo')
-            ->where('name', 'LIKE', "%{$search}%")
+            ->where(function ($q) use ($keywords) {
+                foreach ($keywords as $kw) {
+                    $q->orWhere('name', 'LIKE', "%{$kw}%");
+                }
+            })
             ->orderBy('name')
             ->limit(5)
             ->get()
