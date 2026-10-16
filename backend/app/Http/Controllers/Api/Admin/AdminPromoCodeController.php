@@ -57,7 +57,8 @@ class AdminPromoCodeController extends Controller
             'allow_with_promo_items'   => 'boolean',
             'starts_at'                => 'nullable|date',
             'ends_at'                  => 'nullable|date|after_or_equal:starts_at',
-            'usage_limit'              => 'nullable|integer|min:1',
+                    'usage_limit'              => 'nullable|integer|min:1',
+            'usage_limit_per_user'     => 'nullable|integer|min:1',
         ]);
 
         $data['code'] = strtoupper(trim($data['code']));

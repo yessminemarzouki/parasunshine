@@ -24,6 +24,11 @@ class Order extends Model
         'promo_discount_amount',
     ];
 
+    public function promoCodesUsages()
+    {
+        return $this->hasMany(\App\Models\PromoCodeUsage::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

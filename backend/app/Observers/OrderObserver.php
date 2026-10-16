@@ -14,6 +14,15 @@ class OrderObserver
      */
     public function updated(Order $order): void
     {
+        // 🆕 Si la commande est annulée, libérer l'utilisation du code promo
+        if ($order->isDirty('status') && $order->status === 'cancelled' && $order->promo_code) {
+            $promoCode = \App\Models\PromoCode::where('code', $order->promo_code)->first();
+            if ($promoCode) {
+                $promoCode->decrement('used_count');
+                \App\Models\PromoCodeUsage::where('order_id', $order->id)->delete();
+            }
+        }
+
         // Vérifier si le statut a changé
         if ($order->isDirty('status')) {
             $oldStatus = $order->getOriginal('status');

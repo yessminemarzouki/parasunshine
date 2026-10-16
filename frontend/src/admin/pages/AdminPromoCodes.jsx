@@ -36,6 +36,7 @@ const emptyForm = {
   starts_at: "",
   ends_at: "",
   usage_limit: "",
+  usage_limit_per_user: 1,
 };
 
 export default function AdminPromoCodes() {
@@ -96,6 +97,7 @@ export default function AdminPromoCodes() {
       starts_at: code.starts_at ? code.starts_at.slice(0, 16) : "",
       ends_at: code.ends_at ? code.ends_at.slice(0, 16) : "",
       usage_limit: code.usage_limit ?? "",
+      usage_limit_per_user: code.usage_limit_per_user ?? "",
     });
     setError("");
     setShowForm(true);
@@ -127,6 +129,9 @@ export default function AdminPromoCodes() {
         starts_at: form.starts_at || null,
         ends_at: form.ends_at || null,
         usage_limit: form.usage_limit ? parseInt(form.usage_limit, 10) : null,
+        usage_limit_per_user: form.usage_limit_per_user
+          ? parseInt(form.usage_limit_per_user, 10)
+          : null,
       };
 
       if (editId) {
@@ -339,6 +344,11 @@ export default function AdminPromoCodes() {
                     <td className="px-5 py-3 text-gray-600">
                       {code.used_count}
                       {code.usage_limit ? ` / ${code.usage_limit}` : ""}
+                      {code.usage_limit_per_user && (
+                        <span className="block text-[11px] text-gray-400">
+                          max {code.usage_limit_per_user}/client
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3">
                       {!code.is_active ? (
@@ -559,7 +569,7 @@ export default function AdminPromoCodes() {
               </div>
 
               <div>
-                <Label>Limite d'utilisation (optionnel)</Label>
+                <Label>Limite d'utilisation globale (optionnel)</Label>
                 <Input
                   type="number"
                   min={1}
@@ -568,6 +578,22 @@ export default function AdminPromoCodes() {
                   placeholder="Laisser vide pour un usage illimité"
                   className="w-full"
                 />
+              </div>
+
+              <div>
+                <Label>Limite par client (optionnel)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.usage_limit_per_user}
+                  onChange={(e) => f("usage_limit_per_user", e.target.value)}
+                  placeholder="Ex : 1 (une seule fois par client)"
+                  className="w-full"
+                />
+                <p className="text-[11.5px] text-gray-500 mt-1">
+                  Nombre de fois qu'un même client peut utiliser ce code.
+                  Laisser vide pour aucune limite.
+                </p>
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer">

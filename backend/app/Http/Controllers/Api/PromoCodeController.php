@@ -34,6 +34,15 @@ class PromoCodeController extends Controller
             return response()->json(['valid' => false, 'message' => $error], 422);
         }
 
+        // 🆕 Vérifier la limite par utilisateur (si connecté)
+        $currentUser = $request->user();
+        if ($currentUser) {
+            [$usableByUser, $userError] = $promoCode->isUsableByUser($currentUser->id);
+            if (!$usableByUser) {
+                return response()->json(['valid' => false, 'message' => $userError], 422);
+            }
+        }
+
         // Recalcule le sous-total et détecte les articles en promo
         // directement depuis la base — jamais depuis ce que le client envoie.
         $subtotal = 0;

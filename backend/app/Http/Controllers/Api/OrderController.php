@@ -84,6 +84,8 @@ class OrderController extends Controller
             }
         }
 
+        $promoCode = null;
+
         DB::beginTransaction();
 
         try {
@@ -183,6 +185,9 @@ class OrderController extends Controller
                 if ($promoCode) {
                     [$isValid] = $promoCode->isCurrentlyValid();
 
+                    // 🆕 Vérifier la limite par utilisateur
+                    [$usableByUser] = $promoCode->isUsableByUser($user->id);
+
                     $hasPromoItem = collect($itemsData)->contains(function ($item) {
                         if ($item['type'] === 'bundle') {
                             $b = $item['bundle'];
@@ -192,7 +197,7 @@ class OrderController extends Controller
                         return $p->promo_price && $p->promo_price < $p->price;
                     });
 
-                    if ($isValid && !($hasPromoItem && !$promoCode->allow_with_promo_items)) {
+                    if ($isValid && $usableByUser && !($hasPromoItem && !$promoCode->allow_with_promo_items)) {
                         $promoDiscountPercentage = $promoCode->discount_percentage;
                         $promoDiscountAmount = round($subtotal * $promoCode->discount_percentage / 100, 3);
                         $promoCode->increment('used_count');
@@ -230,8 +235,17 @@ class OrderController extends Controller
     'payment_status' => 'pending',
     'promo_code' => $promoDiscountPercentage ? strtoupper(trim($validated['promo_code'])) : null,
     'promo_discount_percentage' => $promoDiscountPercentage,
-    'promo_discount_amount' => $promoDiscountPercentage ? $promoDiscountAmount : null,
+      'promo_discount_amount' => $promoDiscountPercentage ? $promoDiscountAmount : null,
 ]);
+
+            // 🆕 Enregistrer l'utilisation du code promo par ce client
+            if ($promoDiscountPercentage !== null) {
+                \App\Models\PromoCodeUsage::create([
+                    'promo_code_id' => $promoCode->id,
+                    'user_id'       => $user->id,
+                    'order_id'      => $order->id,
+                ]);
+            }
 
             // Créer les items de la commande — le stock n'est décrémenté
             // qu'au passage en statut "livré" par l'admin, pas à la commande
