@@ -213,12 +213,15 @@ const ConfirmModal = ({ title, onConfirm, onCancel, deleting }) => (
   </div>
 );
 export default function AdminProducts() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState({});
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 350);
+  const [highlightId, setHighlightId] = useState(
+    searchParams.get("highlight") || null,
+  );
   const [stockFilter, setStock] = useState(searchParams.get("stock") || "");
   const [categoryFilter, setCat] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
@@ -764,6 +767,26 @@ export default function AdminProducts() {
       setStock(urlStock);
       setPage(1);
     }
+
+    const urlSearch = searchParams.get("search");
+    if (urlSearch !== null && urlSearch !== search) {
+      setSearch(urlSearch);
+      setPage(1);
+    }
+
+    const urlHighlight = searchParams.get("highlight");
+    if (urlHighlight) {
+      setHighlightId(urlHighlight);
+      // Nettoie l'URL du highlight après 4 secondes (le temps que l'utilisateur voie la ligne)
+      const timer = setTimeout(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete("highlight");
+        setSearchParams(next, { replace: true });
+        setHighlightId(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
   useEffect(() => {
     fetchProducts();
@@ -1719,8 +1742,14 @@ export default function AdminProducts() {
                     return (
                       <tr
                         key={p.id}
-                        className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors ${
-                          isOut ? "bg-red-50/40" : isLow ? "bg-amber-50/40" : ""
+                        className={`border-b border-gray-50 last:border-0 transition-all duration-500 ${
+                          String(highlightId) === String(p.id)
+                            ? "bg-amber-100 ring-2 ring-amber-400 ring-inset shadow-[0_0_0_3px_rgba(251,191,36,0.3)] animate-pulse"
+                            : isOut
+                              ? "bg-red-50/40 hover:bg-red-50/60"
+                              : isLow
+                                ? "bg-amber-50/40 hover:bg-amber-50/60"
+                                : "hover:bg-gray-50/60"
                         }`}
                       >
                         <td className="px-3 py-2.5">

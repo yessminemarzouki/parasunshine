@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDebounce } from "../hooks/useDebounce";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { Search, Eye, Trash2, Sparkles } from "lucide-react";
 import { STORAGE_URL } from "../../config/api";
 import {
@@ -337,8 +337,10 @@ export default function AdminOrders() {
                             className="w-5 h-5 rounded object-cover flex-shrink-0"
                           />
                         )}
-                        <span
-                          className="truncate max-w-[120px]"
+                        <Link
+                          to={`/admin/products?search=${encodeURIComponent(item.product?.reference || item.product?.name || "")}&highlight=${item.product?.id}`}
+                          className="truncate max-w-[120px] text-[#1a4731] hover:underline hover:text-[#0d3d30] transition-colors"
+                          title="Voir ce produit dans l'admin"
                           dangerouslySetInnerHTML={{
                             __html: item.product?.name,
                           }}
@@ -552,8 +554,10 @@ export default function AdminOrders() {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className="text-[13px] font-semibold text-gray-800 truncate"
+                        <Link
+                          to={`/admin/products?search=${encodeURIComponent(item.product?.reference || item.product?.name || "")}&highlight=${item.product?.id}`}
+                          className="block text-[13px] font-semibold text-gray-800 truncate hover:text-[#1a4731] hover:underline transition-colors"
+                          title="Voir ce produit dans l'admin"
                           dangerouslySetInnerHTML={{
                             __html: item.product?.name,
                           }}
