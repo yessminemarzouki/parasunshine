@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { login, getGoogleAuthUrl } from "../services/api";
 import { peekPostLoginRedirect } from "../utils/authRedirect";
@@ -12,6 +12,16 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Erreur renvoyée par le backend après un retour Google (ex: compte inexistant)
+  useEffect(() => {
+    const googleError = searchParams.get("error");
+    if (googleError) {
+      setError(googleError);
+      setSearchParams({}, { replace: true }); // nettoie l'URL
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +65,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      const data = await getGoogleAuthUrl();
+      const data = await getGoogleAuthUrl("login"); // ← "login"
       window.location.href = data.url;
     } catch {
       setError("Impossible de se connecter avec Google");

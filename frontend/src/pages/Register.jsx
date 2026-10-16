@@ -99,7 +99,7 @@ const Register = () => {
   const handleGoogleSignup = async () => {
     try {
       setLoading(true);
-      const data = await getGoogleAuthUrl();
+      const data = await getGoogleAuthUrl("register"); // ← "register"
       window.location.href = data.url;
     } catch {
       setErrors({ general: "Impossible de se connecter avec Google" });

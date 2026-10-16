@@ -15,14 +15,20 @@ const GoogleCallback = () => {
         const urlError = searchParams.get("error");
 
         if (urlError) {
-          setError(decodeURIComponent(urlError));
-          setTimeout(() => navigate("/login"), 2000);
+          const decoded = decodeURIComponent(urlError);
+          setError(decoded);
+          setTimeout(() => {
+            navigate(`/login?error=${encodeURIComponent(decoded)}`);
+          }, 2000);
           return;
         }
 
         if (!code) {
-          setError("Données de connexion manquantes");
-          setTimeout(() => navigate("/login"), 2000);
+          const msg = "Données de connexion manquantes";
+          setError(msg);
+          setTimeout(() => {
+            navigate(`/login?error=${encodeURIComponent(msg)}`);
+          }, 2000);
           return;
         }
 
@@ -46,10 +52,12 @@ const GoogleCallback = () => {
           window.location.reload();
         }, 1000);
       } catch (err) {
-        setError(
-          err?.response?.data?.message || "Erreur lors de la connexion Google",
-        );
-        setTimeout(() => navigate("/login"), 3000);
+        const msg =
+          err?.response?.data?.message || "Erreur lors de la connexion Google";
+        setError(msg);
+        setTimeout(() => {
+          navigate(`/login?error=${encodeURIComponent(msg)}`);
+        }, 3000);
       }
     };
 

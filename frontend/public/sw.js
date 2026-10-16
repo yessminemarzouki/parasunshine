@@ -31,6 +31,9 @@ self.addEventListener("activate", (event) => {
 
 // Routes authentifiées / spécifiques à un utilisateur — jamais mises en cache
 const NEVER_CACHE_PATTERNS = [
+  "/api/auth",
+  "/api/login",
+  "/api/register",
   "/api/me",
   "/api/user",
   "/api/orders",

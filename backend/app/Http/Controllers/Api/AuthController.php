@@ -173,10 +173,13 @@ class AuthController extends Controller
     /**
      * REDIRECTION VERS GOOGLE
      */
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
+        $mode = $request->query('mode', 'login');
+
         $url = Socialite::driver('google')
             ->stateless()
+            ->with(['state' => $mode])
             ->redirect()
             ->getTargetUrl();
 
@@ -194,14 +197,27 @@ class AuthController extends Controller
                 ->stateless()
                 ->user();
 
+            // Récupérer le mode (login ou register) depuis le state OAuth
+            $mode = $request->query('state', 'login');
+
             // Chercher ou créer l'utilisateur
             $user = User::where('email', $googleUser->email)->first();
             $isNewUser = false;
 
+            // ⚠️ Si mode = login ET user n'existe pas → refuser
+            if (!$user && $mode !== 'register') {
+                $frontendUrl = rtrim(config('app.frontend_url'), '/');
+                return redirect(
+                    $frontendUrl . '/login?error=' . urlencode(
+                        "Aucun compte trouvé avec cet email. Veuillez d'abord créer un compte."
+                    )
+                );
+            }
+
             if (!$user) {
                 $isNewUser = true;
+
                 // Découper le nom complet en first_name + last_name
-                // Google fournit généralement name="Prénom Nom"
                 $fullName = trim($googleUser->name ?? '');
                 $parts = explode(' ', $fullName, 2);
                 $firstName = $parts[0] ?? '';
