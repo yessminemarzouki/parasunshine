@@ -332,7 +332,7 @@ export default function ProductPreviewModal({ product, onClose }) {
               )}
 
               {/* Campagne de promotion */}
-              {product.promo_campaign && (
+              {product.promo_campaign && product.promo_campaign.is_active && (
                 <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl">
                   <p className="text-[11px] font-bold text-purple-700 uppercase tracking-widest mb-2">
                     Campagne de promotion
