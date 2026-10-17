@@ -179,6 +179,12 @@ export default function Home() {
   const [promoSection, setPromoSection] = useState(null);
   const isLoggedIn = !!localStorage.getItem("auth_token");
   const [brands, setBrands] = useState([]);
+  // ── Carrousel marques : contrôles manuels ──
+  const brandScrollRef = useRef(null);
+  const [isBrandPaused, setIsBrandPaused] = useState(false);
+  const [isBrandDragging, setIsBrandDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragScrollLeft, setDragScrollLeft] = useState(0);
   const [categoryShowcase, setCategoryShowcase] = useState([]);
   const [featuredVisible, setFeaturedVisible] = useState(true);
   const [shipping, setShipping] = useState({
@@ -239,7 +245,9 @@ export default function Home() {
         cachedFetch(`${API_URL}/homepage-videos`),
       ]);
 
-      setBrands(brandsData);
+      // Ne garder que les marques principales (pas les sous-marques)
+      const mainBrands = (brandsData || []).filter((b) => !b.parent_id);
+      setBrands(mainBrands);
       setBlogPosts(blogData.posts || []);
       setBlogSectionVisible(blogData.section_visible ?? true);
       setPromoSection(promoData);
@@ -317,6 +325,39 @@ export default function Home() {
         marqueeRef.current.style.animationPlayState = "running";
       }
     }, 4000);
+  };
+  // ── Handlers carrousel marques ──
+  const scrollBrandsBy = (direction) => {
+    const el = brandScrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstChild?.firstChild?.offsetWidth || 200;
+    const gap = 40; // gap-10 = 2.5rem = 40px
+    el.scrollBy({
+      left: direction * (cardWidth + gap) * 3, // 3 marques à la fois
+      behavior: "smooth",
+    });
+  };
+
+  const handleBrandDragStart = (e) => {
+    const el = brandScrollRef.current;
+    if (!el) return;
+    setIsBrandDragging(true);
+    setDragStartX(e.pageX - el.offsetLeft);
+    setDragScrollLeft(el.scrollLeft);
+  };
+
+  const handleBrandDragMove = (e) => {
+    if (!isBrandDragging) return;
+    e.preventDefault();
+    const el = brandScrollRef.current;
+    if (!el) return;
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - dragStartX) * 1.5;
+    el.scrollLeft = dragScrollLeft - walk;
+  };
+
+  const handleBrandDragEnd = () => {
+    setIsBrandDragging(false);
   };
   // ── Navigation blog carrousel ──
   const CARDS_PER_PAGE_DESKTOP = 3;
@@ -721,77 +762,100 @@ export default function Home() {
       {/* ── Marques partenaires ── */}
       {brands.length > 0 && (
         <section className="py-16 bg-white">
-          <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
+          <div
+            className="relative mx-auto px-5 md:px-14"
+            style={{ maxWidth: 1400 }}
+          >
             <SectionTitle>Nos marques partenaires</SectionTitle>
+
+            {/* Flèche gauche */}
+            <button
+              onClick={() => scrollBrandsBy(-1)}
+              aria-label="Marques précédentes"
+              className="hidden md:flex absolute left-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* Carrousel scrollable */}
             <div
-              className="relative overflow-hidden py-5"
+              ref={brandScrollRef}
+              onMouseEnter={() => setIsBrandPaused(true)}
+              onMouseLeave={() => {
+                setIsBrandPaused(false);
+                setIsBrandDragging(false);
+              }}
+              onMouseDown={handleBrandDragStart}
+              onMouseMove={handleBrandDragMove}
+              onMouseUp={handleBrandDragEnd}
+              className={`overflow-x-auto w-full py-5 scrollbar-hide ${
+                isBrandDragging ? "cursor-grabbing" : "cursor-grab"
+              }`}
               style={{
                 maskImage:
-                  "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+                  "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
                 WebkitMaskImage:
-                  "linear-gradient(to right, transparent, black 15%, black 85%, transparent)",
+                  "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
+                scrollBehavior: isBrandDragging ? "auto" : "smooth",
               }}
             >
-              <div
-                ref={marqueeRef}
-                className="flex w-max"
-                style={{
-                  animation: `scrollMarquee ${Math.max(20, brands.length * 3)}s linear infinite`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!clickedBrandId)
-                    e.currentTarget.style.animationPlayState = "paused";
-                }}
-                onMouseLeave={(e) => {
-                  if (!clickedBrandId)
-                    e.currentTarget.style.animationPlayState = "running";
-                }}
-              >
-                {[1, 2].map((loop) => (
-                  <div key={loop} className="flex gap-10 pr-10">
-                    {brands.map((brand) => {
-                      const isClicked = clickedBrandId === brand.id;
-                      return (
-                        <button
-                          key={`${loop}-${brand.id}`}
-                          type="button"
-                          onClick={() => handleBrandClick(brand)}
-                          title={
-                            isClicked
-                              ? `Cliquez à nouveau pour voir les produits ${brand.name}`
-                              : `Voir les produits ${brand.name}`
-                          }
-                          className={`group flex-none w-48 h-20 md:w-52 md:h-28 flex items-center justify-center px-1 py-1 md:px-3 md:py-2 overflow-hidden cursor-pointer transition-all duration-300
-                            bg-white border border-gray-200 rounded-lg
-                            md:bg-white md:border md:border-gray-200 md:rounded-xl
-                            hover:shadow-md hover:border-[#1a5242]/20
-                            ${isClicked ? "shadow-md border-[#1a5242]/20" : ""}
-                          `}
-                        >
-                          <img
-                            src={`${STORAGE_URL}/${brand.logo}`}
-                            alt={brand.name}
-                            loading="lazy"
-                            decoding="async"
-                            className={`max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 scale-105 md:scale-100 ${
-                              isClicked
-                                ? "grayscale-0 opacity-100"
-                                : "grayscale-0 opacity-100 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100"
-                            }`}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+              <div className="flex gap-10 w-max">
+                {brands.map((brand) => {
+                  const isClicked = clickedBrandId === brand.id;
+                  return (
+                    <button
+                      key={brand.id}
+                      type="button"
+                      onClick={(e) => {
+                        // Empêche le clic si on vient de faire un drag
+                        if (isBrandDragging) return;
+                        handleBrandClick(brand);
+                      }}
+                      title={
+                        isClicked
+                          ? `Cliquez à nouveau pour voir les produits ${brand.name}`
+                          : `Voir les produits ${brand.name}`
+                      }
+                      className={`group flex-none w-48 h-20 md:w-52 md:h-28 flex items-center justify-center px-1 py-1 md:px-3 md:py-2 overflow-hidden cursor-pointer transition-all duration-300
+                        bg-white border border-gray-200 rounded-lg
+                        md:bg-white md:border md:border-gray-200 md:rounded-xl
+                        hover:shadow-md hover:border-[#1a5242]/20
+                        ${isClicked ? "shadow-md border-[#1a5242]/20" : ""}
+                        ${isBrandPaused ? "" : "animate-[brandPulse_0.3s_ease-out]"}
+                      `}
+                    >
+                      <img
+                        src={`${STORAGE_URL}/${brand.logo}`}
+                        alt={brand.name}
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                        className={`max-w-full max-h-full w-auto h-auto object-contain transition-all duration-300 scale-105 md:scale-100 select-none ${
+                          isClicked
+                            ? "grayscale-0 opacity-100"
+                            : "grayscale-0 opacity-100 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            {/* Flèche droite */}
+            <button
+              onClick={() => scrollBrandsBy(1)}
+              aria-label="Marques suivantes"
+              className="hidden md:flex absolute right-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
           <style>{`
-        @keyframes scrollMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
-      `}</style>
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+            @keyframes brandPulse { 0% { transform: scale(0.98); } 100% { transform: scale(1); } }
+          `}</style>
         </section>
       )}
       <HomeVideoSection video={videoFor("after_brands")} />
