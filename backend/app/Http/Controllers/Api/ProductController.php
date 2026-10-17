@@ -174,7 +174,12 @@ class ProductController extends Controller
             }
 
             if ($request->has('promo') && $request->get('promo') == 'true') {
-                $query->where('is_promo', true);
+                $query->where('is_promo', true)
+                      // AJOUT : ignore les promos expirées
+                      ->where(function ($q) {
+                          $q->whereNull('promo_ends_at')
+                            ->orWhere('promo_ends_at', '>=', now());
+                      });
             }
 
             $sortBy = $request->get('sort', 'created_at');
@@ -227,7 +232,12 @@ class ProductController extends Controller
         }
 
         if ($request->boolean('promo')) {
-            $query->where('is_promo', true);
+            $query->where('is_promo', true)
+                  // AJOUT : ignore les promos expirées
+                  ->where(function ($q) {
+                      $q->whereNull('promo_ends_at')
+                        ->orWhere('promo_ends_at', '>=', now());
+                  });
         }
 
         if ($request->boolean('new')) {
@@ -614,6 +624,11 @@ class ProductController extends Controller
                     'brand.parent:id,name,slug',
                 ])
                 ->where('is_promo', true)
+                // AJOUT : ignore les promos expirées
+                ->where(function ($q) {
+                    $q->whereNull('promo_ends_at')
+                      ->orWhere('promo_ends_at', '>=', now());
+                })
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
@@ -685,8 +700,13 @@ class ProductController extends Controller
                     ->where('is_new', true)
                     ->orderBy('created_at', 'desc')->limit(8)->get(),
 
-                'promotions' => Product::select($cols)->with($with)
+                             'promotions' => Product::select($cols)->with($with)
                     ->where('is_promo', true)
+                    // AJOUT : ignore les promos expirées
+                    ->where(function ($q) {
+                        $q->whereNull('promo_ends_at')
+                          ->orWhere('promo_ends_at', '>=', now());
+                    })
                     ->orderBy('created_at', 'desc')
                     ->get(),
 

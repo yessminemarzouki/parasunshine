@@ -48,7 +48,12 @@ class AdminPromoSectionController extends Controller
             ->with(['category:id,name,slug','brand:id,name,slug'])
             ->whereIn('id', $ids)
             ->where('is_promo', true)
-            ->where('stock', '>', 0);
+            ->where('stock', '>', 0)
+            // AJOUT : ignore les promos expirées
+            ->where(function ($q) {
+                $q->whereNull('promo_ends_at')
+                  ->orWhere('promo_ends_at', '>=', now());
+            });
 
         $products = $this->applyOrderMode($query, $section->order_mode, $ids);
 
