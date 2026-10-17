@@ -759,9 +759,10 @@ export default function Home() {
               }}
             >
               <div
-                className="flex w-max group-hover:[animation-play-state:paused] animate-[scrollMarquee_40s_linear_infinite]"
+                className="flex w-max group-hover:[animation-play-state:paused]"
                 style={{
                   willChange: "transform",
+                  animation: `scrollMarquee ${Math.max(60, brands.length * 6)}s linear infinite`,
                 }}
               >
                 {[1, 2].map((loop) => (
