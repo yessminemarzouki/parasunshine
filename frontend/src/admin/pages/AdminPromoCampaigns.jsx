@@ -245,9 +245,15 @@ export default function AdminPromoCampaigns() {
                     -{c.discount_percentage}%
                   </p>
                 </div>
-                <Badge type={c.is_active ? "green" : "gray"}>
-                  {c.is_active ? "Active" : "Désactivée"}
-                </Badge>
+                {c.is_active &&
+                c.ends_at &&
+                parseServerDate(c.ends_at) < new Date() ? (
+                  <Badge type="red">Expirée</Badge>
+                ) : (
+                  <Badge type={c.is_active ? "green" : "gray"}>
+                    {c.is_active ? "Active" : "Désactivée"}
+                  </Badge>
+                )}
               </div>
 
               {(c.starts_at || c.ends_at) && (

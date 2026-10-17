@@ -24,6 +24,28 @@ class AdminPromoCampaignController extends Controller
     // ── Liste des campagnes ──
     public function index()
     {
+        // Nettoyage automatique : si une campagne est active mais que sa date de fin est passée,
+        // on la désactive et on retire la promo des produits liés.
+        $expiredCampaigns = PromoCampaign::where('is_active', true)
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<', now())
+            ->get();
+
+        foreach ($expiredCampaigns as $campaign) {
+            $campaign->update(['is_active' => false]);
+            foreach ($campaign->products as $product) {
+                $product->update([
+                    'is_promo'            => false,
+                    'promo_price'         => null,
+                    'discount_percentage' => null,
+                    'promo_starts_at'     => null,
+                    'promo_ends_at'       => null,
+                ]);
+            }
+            Cache::forget('home_data');
+            Cache::forget('products_promotions');
+        }
+
         $campaigns = PromoCampaign::withCount('products')
             ->orderByDesc('created_at')
             ->get();
