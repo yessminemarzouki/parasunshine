@@ -104,6 +104,7 @@ class AdminPromoSectionController extends Controller
         if (!empty($includedIds)) {
             $includedProducts = Product::select(['id','name','slug','price','promo_price','discount_percentage','image','stock','is_promo'])
                 ->whereIn('id', $includedIds)
+                ->where('is_promo', true) // AJOUT : n'affiche que les produits encore en promo
                 ->get()
                 ->sortBy(fn ($p) => array_search($p->id, $includedIds))
                 ->values();
