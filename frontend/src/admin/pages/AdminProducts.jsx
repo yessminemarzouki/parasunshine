@@ -1867,11 +1867,14 @@ export default function AdminProducts() {
                                 Promo
                               </span>
                             )}
-                            {topPromoIds.includes(p.id) && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 bg-purple-50 text-purple-600 border border-purple-200 rounded">
-                                Top Promo
-                              </span>
-                            )}
+                            {topPromoIds.includes(p.id) &&
+                              p.is_promo &&
+                              (!p.promo_ends_at ||
+                                new Date(p.promo_ends_at) >= new Date()) && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-purple-50 text-purple-600 border border-purple-200 rounded">
+                                  Top Promo
+                                </span>
+                              )}
                             {p.is_bestseller && (
                               <span
                                 className="text-[10px] font-bold px-1.5 py-0.5 bg-[#f5f5dc] text-[#713f12] border border-[#d6c896] rounded"
