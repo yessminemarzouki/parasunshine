@@ -416,9 +416,11 @@ export const searchPromotionProducts = async (params = {}) => {
   return response.data;
 };
 export const previewPromotionPrices = (data) =>
-  api.post("/admin/promotions/preview", data).then((res) => res.data);
+  adminApi.post("/admin/promotions/preview", data).then((res) => res.data);
 export const applyPromotionInflation = (data) =>
-  api.post("/admin/promotions/apply-inflation", data).then((res) => res.data);
+  adminApi
+    .post("/admin/promotions/apply-inflation", data)
+    .then((res) => res.data);
 export const applyBulkPromotion = async (data) => {
   const response = await adminApi.post("/admin/promotions/apply", data);
   return response.data;
