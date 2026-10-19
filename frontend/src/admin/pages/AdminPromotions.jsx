@@ -250,7 +250,9 @@ export default function AdminPromotions() {
             <p className="text-[13px] font-bold text-gray-700">
               {mode === "apply"
                 ? "Produits sans promotion active"
-                : "Produits actuellement en promotion"}
+                : mode === "inflation"
+                  ? "Produits sans promotion (pour gonflement)"
+                  : "Produits actuellement en promotion"}
             </p>
             <button
               onClick={handleSelectAll}
@@ -314,7 +316,9 @@ export default function AdminPromotions() {
             <p className="text-[12.5px] text-gray-400 text-center py-4">
               {mode === "apply"
                 ? "Aucun produit sans promotion trouvé."
-                : "Aucun produit en promotion trouvé."}
+                : mode === "inflation"
+                  ? "Aucun produit sans promotion trouvé."
+                  : "Aucun produit en promotion trouvé."}
             </p>
           )}
 
