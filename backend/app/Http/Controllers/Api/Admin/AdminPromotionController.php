@@ -31,6 +31,11 @@ class AdminPromotionController extends Controller
                 continue;
             } // Ignore les produits sans prix valide
 
+            // Sécurité : si un ancien reference_price traîne, on le nettoie
+            if ($product->reference_price) {
+                $product->update(['reference_price' => null]);
+            }
+
             // 1. On calcule le prix que le client va vraiment payer (remise interne)
             $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
 
@@ -73,6 +78,7 @@ class AdminPromotionController extends Controller
             $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
             $referencePrice = round($finalPromoPrice / (1 - ($validated['displayed_discount'] / 100)), 3);
 
+            // Si le produit avait déjà un ancien reference_price d'une ancienne promo, on l'écrase
             $product->update([
                 'reference_price'     => $referencePrice,
                 'is_promo'            => true,
