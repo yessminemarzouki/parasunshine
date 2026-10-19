@@ -13,29 +13,30 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
     private $listColumns = [
-    'id',
-    'name',
-    'slug',
-    'price',
-    'reference',
-    'short_description',
-    'promo_price',
-    'discount_percentage',
-    'image',
-    'stock',
-    'category_id',
-    'category2_id',
-    'brand_id',
-    'loyalty_points',
-    'is_featured',
-    'is_new',
-    'is_bestseller',
-    'is_promo',
-      'has_sizes',
-    'has_colors',
-    'has_age',
-    'is_unavailable',
-];
+        'id',
+        'name',
+        'slug',
+        'price',
+        'reference_price',
+        'reference',
+        'short_description',
+        'promo_price',
+        'discount_percentage',
+        'image',
+        'stock',
+        'category_id',
+        'category2_id',
+        'brand_id',
+        'loyalty_points',
+        'is_featured',
+        'is_new',
+        'is_bestseller',
+        'is_promo',
+          'has_sizes',
+        'has_colors',
+        'has_age',
+        'is_unavailable',
+    ];
 
     /**
      * Retourne tous les IDs de catégories (la catégorie elle-même + tous ses descendants)
@@ -646,31 +647,31 @@ class ProductController extends Controller
 
         $product = Cache::remember($cacheKey, 300, function () use ($slug) {
             return Product::select([
-                'id', 'name', 'slug', 'description', 'reference',
-                'short_description', 'benefits', 'usage_tips',
-                'price', 'promo_price', 'discount_percentage',
-                'stock', 'image', 'images', 'category_id', 'brand_id',
-                'loyalty_points', 'is_featured', 'is_new', 'is_bestseller',
-                          'is_promo', 'rating', 'reviews_count', 'created_at',
-                'is_unavailable',
-                'category2_id', 'display_category1', 'display_category2',
-                         'has_sizes',
-                'sizes',
-                'has_colors',
-                'colors',
-                'has_age',
-                'ages',
-                'promo_starts_at',
-                'promo_ends_at',
-            ])
-                   ->with([
-                'category:id,name,slug,parent_id',
-                'category2:id,name,slug,parent_id',
-                'brand:id,name,slug,logo,parent_id',
-                'brand.parent:id,name,slug,logo',
-            ])
-            ->where('slug', $slug)
-            ->firstOrFail();
+    'id', 'name', 'slug', 'description', 'reference',
+    'short_description', 'benefits', 'usage_tips',
+    'price', 'reference_price', 'promo_price', 'discount_percentage',
+    'stock', 'image', 'images', 'category_id', 'brand_id',
+    'loyalty_points', 'is_featured', 'is_new', 'is_bestseller',
+                'is_promo', 'rating', 'reviews_count', 'created_at',
+    'is_unavailable',
+                  'category2_id', 'display_category1', 'display_category2',
+                           'has_sizes',
+                  'sizes',
+                  'has_colors',
+                  'colors',
+                  'has_age',
+                  'ages',
+                  'promo_starts_at',
+                  'promo_ends_at',
+              ])
+                     ->with([
+                  'category:id,name,slug,parent_id',
+                  'category2:id,name,slug,parent_id',
+                  'brand:id,name,slug,logo,parent_id',
+                  'brand.parent:id,name,slug,logo',
+              ])
+              ->where('slug', $slug)
+              ->firstOrFail();
         });
 
         return response()->json($product);

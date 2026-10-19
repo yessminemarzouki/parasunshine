@@ -1112,9 +1112,9 @@ class AdminProductController extends Controller
          'brand.parent:id,name',
          'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
         ])
-         ->select([
-        'id', 'name', 'slug', 'reference', 'price', 'promo_price',
-                     'discount_percentage', 'stock', 'image', 'images', 'category_id', 'category2_id',
+     ->select([
+    'id', 'name', 'slug', 'reference', 'price', 'promo_price', 'reference_price',
+    'discount_percentage', 'stock', 'image', 'images', 'category_id', 'category2_id',
            'display_category1', 'display_category2', 'brand_id',
         'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
         'has_sizes', 'has_colors', 'sizes', 'colors', 'loyalty_points',
