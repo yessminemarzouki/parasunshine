@@ -20,11 +20,16 @@ class AdminPromotionController extends Controller
             'displayed_discount' => 'required|numeric|min:1|max:99', // La remise affichée
         ]);
 
-        $products = Product::whereIn('id', $validated['product_ids'])->get();
+        $products = Product::whereIn('id', $validated['product_ids'])
+         ->where('is_promo', false) // Sécurité : pas de calcul sur un produit déjà en promo
+         ->get();
         $results = [];
 
         foreach ($products as $product) {
             $basePrice = (float) $product->price;
+            if ($basePrice <= 0) {
+                continue;
+            } // Ignore les produits sans prix valide
 
             // 1. On calcule le prix que le client va vraiment payer (remise interne)
             $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);

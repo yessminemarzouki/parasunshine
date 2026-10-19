@@ -516,7 +516,7 @@ export default function AdminPromotions() {
                       });
                       if (data.length === 0) {
                         pushToast(
-                          "Aucun de ces produits n'a pu être calculé. Vérifiez que le prix de base est valide.",
+                          "Aucun de ces produits n'a pu être calculé. Il est peut-être déjà en promotion ou sans prix.",
                           "error",
                         );
                         setPreviewData([]);
