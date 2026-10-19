@@ -139,7 +139,10 @@ function ResultRow({ p, size = "normal", onSelect }) {
                 margin: 0,
               }}
             >
-              {parseFloat(p.price).toFixed(3)} DT
+              {parseFloat(p.reference_price || p.price)
+                .toFixed(3)
+                .replace(".", ",")}{" "}
+              DT
             </p>
           </>
         ) : (

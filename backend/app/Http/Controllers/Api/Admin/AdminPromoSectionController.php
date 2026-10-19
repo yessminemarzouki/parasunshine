@@ -35,11 +35,11 @@ class AdminPromoSectionController extends Controller
             return response()->json(['visible' => false, 'products' => []]);
         }
 
-        $cols = ['id','name','slug','price','promo_price','discount_percentage',
-         'image','stock','category_id','brand_id','is_promo','is_featured',
-         'is_new','is_bestseller','loyalty_points','reference','short_description',
-         'has_sizes',
-         'has_colors',
+        $cols = ['id','name','slug','price','reference_price','promo_price','discount_percentage',
+ 'image','stock','category_id','brand_id','is_promo','is_featured',
+ 'is_new','is_bestseller','loyalty_points','reference','short_description',
+ 'has_sizes',
+ 'has_colors',
 ];
 
         $ids = $section->product_ids ?? [];
