@@ -243,11 +243,14 @@ export default function Wishlist() {
             if (!product) return null;
 
             const price = parseFloat(product.price) || 0;
+            const referencePrice = parseFloat(product.reference_price) || price; // ← AJOUT
             const promoPrice = parseFloat(product.promo_price) || 0;
             const hasPromo = promoPrice > 0 && promoPrice < price;
             const display = hasPromo ? promoPrice : price;
             const discount = hasPromo
-              ? Math.round(((price - promoPrice) / price) * 100)
+              ? Math.round(
+                  ((referencePrice - promoPrice) / referencePrice) * 100,
+                ) // ← MODIF
               : 0;
 
             return (
@@ -326,7 +329,7 @@ export default function Wishlist() {
                     </span>
                     {hasPromo && (
                       <span className="text-[11px] sm:text-[12.5px] text-gray-400 line-through">
-                        {price.toFixed(3)} DT
+                        {referencePrice.toFixed(3).replace(".", ",")} DT
                       </span>
                     )}
                   </div>
