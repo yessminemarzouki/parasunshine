@@ -16,10 +16,8 @@ class AdminPromotionController extends Controller
         $validated = $request->validate([
             'product_ids' => 'required|array|min:1',
             'product_ids.*' => 'integer',
-            'mode' => 'required|in:percentage,fixed_price,fake_discount',
-            'displayed_discount' => 'required|numeric|min:1|max:99',
-            'internal_discount' => 'nullable|numeric|min:1|max:99', // uniquement pour fake_discount
-            'fixed_price' => 'nullable|numeric|min:0', // uniquement pour fixed_price
+            'internal_discount' => 'required|numeric|min:1|max:99', // La vraie remise
+            'displayed_discount' => 'required|numeric|min:1|max:99', // La remise affichée
         ]);
 
         $products = Product::whereIn('id', $validated['product_ids'])->get();
@@ -27,33 +25,12 @@ class AdminPromotionController extends Controller
 
         foreach ($products as $product) {
             $basePrice = (float) $product->price;
-            $referencePrice = $basePrice;
-            $finalPromoPrice = $basePrice;
-            $internalDiscount = 0;
 
-            if ($validated['mode'] === 'percentage') {
-                // Mode 1 : On gonfle le prix de référence pour afficher X%
-                // Le prix final (ce que paye le client) ne change pas.
-                $discount = $validated['displayed_discount'] / 100;
-                $referencePrice = round($basePrice / (1 - $discount), 3);
-                $finalPromoPrice = $basePrice;
+            // 1. On calcule le prix que le client va vraiment payer (remise interne)
+            $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
 
-            } elseif ($validated['mode'] === 'fixed_price') {
-                // Mode 2 : On fixe le prix final voulu, on calcule le prix de référence
-                $fixedPrice = $validated['fixed_price'];
-                $discount = $validated['displayed_discount'] / 100;
-                $referencePrice = round($fixedPrice / (1 - $discount), 3);
-                $finalPromoPrice = $fixedPrice;
-
-            } elseif ($validated['mode'] === 'fake_discount') {
-                // Mode 3 : Remise interne (ex: 10%) mais affichée comme (ex: 50%)
-                $internalPct = ($validated['internal_discount'] ?? 10) / 100;
-                $displayPct = $validated['displayed_discount'] / 100;
-
-                $finalPromoPrice = round($basePrice * (1 - $internalPct), 3);
-                $referencePrice = round($finalPromoPrice / (1 - $displayPct), 3);
-                $internalDiscount = $internalPct * 100;
-            }
+            // 2. On calcule le prix barré pour que ça corresponde à la remise affichée
+            $referencePrice = round($finalPromoPrice / (1 - ($validated['displayed_discount'] / 100)), 3);
 
             $results[] = [
                 'id' => $product->id,
@@ -61,9 +38,9 @@ class AdminPromotionController extends Controller
                 'base_price' => $basePrice,
                 'reference_price' => $referencePrice,
                 'final_promo_price' => $finalPromoPrice,
-                'amount_added' => round($referencePrice - $basePrice, 3),
                 'displayed_discount' => $validated['displayed_discount'],
-                'internal_discount' => $internalDiscount,
+                'internal_discount' => $validated['internal_discount'],
+                'amount_added' => round($referencePrice - $basePrice, 3),
             ];
         }
 
@@ -76,10 +53,8 @@ class AdminPromotionController extends Controller
         $validated = $request->validate([
             'product_ids' => 'required|array|min:1',
             'product_ids.*' => 'integer|exists:products,id',
-            'mode' => 'required|in:percentage,fixed_price,fake_discount',
+            'internal_discount' => 'required|numeric|min:1|max:99',
             'displayed_discount' => 'required|numeric|min:1|max:99',
-            'internal_discount' => 'nullable|numeric|min:1|max:99',
-            'fixed_price' => 'nullable|numeric|min:0',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
             'add_to_top_promo' => 'boolean',
@@ -89,24 +64,9 @@ class AdminPromotionController extends Controller
 
         foreach ($products as $product) {
             $basePrice = (float) $product->price;
-            $referencePrice = $basePrice;
-            $finalPromoPrice = $basePrice;
 
-            if ($validated['mode'] === 'percentage') {
-                $discount = $validated['displayed_discount'] / 100;
-                $referencePrice = round($basePrice / (1 - $discount), 3);
-                $finalPromoPrice = $basePrice;
-            } elseif ($validated['mode'] === 'fixed_price') {
-                $fixedPrice = $validated['fixed_price'];
-                $discount = $validated['displayed_discount'] / 100;
-                $referencePrice = round($fixedPrice / (1 - $discount), 3);
-                $finalPromoPrice = $fixedPrice;
-            } elseif ($validated['mode'] === 'fake_discount') {
-                $internalPct = ($validated['internal_discount'] ?? 10) / 100;
-                $displayPct = $validated['displayed_discount'] / 100;
-                $finalPromoPrice = round($basePrice * (1 - $internalPct), 3);
-                $referencePrice = round($finalPromoPrice / (1 - $displayPct), 3);
-            }
+            $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
+            $referencePrice = round($finalPromoPrice / (1 - ($validated['displayed_discount'] / 100)), 3);
 
             $product->update([
                 'reference_price'     => $referencePrice,
@@ -135,7 +95,7 @@ class AdminPromotionController extends Controller
         Cache::increment('products_list_version');
 
         return response()->json([
-            'message' => count($products) . ' produit(s) mis en promotion avec prix de référence gonflé.',
+            'message' => count($products) . ' produit(s) mis en promotion avec prix gonflé.',
             'count' => count($products),
         ]);
     }

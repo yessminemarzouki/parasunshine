@@ -28,10 +28,8 @@ export default function AdminPromotions() {
   const [discount, setDiscount] = useState("");
 
   // Nouveaux états pour le mode inflation
-  const [inflationMode, setInflationMode] = useState("percentage"); // percentage | fixed_price | fake_discount
   const [displayedDiscount, setDisplayedDiscount] = useState(50);
   const [internalDiscount, setInternalDiscount] = useState(10);
-  const [fixedPrice, setFixedPrice] = useState("");
   const [previewData, setPreviewData] = useState([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -425,56 +423,27 @@ export default function AdminPromotions() {
                 </p>
               </div>
 
-              {/* Sélection du sous-mode */}
-              <div className="flex flex-col gap-2 mb-4">
-                {[
-                  {
-                    val: "percentage",
-                    label: "1. Pourcentage simple",
-                    desc: "Ex: Afficher -50% (le prix final reste le même)",
-                  },
-                  {
-                    val: "fixed_price",
-                    label: "2. Prix final fixe",
-                    desc: "Ex: Afficher -50% mais garder un prix final de 15 DT",
-                  },
-                  {
-                    val: "fake_discount",
-                    label: "3. Faux pourcentage",
-                    desc: "Ex: Remise interne 10% mais affichée comme 50%",
-                  },
-                ].map((m) => (
-                  <label
-                    key={m.val}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
-                      inflationMode === m.val
-                        ? "border-[#1a4731] bg-[#edf7f3]"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      checked={inflationMode === m.val}
-                      onChange={() => {
-                        setInflationMode(m.val);
-                        setPreviewData([]);
-                      }}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <p className="text-[12.5px] font-bold text-gray-800">
-                        {m.label}
-                      </p>
-                      <p className="text-[11px] text-gray-500">{m.desc}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              {/* Champs dynamiques */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Champs de configuration */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <Label required>Remise affichée (%)</Label>
+                  <Label required>Vraie remise (interne) %</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={internalDiscount}
+                    onChange={(e) => {
+                      setInternalDiscount(Number(e.target.value));
+                      setPreviewData([]);
+                    }}
+                    className="w-full mt-1"
+                  />
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    La remise réelle sur la marge.
+                  </p>
+                </div>
+                <div>
+                  <Label required>Remise affichée (publique) %</Label>
                   <Input
                     type="number"
                     min={1}
@@ -486,38 +455,10 @@ export default function AdminPromotions() {
                     }}
                     className="w-full mt-1"
                   />
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Le pourcentage que verront les clients.
+                  </p>
                 </div>
-                {inflationMode === "fake_discount" && (
-                  <div>
-                    <Label required>Remise interne (%)</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={99}
-                      value={internalDiscount}
-                      onChange={(e) => {
-                        setInternalDiscount(Number(e.target.value));
-                        setPreviewData([]);
-                      }}
-                      className="w-full mt-1"
-                    />
-                  </div>
-                )}
-                {inflationMode === "fixed_price" && (
-                  <div>
-                    <Label required>Prix final (DT)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={fixedPrice}
-                      onChange={(e) => {
-                        setFixedPrice(e.target.value);
-                        setPreviewData([]);
-                      }}
-                      className="w-full mt-1"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Dates */}
@@ -566,10 +507,8 @@ export default function AdminPromotions() {
                     try {
                       const data = await previewPromotionPrices({
                         product_ids: selected.map((p) => p.id),
-                        mode: inflationMode,
                         displayed_discount: displayedDiscount,
                         internal_discount: internalDiscount,
-                        fixed_price: fixedPrice || 0,
                       });
                       setPreviewData(data);
                     } catch (err) {
@@ -594,10 +533,8 @@ export default function AdminPromotions() {
                     try {
                       const result = await applyPromotionInflation({
                         product_ids: selected.map((p) => p.id),
-                        mode: inflationMode,
                         displayed_discount: displayedDiscount,
                         internal_discount: internalDiscount,
-                        fixed_price: fixedPrice || 0,
                         starts_at: startsAt || null,
                         ends_at: endsAt || null,
                         add_to_top_promo: addToTopPromo,
