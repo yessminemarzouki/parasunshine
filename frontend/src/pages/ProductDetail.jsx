@@ -784,7 +784,12 @@ export default function ProductDetail() {
                   <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-red-500 text-white shadow-sm">
                     -
                     {product.discount_percentage ||
-                      Math.round(((price - promoPrice) / price) * 100)}
+                      Math.round(
+                        ((parseFloat(product.reference_price || price) -
+                          promoPrice) /
+                          parseFloat(product.reference_price || price)) *
+                          100,
+                      )}
                     %
                   </span>
                 )}
@@ -983,13 +988,18 @@ export default function ProductDetail() {
               </span>
               {hasPromo && (
                 <span className="text-[16px] text-gray-400 line-through font-medium">
-                  {(product.reference_price || price).toFixed(3)} DT
+                  {parseFloat(product.reference_price || price)
+                    .toFixed(3)
+                    .replace(".", ",")}{" "}
+                  DT
                 </span>
               )}
               {hasPromo && (
                 <span className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg">
                   Économisez{" "}
-                  {((product.reference_price || price) - promoPrice).toFixed(3)}{" "}
+                  {(parseFloat(product.reference_price || price) - promoPrice)
+                    .toFixed(3)
+                    .replace(".", ",")}{" "}
                   DT
                 </span>
               )}

@@ -126,9 +126,16 @@ const ProductCard = ({ product }) => {
       .catch(() => {});
   };
 
-  const discountPercentage = product.promo_price
-    ? Math.round(((product.price - product.promo_price) / product.price) * 100)
-    : product.discount_percentage;
+  const discountPercentage =
+    product.discount_percentage ||
+    (product.promo_price
+      ? Math.round(
+          ((parseFloat(product.reference_price || product.price) -
+            parseFloat(product.promo_price)) /
+            parseFloat(product.reference_price || product.price)) *
+            100,
+        )
+      : null);
 
   return (
     <>
