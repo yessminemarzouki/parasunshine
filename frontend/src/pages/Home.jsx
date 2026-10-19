@@ -203,19 +203,7 @@ export default function Home() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const preloaded = sessionStorage.getItem("preloaded_home");
-      const preloadedTime = sessionStorage.getItem("preloaded_home_time");
-      if (
-        preloaded &&
-        preloadedTime &&
-        Date.now() - parseInt(preloadedTime) < 30000
-      ) {
-        setData(JSON.parse(preloaded));
-        sessionStorage.removeItem("preloaded_home");
-        sessionStorage.removeItem("preloaded_home_time");
-      } else {
-        setData(await cachedFetch(`${API_URL}/home`));
-      }
+      setData(await cachedFetch(`${API_URL}/home`));
 
       // Tous ces appels passent désormais par cachedFetch (comme /home
       // déjà), avec son cache mémoire de 5 minutes — évite de refaire ces
