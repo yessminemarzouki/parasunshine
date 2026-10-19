@@ -58,10 +58,11 @@ const CartNotification = ({ product, quantity, onClose, isVisible }) => {
   if (!isVisible || !product) return null;
 
   const originalPrice = parseFloat(product.price) || 0;
+  const referencePrice = parseFloat(product.reference_price) || originalPrice; // ← AJOUT
   const promoPrice = parseFloat(product.promo_price) || 0;
   const hasPromo = promoPrice > 0 && promoPrice < originalPrice;
   const displayPrice = hasPromo ? promoPrice : originalPrice;
-  const savings = hasPromo ? (originalPrice - promoPrice) * quantity : 0;
+  const savings = hasPromo ? (referencePrice - promoPrice) * quantity : 0; // ← MODIF
 
   const cartTotal = cart.reduce((total, item) => {
     const price = parseFloat(item.price) || 0;
@@ -209,7 +210,7 @@ const CartNotification = ({ product, quantity, onClose, isVisible }) => {
                 </span>
                 {hasPromo && (
                   <span className="text-[12px] text-gray-400 line-through">
-                    {originalPrice.toFixed(3)} DT
+                    {referencePrice.toFixed(3).replace(".", ",")} DT
                   </span>
                 )}
                 <span className="text-[12px] text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full font-medium">
@@ -221,7 +222,7 @@ const CartNotification = ({ product, quantity, onClose, isVisible }) => {
                   className="text-[11px] font-semibold mt-1"
                   style={{ color: "#92400E" }}
                 >
-                  Vous économisez {savings.toFixed(3)} DT
+                  Vous économisez {savings.toFixed(3).replace(".", ",")} DT
                 </p>
               )}
             </div>

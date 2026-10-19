@@ -361,12 +361,15 @@ export default function Cart() {
             {/* Items */}
             {cart.map((item, idx) => {
               const price = parseFloat(item.price) || 0;
+              const referencePrice = parseFloat(item.reference_price) || price; // ← AJOUT
               const promoPrice = parseFloat(item.promo_price) || 0;
               const hasPromo = promoPrice > 0 && promoPrice < price;
               const display = hasPromo ? promoPrice : price;
               const itemTotal = (display * item.quantity).toFixed(3);
               const discPct = hasPromo
-                ? Math.round(((price - promoPrice) / price) * 100)
+                ? Math.round(
+                    ((referencePrice - promoPrice) / referencePrice) * 100,
+                  ) // ← MODIF
                 : 0;
 
               return isDesktop ? (
@@ -569,7 +572,7 @@ export default function Cart() {
                             margin: "2px 0 0",
                           }}
                         >
-                          {price.toFixed(3)} DT
+                          {referencePrice.toFixed(3).replace(".", ",")} DT
                         </p>
                       </>
                     ) : (
@@ -932,7 +935,10 @@ export default function Cart() {
                             marginRight: 6,
                           }}
                         >
-                          {(price * item.quantity).toFixed(3)} DT
+                          {(referencePrice * item.quantity)
+                            .toFixed(3)
+                            .replace(".", ",")}{" "}
+                          DT
                         </span>
                       )}
                       <span
