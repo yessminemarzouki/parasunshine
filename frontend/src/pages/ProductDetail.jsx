@@ -983,12 +983,14 @@ export default function ProductDetail() {
               </span>
               {hasPromo && (
                 <span className="text-[16px] text-gray-400 line-through font-medium">
-                  {price.toFixed(3)} DT
+                  {(product.reference_price || price).toFixed(3)} DT
                 </span>
               )}
               {hasPromo && (
                 <span className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg">
-                  Économisez {(price - promoPrice).toFixed(3)} DT
+                  Économisez{" "}
+                  {((product.reference_price || price) - promoPrice).toFixed(3)}{" "}
+                  DT
                 </span>
               )}
             </div>

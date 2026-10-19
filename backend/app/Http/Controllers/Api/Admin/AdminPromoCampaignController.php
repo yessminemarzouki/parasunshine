@@ -37,6 +37,7 @@ class AdminPromoCampaignController extends Controller
                 $product->update([
                     'is_promo'            => false,
                     'promo_price'         => null,
+                    'reference_price'     => null, // Ajouté ici
                     'discount_percentage' => null,
                     'promo_starts_at'     => null,
                     'promo_ends_at'       => null,
@@ -127,6 +128,7 @@ class AdminPromoCampaignController extends Controller
                 $product->update([
                     'is_promo'            => false,
                     'promo_price'         => null,
+                    'reference_price'     => null, // Ajouté ici
                     'discount_percentage' => null,
                     'promo_starts_at'     => null,
                     'promo_ends_at'       => null,
@@ -150,6 +152,7 @@ class AdminPromoCampaignController extends Controller
             $product->update([
                 'is_promo'            => false,
                 'promo_price'         => null,
+                'reference_price'     => null, // Ajouté ici
                 'discount_percentage' => null,
                 'promo_starts_at'     => null,
                 'promo_ends_at'       => null,
@@ -266,6 +269,7 @@ class AdminPromoCampaignController extends Controller
             $product->update([
                 'is_promo'            => false,
                 'promo_price'         => null,
+                'reference_price'     => null, // Ajouté ici
                 'discount_percentage' => null,
                 'promo_starts_at'     => null,
                 'promo_ends_at'       => null,

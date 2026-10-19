@@ -10,6 +10,135 @@ use Illuminate\Support\Facades\Cache;
 
 class AdminPromotionController extends Controller
 {
+    // ── CALCULER L'APERÇU AVANT APPLICATION ──
+    public function previewPrices(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer',
+            'mode' => 'required|in:percentage,fixed_price,fake_discount',
+            'displayed_discount' => 'required|numeric|min:1|max:99',
+            'internal_discount' => 'nullable|numeric|min:1|max:99', // uniquement pour fake_discount
+            'fixed_price' => 'nullable|numeric|min:0', // uniquement pour fixed_price
+        ]);
+
+        $products = Product::whereIn('id', $validated['product_ids'])->get();
+        $results = [];
+
+        foreach ($products as $product) {
+            $basePrice = (float) $product->price;
+            $referencePrice = $basePrice;
+            $finalPromoPrice = $basePrice;
+            $internalDiscount = 0;
+
+            if ($validated['mode'] === 'percentage') {
+                // Mode 1 : On gonfle le prix de référence pour afficher X%
+                // Le prix final (ce que paye le client) ne change pas.
+                $discount = $validated['displayed_discount'] / 100;
+                $referencePrice = round($basePrice / (1 - $discount), 3);
+                $finalPromoPrice = $basePrice;
+
+            } elseif ($validated['mode'] === 'fixed_price') {
+                // Mode 2 : On fixe le prix final voulu, on calcule le prix de référence
+                $fixedPrice = $validated['fixed_price'];
+                $discount = $validated['displayed_discount'] / 100;
+                $referencePrice = round($fixedPrice / (1 - $discount), 3);
+                $finalPromoPrice = $fixedPrice;
+
+            } elseif ($validated['mode'] === 'fake_discount') {
+                // Mode 3 : Remise interne (ex: 10%) mais affichée comme (ex: 50%)
+                $internalPct = ($validated['internal_discount'] ?? 10) / 100;
+                $displayPct = $validated['displayed_discount'] / 100;
+
+                $finalPromoPrice = round($basePrice * (1 - $internalPct), 3);
+                $referencePrice = round($finalPromoPrice / (1 - $displayPct), 3);
+                $internalDiscount = $internalPct * 100;
+            }
+
+            $results[] = [
+                'id' => $product->id,
+                'name' => $product->name,
+                'base_price' => $basePrice,
+                'reference_price' => $referencePrice,
+                'final_promo_price' => $finalPromoPrice,
+                'amount_added' => round($referencePrice - $basePrice, 3),
+                'displayed_discount' => $validated['displayed_discount'],
+                'internal_discount' => $internalDiscount,
+            ];
+        }
+
+        return response()->json($results);
+    }
+
+    // ── APPLIQUER LE GONFLEMENT ET LA PROMO ──
+    public function applyWithInflation(Request $request)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'integer|exists:products,id',
+            'mode' => 'required|in:percentage,fixed_price,fake_discount',
+            'displayed_discount' => 'required|numeric|min:1|max:99',
+            'internal_discount' => 'nullable|numeric|min:1|max:99',
+            'fixed_price' => 'nullable|numeric|min:0',
+            'starts_at' => 'nullable|date',
+            'ends_at' => 'nullable|date|after_or_equal:starts_at',
+            'add_to_top_promo' => 'boolean',
+        ]);
+
+        $products = Product::whereIn('id', $validated['product_ids'])->get();
+
+        foreach ($products as $product) {
+            $basePrice = (float) $product->price;
+            $referencePrice = $basePrice;
+            $finalPromoPrice = $basePrice;
+
+            if ($validated['mode'] === 'percentage') {
+                $discount = $validated['displayed_discount'] / 100;
+                $referencePrice = round($basePrice / (1 - $discount), 3);
+                $finalPromoPrice = $basePrice;
+            } elseif ($validated['mode'] === 'fixed_price') {
+                $fixedPrice = $validated['fixed_price'];
+                $discount = $validated['displayed_discount'] / 100;
+                $referencePrice = round($fixedPrice / (1 - $discount), 3);
+                $finalPromoPrice = $fixedPrice;
+            } elseif ($validated['mode'] === 'fake_discount') {
+                $internalPct = ($validated['internal_discount'] ?? 10) / 100;
+                $displayPct = $validated['displayed_discount'] / 100;
+                $finalPromoPrice = round($basePrice * (1 - $internalPct), 3);
+                $referencePrice = round($finalPromoPrice / (1 - $displayPct), 3);
+            }
+
+            $product->update([
+                'reference_price'     => $referencePrice,
+                'is_promo'            => true,
+                'discount_percentage' => $validated['displayed_discount'],
+                'promo_price'         => $finalPromoPrice,
+                'promo_starts_at'     => $validated['starts_at'] ?? null,
+                'promo_ends_at'       => $validated['ends_at'] ?? null,
+                'promo_campaign_id'   => null,
+            ]);
+
+            Cache::forget('product_' . $product->slug);
+        }
+
+        if ($request->boolean('add_to_top_promo')) {
+            $section = PromoSection::first();
+            if ($section) {
+                $existingIds = $section->product_ids ?? [];
+                $newIds = array_values(array_unique(array_merge($existingIds, $validated['product_ids'])));
+                $section->update(['product_ids' => $newIds]);
+            }
+        }
+
+        Cache::forget('home_data');
+        Cache::forget('products_promotions');
+        Cache::increment('products_list_version');
+
+        return response()->json([
+            'message' => count($products) . ' produit(s) mis en promotion avec prix de référence gonflé.',
+            'count' => count($products),
+        ]);
+    }
     /**
      * RECHERCHE INTELLIGENTE
      * Cherche simultanément par nom, référence, catégorie, marque
@@ -135,6 +264,7 @@ class AdminPromotionController extends Controller
             $product->update([
                 'is_promo'            => false,
                 'promo_price'         => null,
+                'reference_price'     => null, // On remet le prix normal
                 'discount_percentage' => null,
                 'promo_starts_at'     => null,
                 'promo_ends_at'       => null,

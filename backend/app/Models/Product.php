@@ -14,7 +14,8 @@ class Product extends Model
         'name',
         'slug',
         'description',
-        'price',
+             'price',
+        'reference_price',
         'reference',           // ← AJOUTE ÇA
         'short_description',   // ← AJOUTE ÇA
         'benefits',        // ← Nouveau
@@ -53,7 +54,8 @@ class Product extends Model
     protected $casts = [
      'rating'          => 'float',
      'reviews_count'   => 'integer',
-     'price'           => 'float',
+        'price'           => 'float',
+     'reference_price' => 'float',
      'promo_price'     => 'float',
      'discount_percentage' => 'integer',
      'stock'           => 'integer',

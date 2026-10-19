@@ -220,7 +220,10 @@ const ProductCard = ({ product }) => {
                   DT
                 </span>
                 <span className="text-[11px] md:text-[0.9rem] font-normal text-gray-400 line-through">
-                  {parseFloat(product.price).toFixed(3).replace(".", ",")} DT
+                  {parseFloat(product.reference_price || product.price)
+                    .toFixed(3)
+                    .replace(".", ",")}{" "}
+                  DT
                 </span>
               </>
             ) : (

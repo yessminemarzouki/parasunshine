@@ -8,11 +8,15 @@ import {
   AlertTriangle,
   Check,
   Trash2,
+  TrendingUp,
+  Calculator,
 } from "lucide-react";
 import {
   searchPromotionProducts,
   applyBulkPromotion,
   removeBulkPromotion,
+  previewPromotionPrices,
+  applyPromotionInflation,
   getAdminCategories,
   getAdminBrands,
 } from "../services/adminApi";
@@ -20,12 +24,21 @@ import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
 
 export default function AdminPromotions() {
-  const [mode, setMode] = useState("apply"); // "apply" | "remove"
+  const [mode, setMode] = useState("apply"); // "apply" | "remove" | "inflation"
+  const [discount, setDiscount] = useState("");
+
+  // Nouveaux états pour le mode inflation
+  const [inflationMode, setInflationMode] = useState("percentage"); // percentage | fixed_price | fake_discount
+  const [displayedDiscount, setDisplayedDiscount] = useState(50);
+  const [internalDiscount, setInternalDiscount] = useState(10);
+  const [fixedPrice, setFixedPrice] = useState("");
+  const [previewData, setPreviewData] = useState([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState([]); // liste de produits complets
-  const [discount, setDiscount] = useState("");
+
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [addToTopPromo, setAddToTopPromo] = useState(false);
@@ -87,6 +100,7 @@ export default function AdminPromotions() {
     setQuery("");
     setFilterCategory("");
     setFilterBrand("");
+    setPreviewData([]);
   }, [mode]);
 
   const toggleSelect = (product) => {
@@ -209,6 +223,11 @@ export default function AdminPromotions() {
       <div className="flex gap-0.5 bg-gray-100 p-1 rounded-xl mb-5 overflow-x-auto">
         {[
           { key: "apply", label: "Appliquer une promo", icon: Tag },
+          {
+            key: "inflation",
+            label: "Gonfler les prix (Promo)",
+            icon: TrendingUp,
+          },
           { key: "remove", label: "Retirer une promo", icon: Trash2 },
         ].map(({ key, label, icon: Icon }) => (
           <button
@@ -397,7 +416,269 @@ export default function AdminPromotions() {
             )}
           </div>
 
-          {mode === "apply" ? (
+          {mode === "inflation" ? (
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Calculator size={16} className="text-[#1a4731]" />
+                <p className="text-[13px] font-bold text-gray-700">
+                  Configuration du prix gonflé
+                </p>
+              </div>
+
+              {/* Sélection du sous-mode */}
+              <div className="flex flex-col gap-2 mb-4">
+                {[
+                  {
+                    val: "percentage",
+                    label: "1. Pourcentage simple",
+                    desc: "Ex: Afficher -50% (le prix final reste le même)",
+                  },
+                  {
+                    val: "fixed_price",
+                    label: "2. Prix final fixe",
+                    desc: "Ex: Afficher -50% mais garder un prix final de 15 DT",
+                  },
+                  {
+                    val: "fake_discount",
+                    label: "3. Faux pourcentage",
+                    desc: "Ex: Remise interne 10% mais affichée comme 50%",
+                  },
+                ].map((m) => (
+                  <label
+                    key={m.val}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                      inflationMode === m.val
+                        ? "border-[#1a4731] bg-[#edf7f3]"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      checked={inflationMode === m.val}
+                      onChange={() => {
+                        setInflationMode(m.val);
+                        setPreviewData([]);
+                      }}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <p className="text-[12.5px] font-bold text-gray-800">
+                        {m.label}
+                      </p>
+                      <p className="text-[11px] text-gray-500">{m.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {/* Champs dynamiques */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <Label required>Remise affichée (%)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={displayedDiscount}
+                    onChange={(e) => {
+                      setDisplayedDiscount(Number(e.target.value));
+                      setPreviewData([]);
+                    }}
+                    className="w-full mt-1"
+                  />
+                </div>
+                {inflationMode === "fake_discount" && (
+                  <div>
+                    <Label required>Remise interne (%)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={internalDiscount}
+                      onChange={(e) => {
+                        setInternalDiscount(Number(e.target.value));
+                        setPreviewData([]);
+                      }}
+                      className="w-full mt-1"
+                    />
+                  </div>
+                )}
+                {inflationMode === "fixed_price" && (
+                  <div>
+                    <Label required>Prix final (DT)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={fixedPrice}
+                      onChange={(e) => {
+                        setFixedPrice(e.target.value);
+                        setPreviewData([]);
+                      }}
+                      className="w-full mt-1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <Label>Début (optionnel)</Label>
+                  <input
+                    type="datetime-local"
+                    value={startsAt}
+                    onChange={(e) => setStartsAt(e.target.value)}
+                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Fin (optionnel)</Label>
+                  <input
+                    type="datetime-local"
+                    value={endsAt}
+                    onChange={(e) => setEndsAt(e.target.value)}
+                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2.5 cursor-pointer mb-4">
+                <input
+                  type="checkbox"
+                  checked={addToTopPromo}
+                  onChange={(e) => setAddToTopPromo(e.target.checked)}
+                  className="w-4 h-4 accent-[#1a4731]"
+                />
+                <span className="text-[12.5px] text-gray-700 font-medium">
+                  Ajouter à la section Top Promo
+                </span>
+              </label>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    if (selected.length === 0) {
+                      pushToast("Sélectionnez des produits.", "error");
+                      return;
+                    }
+                    setPreviewLoading(true);
+                    try {
+                      const data = await previewPromotionPrices({
+                        product_ids: selected.map((p) => p.id),
+                        mode: inflationMode,
+                        displayed_discount: displayedDiscount,
+                        internal_discount: internalDiscount,
+                        fixed_price: fixedPrice || 0,
+                      });
+                      setPreviewData(data);
+                    } catch (err) {
+                      pushToast("Erreur lors du calcul de l'aperçu.", "error");
+                    } finally {
+                      setPreviewLoading(false);
+                    }
+                  }}
+                  disabled={previewLoading || selected.length === 0}
+                  className="flex-1 px-3 py-2 rounded-lg border border-[#1a4731] text-[#1a4731] text-[12.5px] font-bold hover:bg-[#edf7f3] transition-colors disabled:opacity-50"
+                >
+                  {previewLoading ? "Calcul..." : "Calculer l'aperçu"}
+                </button>
+
+                <Btn
+                  onClick={async () => {
+                    if (selected.length === 0) {
+                      pushToast("Sélectionnez des produits.", "error");
+                      return;
+                    }
+                    setApplying(true);
+                    try {
+                      const result = await applyPromotionInflation({
+                        product_ids: selected.map((p) => p.id),
+                        mode: inflationMode,
+                        displayed_discount: displayedDiscount,
+                        internal_discount: internalDiscount,
+                        fixed_price: fixedPrice || 0,
+                        starts_at: startsAt || null,
+                        ends_at: endsAt || null,
+                        add_to_top_promo: addToTopPromo,
+                      });
+                      pushToast(result.message);
+                      setSelected([]);
+                      setPreviewData([]);
+                      runSearch(query, mode);
+                    } catch (err) {
+                      pushToast(
+                        err.response?.data?.message || "Erreur.",
+                        "error",
+                      );
+                    } finally {
+                      setApplying(false);
+                    }
+                  }}
+                  disabled={applying || selected.length === 0}
+                >
+                  {applying ? "Application..." : "Appliquer"}
+                </Btn>
+              </div>
+
+              {/* Tableau d'aperçu */}
+              {previewData.length > 0 && (
+                <div className="mt-4 border border-gray-100 rounded-xl overflow-hidden">
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                      Aperçu des prix
+                    </p>
+                    <button
+                      onClick={() => setPreviewData([])}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="max-h-[250px] overflow-y-auto">
+                    <table className="w-full text-left text-[12px]">
+                      <thead className="bg-white sticky top-0">
+                        <tr className="border-b border-gray-100 text-gray-400">
+                          <th className="p-2 font-semibold">Produit</th>
+                          <th className="p-2 font-semibold text-right">Base</th>
+                          <th className="p-2 font-semibold text-right">
+                            Prix barré
+                          </th>
+                          <th className="p-2 font-semibold text-right">
+                            Prix payé
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewData.map((p) => (
+                          <tr
+                            key={p.id}
+                            className="border-b border-gray-50 last:border-0 hover:bg-gray-50"
+                          >
+                            <td className="p-2 truncate max-w-[120px]">
+                              {p.name}
+                            </td>
+                            <td className="p-2 text-right text-gray-500">
+                              {p.base_price.toFixed(3)}
+                            </td>
+                            <td className="p-2 text-right font-bold text-gray-800">
+                              {p.reference_price.toFixed(3)}
+                            </td>
+                            <td className="p-2 text-right font-bold text-emerald-600">
+                              {p.final_promo_price.toFixed(3)}
+                              <span className="block text-[10px] text-emerald-500 font-normal">
+                                -{p.displayed_discount}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : mode === "apply" ? (
             <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
               <p className="text-[13px] font-bold text-gray-700 mb-4">
                 Paramètres de la promotion

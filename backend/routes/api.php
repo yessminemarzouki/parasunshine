@@ -278,6 +278,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
 
     // Assistant Promotions (recherche intelligente + application groupée)
     Route::get('/promotions/search', [AdminPromotionController::class, 'search']);
+    Route::post('/promotions/preview', [AdminPromotionController::class, 'previewPrices']);
+    Route::post('/promotions/apply-inflation', [AdminPromotionController::class, 'applyWithInflation']);
     Route::post('/promotions/apply', [AdminPromotionController::class, 'apply']);
     Route::post('/promotions/remove', [AdminPromotionController::class, 'remove']);
 
