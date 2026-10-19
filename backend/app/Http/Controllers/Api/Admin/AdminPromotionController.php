@@ -138,6 +138,9 @@ class AdminPromotionController extends Controller
 
         if ($mode === 'remove') {
             $query->where('is_promo', true);
+        } elseif ($mode === 'inflation') {
+            // Pour gonfler les prix, on ne montre que les produits sans promo active
+            $query->where('is_promo', false);
         } else {
             $query->where('is_promo', false);
         }

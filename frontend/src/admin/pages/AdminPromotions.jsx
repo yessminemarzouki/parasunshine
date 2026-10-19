@@ -510,9 +510,21 @@ export default function AdminPromotions() {
                         displayed_discount: displayedDiscount,
                         internal_discount: internalDiscount,
                       });
-                      setPreviewData(data);
+                      if (data.length === 0) {
+                        pushToast(
+                          "Aucun de ces produits n'a pu être calculé. Vérifiez que le prix de base est valide.",
+                          "error",
+                        );
+                        setPreviewData([]);
+                      } else {
+                        setPreviewData(data);
+                      }
                     } catch (err) {
-                      pushToast("Erreur lors du calcul de l'aperçu.", "error");
+                      pushToast(
+                        err.response?.data?.message ||
+                          "Erreur lors du calcul de l'aperçu.",
+                        "error",
+                      );
                     } finally {
                       setPreviewLoading(false);
                     }
