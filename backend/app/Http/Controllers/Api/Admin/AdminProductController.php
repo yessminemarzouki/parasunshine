@@ -20,7 +20,7 @@ class AdminProductController extends Controller
         if ($price <= 0) {
             return 0;
         }
-        return (float) (round($price) + 0.900);
+        return floor($price * 10) / 10;
     }
 
     private function parsePrice($value): ?float

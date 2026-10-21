@@ -24,10 +24,10 @@ import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
 
 export default function AdminPromotions() {
-  // Fonction d'arrondi psychologique (ex: 18.99 -> 19.900)
+  // Arrondi plancher à la centaine inférieure (ex: 8.46 -> 8.400)
   const roundPrice = (price) => {
     if (!price || price <= 0) return 0;
-    return (Math.round(price) + 0.9).toFixed(3);
+    return (Math.floor(price * 10) / 10).toFixed(3);
   };
 
   const [mode, setMode] = useState("apply"); // "apply" | "remove" | "inflation"

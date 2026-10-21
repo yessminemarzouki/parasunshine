@@ -11,15 +11,15 @@ use Illuminate\Support\Facades\Cache;
 class AdminPromotionController extends Controller
 {
     /**
-     * Arrondit un prix à l'unité la plus proche et ajoute .900
-     * Ex: 18.99 -> 19.900 / 19.93 -> 19.900
+     * Arrondit un prix à la centaine inférieure (plancher)
+     * Ex: 8.460 -> 8.400 / 9.840 -> 9.800 / 7.950 -> 7.900
      */
     private function roundToPsychologicalPrice($price)
     {
         if ($price <= 0) {
             return 0;
         }
-        return (float) (round($price) + 0.900);
+        return floor($price * 10) / 10;
     }
 
     // ── CALCULER L'APERÇU AVANT APPLICATION ──
