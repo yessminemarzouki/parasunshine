@@ -10,6 +10,18 @@ use Illuminate\Support\Facades\Cache;
 
 class AdminPromotionController extends Controller
 {
+    /**
+     * Arrondit un prix à l'unité la plus proche et ajoute .900
+     * Ex: 18.99 -> 19.900 / 19.93 -> 19.900
+     */
+    private function roundToPsychologicalPrice($price)
+    {
+        if ($price <= 0) {
+            return 0;
+        }
+        return (float) (round($price) + 0.900);
+    }
+
     // ── CALCULER L'APERÇU AVANT APPLICATION ──
     public function previewPrices(Request $request)
     {
@@ -37,10 +49,12 @@ class AdminPromotionController extends Controller
             }
 
             // 1. On calcule le prix que le client va vraiment payer (remise interne)
-            $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
+            $finalPromoPriceRaw = $basePrice * (1 - ($validated['internal_discount'] / 100));
+            $finalPromoPrice = $this->roundToPsychologicalPrice($finalPromoPriceRaw);
 
             // 2. On calcule le prix barré pour que ça corresponde à la remise affichée
-            $referencePrice = round($finalPromoPrice / (1 - ($validated['displayed_discount'] / 100)), 3);
+            $referencePriceRaw = $finalPromoPrice / (1 - ($validated['displayed_discount'] / 100));
+            $referencePrice = $this->roundToPsychologicalPrice($referencePriceRaw);
 
             $results[] = [
                 'id' => $product->id,
@@ -75,8 +89,11 @@ class AdminPromotionController extends Controller
         foreach ($products as $product) {
             $basePrice = (float) $product->price;
 
-            $finalPromoPrice = round($basePrice * (1 - ($validated['internal_discount'] / 100)), 3);
-            $referencePrice = round($finalPromoPrice / (1 - ($validated['displayed_discount'] / 100)), 3);
+            $finalPromoPriceRaw = $basePrice * (1 - ($validated['internal_discount'] / 100));
+            $finalPromoPrice = $this->roundToPsychologicalPrice($finalPromoPriceRaw);
+
+            $referencePriceRaw = $finalPromoPrice / (1 - ($validated['displayed_discount'] / 100));
+            $referencePrice = $this->roundToPsychologicalPrice($referencePriceRaw);
 
             // Si le produit avait déjà un ancien reference_price d'une ancienne promo, on l'écrase
             $product->update([

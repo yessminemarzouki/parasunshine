@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\Cache;
 
 class AdminProductController extends Controller
 {
+    private function roundToPsychologicalPrice($price)
+    {
+        if ($price <= 0) {
+            return 0;
+        }
+        return (float) (round($price) + 0.900);
+    }
+
     private function parsePrice($value): ?float
     {
         if ($value === null || $value === '') {
@@ -565,8 +573,9 @@ class AdminProductController extends Controller
                     // Prix promo fourni → calcul automatique du pourcentage
                     $promoPercent = round((($price - $promoPrice) / $price) * 100, 2);
                 } elseif ($promoPercent && !$promoPrice && $price > 0) {
-                    // Pourcentage fourni → calcul automatique du prix promo
-                    $promoPrice = round($price - ($price * $promoPercent / 100), 3);
+                    // Pourcentage fourni → calcul automatique du prix promo avec arrondi
+                    $rawPromoPrice = $price - ($price * $promoPercent / 100);
+                    $promoPrice = $this->roundToPsychologicalPrice($rawPromoPrice);
                 }
 
 

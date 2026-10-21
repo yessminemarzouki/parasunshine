@@ -24,6 +24,12 @@ import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
 
 export default function AdminPromotions() {
+  // Fonction d'arrondi psychologique (ex: 18.99 -> 19.900)
+  const roundPrice = (price) => {
+    if (!price || price <= 0) return 0;
+    return (Math.round(price) + 0.9).toFixed(3);
+  };
+
   const [mode, setMode] = useState("apply"); // "apply" | "remove" | "inflation"
   const [discount, setDiscount] = useState("");
 
@@ -615,10 +621,10 @@ export default function AdminPromotions() {
                               {p.base_price.toFixed(3)}
                             </td>
                             <td className="p-2 text-right font-bold text-gray-800">
-                              {p.reference_price.toFixed(3)}
+                              {roundPrice(p.reference_price)}
                             </td>
                             <td className="p-2 text-right font-bold text-emerald-600">
-                              {p.final_promo_price.toFixed(3)}
+                              {roundPrice(p.final_promo_price)}
                               <span className="block text-[10px] text-emerald-500 font-normal">
                                 -{p.displayed_discount}%
                               </span>
@@ -698,10 +704,8 @@ export default function AdminPromotions() {
                   <div className="max-h-[160px] overflow-y-auto">
                     {selected.map((p) => {
                       const price = parseFloat(p.price) || 0;
-                      const newPrice = (
-                        price -
-                        (price * discountNum) / 100
-                      ).toFixed(3);
+                      const rawNewPrice = price - (price * discountNum) / 100;
+                      const newPrice = roundPrice(rawNewPrice);
                       return (
                         <div
                           key={p.id}
