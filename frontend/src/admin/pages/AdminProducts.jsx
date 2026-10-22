@@ -2309,7 +2309,6 @@ export default function AdminProducts() {
                           disabled={!!editProduct?.promo_campaign}
                           value={form.promo_starts_at}
                           onChange={(e) => f("promo_starts_at", e.target.value)}
-                          min={new Date().toISOString().slice(0, 16)}
                           className={`w-full h-9 px-3 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-[#1a4731] transition-all ${
                             editProduct?.promo_campaign
                               ? "bg-gray-50 text-gray-400 cursor-not-allowed"
