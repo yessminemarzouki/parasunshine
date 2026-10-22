@@ -1832,6 +1832,14 @@ export default function AdminProducts() {
                               DT
                             </p>
                           )}
+                          {p.reference_price && p.promo_price && (
+                            <p className="text-[10.5px] text-gray-400 line-through">
+                              {parseFloat(p.reference_price)
+                                .toFixed(3)
+                                .replace(".", ",")}{" "}
+                              DT
+                            </p>
+                          )}
                         </td>
                         <td className="px-3 py-2.5">
                           {p.is_unavailable ? (
