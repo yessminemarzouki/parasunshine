@@ -48,7 +48,7 @@ class ProductController extends Controller
     {
         $cacheKey = 'category_ids_' . $categorySlug;
 
-        return Cache::remember($cacheKey, 300, function () use ($categorySlug) {
+        return Cache::remember($cacheKey, 60, function () use ($categorySlug) {
             $category = Category::where('slug', $categorySlug)
                 ->select('id', 'slug')
                 ->first();
@@ -155,7 +155,7 @@ class ProductController extends Controller
             'page'      => $request->query('page', 1),
         ]));
 
-        $products = Cache::remember($cacheKey, 300, function () use ($request) {
+        $products = Cache::remember($cacheKey, 60, function () use ($request) {
             $query = Product::select($this->listColumns)
                           ->with([
                     'category:id,name,slug,parent_id',
@@ -398,7 +398,7 @@ class ProductController extends Controller
      */
     public function categories()
     {
-        return Cache::remember('all_categories_tree', 300, function () {
+        return Cache::remember('all_categories_tree', 60, function () {
             return Category::select(
                 'id',
                 'name',
@@ -564,7 +564,7 @@ class ProductController extends Controller
      */
     public function brands()
     {
-        return Cache::remember('all_brands', 300, function () {
+        return Cache::remember('all_brands', 60, function () {
             return Brand::select('id', 'name', 'slug', 'logo', 'parent_id')
                 ->orderBy('name')
                 ->get();
@@ -578,7 +578,7 @@ class ProductController extends Controller
     {
         $cacheKey = 'brands_category_' . $categorySlug;
 
-        return Cache::remember($cacheKey, 300, function () use ($categorySlug) {
+        return Cache::remember($cacheKey, 60, function () use ($categorySlug) {
             $categoryIds = $this->getCategoryIdsWithDescendants($categorySlug);
 
             if (empty($categoryIds)) {
@@ -605,7 +605,7 @@ class ProductController extends Controller
      */
     public function featured()
     {
-        $products = Cache::remember('products_featured', 300, function () {
+        $products = Cache::remember('products_featured', 60, function () {
             $products = Product::select($this->listColumns)
                             ->with([
                     'category:id,name,slug',
@@ -642,7 +642,7 @@ class ProductController extends Controller
      */
     public function bestsellers()
     {
-        $products = Cache::remember('products_bestsellers', 300, function () {
+        $products = Cache::remember('products_bestsellers', 60, function () {
             $products = Product::select($this->listColumns)
                         ->with([
                     'category:id,name,slug',
@@ -679,7 +679,7 @@ class ProductController extends Controller
      */
     public function newest()
     {
-        $products = Cache::remember('products_newest', 300, function () {
+        $products = Cache::remember('products_newest', 60, function () {
             $products = Product::select($this->listColumns)
                              ->with([
                     'category:id,name,slug',
@@ -716,7 +716,7 @@ class ProductController extends Controller
      */
     public function promotions()
     {
-        $products = Cache::remember('products_promotions', 300, function () {
+        $products = Cache::remember('products_promotions', 60, function () {
             return Product::select($this->listColumns)
                  ->with([
                     'category:id,name,slug',
@@ -747,7 +747,7 @@ class ProductController extends Controller
     {
         $cacheKey = 'product_' . $slug;
 
-        $product = Cache::remember($cacheKey, 300, function () use ($slug) {
+        $product = Cache::remember($cacheKey, 60, function () use ($slug) {
             $product = Product::select([
     'id', 'name', 'slug', 'description', 'reference',
     'short_description', 'benefits', 'usage_tips',
@@ -800,7 +800,7 @@ class ProductController extends Controller
      */
     public function home()
     {
-        $data = Cache::remember('home_data', 300, function () {
+        $data = Cache::remember('home_data', 60, function () {
             $cols = $this->listColumns;
             $with = [
                 'category:id,name,slug',
