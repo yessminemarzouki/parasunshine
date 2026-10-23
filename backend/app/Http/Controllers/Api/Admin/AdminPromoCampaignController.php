@@ -88,13 +88,27 @@ class AdminPromoCampaignController extends Controller
         // Si la campagne est active, répercute immédiatement le nouveau
         // pourcentage/dates sur tous les produits déjà rattachés.
         if ($promoCampaign->is_active) {
+            $now = now();
+            $isCampaignActiveNow = $promoCampaign->is_active
+                && (!$promoCampaign->starts_at || $promoCampaign->starts_at <= $now)
+                && (!$promoCampaign->ends_at || $promoCampaign->ends_at >= $now);
+
             foreach ($promoCampaign->products as $product) {
-                $product->update([
+                $updateData = [
                     'discount_percentage' => $promoCampaign->discount_percentage,
                     'promo_price'         => $this->computePromoPrice((float) $product->price, $promoCampaign->discount_percentage),
                     'promo_starts_at'     => $promoCampaign->starts_at,
                     'promo_ends_at'       => $promoCampaign->ends_at,
-                ]);
+                ];
+
+                // ✅ On active le flag is_promo SEULEMENT si la date est arrivée
+                if ($isCampaignActiveNow) {
+                    $updateData['is_promo'] = true;
+                } else {
+                    $updateData['is_promo'] = false;
+                }
+
+                $product->update($updateData);
                 Cache::forget('product_' . $product->slug);
             }
             $this->clearCaches();
@@ -231,15 +245,24 @@ class AdminPromoCampaignController extends Controller
 
         $products = Product::whereIn('id', $validated['product_ids'])->get();
 
+        $now = now();
+        $isCampaignActiveNow = $promoCampaign->is_active
+            && (!$promoCampaign->starts_at || $promoCampaign->starts_at <= $now)
+            && (!$promoCampaign->ends_at || $promoCampaign->ends_at >= $now);
+
         foreach ($products as $product) {
             $updateData = ['promo_campaign_id' => $promoCampaign->id];
 
-            if ($promoCampaign->is_active) {
+            // ✅ On applique la promo SEULEMENT si la campagne est déjà active
+            if ($isCampaignActiveNow) {
                 $updateData['is_promo'] = true;
                 $updateData['discount_percentage'] = $promoCampaign->discount_percentage;
                 $updateData['promo_price'] = $this->computePromoPrice((float) $product->price, $promoCampaign->discount_percentage);
                 $updateData['promo_starts_at'] = $promoCampaign->starts_at;
                 $updateData['promo_ends_at'] = $promoCampaign->ends_at;
+            } else {
+                // ⏳ Campagne programmée : on garde juste le lien, le Model gérera l'affichage plus tard
+                $updateData['is_promo'] = false;
             }
 
             $product->update($updateData);

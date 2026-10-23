@@ -258,4 +258,86 @@ class Product extends Model
 
         return false;
     }
+    /**
+     * Récupère la date de début effective de la promo
+     * (soit celle du produit, soit celle de la campagne liée)
+     */
+    public function getEffectivePromoStartsAtAttribute()
+    {
+        if ($this->promo_starts_at) {
+            return $this->promo_starts_at;
+        }
+        if ($this->promoCampaign) {
+            return $this->promoCampaign->starts_at;
+        }
+        return null;
+    }
+
+    /**
+     * Récupère la date de fin effective de la promo
+     */
+    public function getEffectivePromoEndsAtAttribute()
+    {
+        if ($this->promo_ends_at) {
+            return $this->promo_ends_at;
+        }
+        if ($this->promoCampaign) {
+            return $this->promoCampaign->ends_at;
+        }
+        return null;
+    }
+
+    /**
+     * Détermine si la promotion est réellement active à l'instant T
+     * (vérifie le flag is_promo OU la présence d'une campagne, + les dates)
+     */
+    public function getIsPromoActiveAttribute()
+    {
+        if (!$this->is_promo && !$this->promo_campaign_id) {
+            return false;
+        }
+
+        // ✅ Si lié à une campagne, vérifier qu'elle est bien active (toggle)
+        if ($this->promo_campaign_id && $this->promoCampaign) {
+            if (!$this->promoCampaign->is_active) {
+                return false;
+            }
+        }
+
+        $now = now();
+        $startsAt = $this->effective_promo_starts_at;
+        $endsAt = $this->effective_promo_ends_at;
+
+        $hasStarted = !$startsAt || $startsAt <= $now;
+        $hasEnded = $endsAt && $endsAt < $now;
+
+        return $hasStarted && !$hasEnded;
+    }
+
+    /**
+     * Formate automatiquement les données de promo pour le frontend
+     * (à appeler dans les contrôleurs avant de renvoyer la réponse)
+     */
+    public function formatPromoForFrontend()
+    {
+        $this->promo_starts_at = $this->effective_promo_starts_at;
+        $this->promo_ends_at = $this->effective_promo_ends_at;
+
+        if ($this->is_promo_active) {
+            $this->is_promo = true;
+
+            // Si la campagne a un % mais que le produit n'a pas de prix promo calculé
+            if (!$this->promo_price && $this->promoCampaign && $this->promoCampaign->discount_percentage) {
+                $this->discount_percentage = $this->promoCampaign->discount_percentage;
+                $this->promo_price = round($this->price * (1 - $this->discount_percentage / 100), 3);
+            }
+        } else {
+            $this->is_promo = false;
+            $this->promo_price = null;
+            $this->reference_price = null;
+            $this->discount_percentage = null;
+        }
+
+        return $this;
+    }
 }

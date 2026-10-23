@@ -157,10 +157,11 @@ class ProductController extends Controller
 
         $products = Cache::remember($cacheKey, 60, function () use ($request) {
             $query = Product::select($this->listColumns)
-                          ->with([
-                    'category:id,name,slug,parent_id',
-                    'brand:id,name,slug,parent_id',
-                    'brand.parent:id,name,slug',
+                    ->with([
+              'category:id,name,slug,parent_id',
+              'brand:id,name,slug,parent_id',
+              'brand.parent:id,name,slug',
+              'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ✅ AJOUT
                 ]);
 
             if ($request->has('category')) {
@@ -177,15 +178,10 @@ class ProductController extends Controller
             }
 
             if ($request->has('promo') && $request->get('promo') == 'true') {
-                $query->where('is_promo', true)
-                      ->where(function ($q) {
-                          $q->whereNull('promo_starts_at')
-                            ->orWhere('promo_starts_at', '<=', now());
-                      })
-                      ->where(function ($q) {
-                          $q->whereNull('promo_ends_at')
-                            ->orWhere('promo_ends_at', '>=', now());
-                      });
+                // On récupère tous les produits en promo OU liés à une campagne
+                $query->where(function ($q) {
+                    $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
+                });
             }
 
             $sortBy = $request->get('sort', 'created_at');
@@ -197,22 +193,12 @@ class ProductController extends Controller
             }
 
             $query->orderBy($sortBy, $sortDirection);
+            return $query->paginate(12);
+        });
 
-            $products = $query->paginate(12);
-            $products->getCollection()->each(function ($p) {
-                if ($p->is_promo) {
-                    $now = now();
-                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                    if (!$hasStarted || $hasEnded) {
-                        $p->is_promo = false;
-                        $p->promo_price = null;
-                        $p->reference_price = null;
-                        $p->discount_percentage = null;
-                    }
-                }
-            });
-            return $products;
+        // ✅ Formate les promos APRÈS le cache (pas avant !)
+        $products->getCollection()->each(function ($p) {
+            $p->formatPromoForFrontend();
         });
 
         return response()->json($products);
@@ -252,15 +238,9 @@ class ProductController extends Controller
         }
 
         if ($request->boolean('promo')) {
-            $query->where('is_promo', true)
-                  ->where(function ($q) {
-                      $q->whereNull('promo_starts_at')
-                        ->orWhere('promo_starts_at', '<=', now());
-                  })
-                  ->where(function ($q) {
-                      $q->whereNull('promo_ends_at')
-                        ->orWhere('promo_ends_at', '>=', now());
-                  });
+            $query->where(function ($q) {
+                $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
+            });
         }
 
         if ($request->boolean('new')) {
@@ -373,22 +353,13 @@ class ProductController extends Controller
             'category:id,name,slug,parent_id',
             'brand:id,name,slug,parent_id',
             'brand.parent:id,name,slug',
+            'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ✅ AJOUT
         ]);
 
         $perPage = min((int) $request->get('per_page', 20), 50);
         $products = $query->paginate($perPage);
         $products->getCollection()->each(function ($p) {
-            if ($p->is_promo) {
-                $now = now();
-                $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                if (!$hasStarted || $hasEnded) {
-                    $p->is_promo = false;
-                    $p->promo_price = null;
-                    $p->reference_price = null;
-                    $p->discount_percentage = null;
-                }
-            }
+            $p->formatPromoForFrontend();
         });
         return $products;
     }
@@ -449,9 +420,10 @@ class ProductController extends Controller
 
         $cols = $this->listColumns;
         $with = [
-            'category:id,name,slug',
-            'brand:id,name,slug,parent_id',
-            'brand.parent:id,name,slug',
+        'category:id,name,slug',
+        'brand:id,name,slug,parent_id',
+        'brand.parent:id,name,slug',
+        'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ✅ AJOUT
         ];
 
         // Découpe la requête en mots-clés (>= 2 caractères, uniques)
@@ -498,19 +470,9 @@ class ProductController extends Controller
             ->limit(10)
             ->get();
 
-        // Désactiver la promo si elle n'a pas commencé ou est expirée
+        // Formate les promos pour le frontend
         $results->each(function ($p) {
-            if ($p->is_promo) {
-                $now = now();
-                $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                if (!$hasStarted || $hasEnded) {
-                    $p->is_promo = false;
-                    $p->promo_price = null;
-                    $p->reference_price = null;
-                    $p->discount_percentage = null;
-                }
-            }
+            $p->formatPromoForFrontend();
         });
 
         // ── Suggestions (si 0 résultats exacts) ──
@@ -527,6 +489,11 @@ class ProductController extends Controller
                 ->orderByRaw($relevanceSQL . ' DESC', $relevanceBindings)
                 ->limit(3)
                 ->get();
+
+            // ✅ AJOUT : Formate les suggestions pour le frontend
+            $suggestions->each(function ($p) {
+                $p->formatPromoForFrontend();
+            });
         }
 
         // ── Marques correspondantes ──
@@ -606,32 +573,22 @@ class ProductController extends Controller
     public function featured()
     {
         $products = Cache::remember('products_featured', 60, function () {
-            $products = Product::select($this->listColumns)
-                            ->with([
-                    'category:id,name,slug',
-                    'brand:id,name,slug,parent_id',
-                    'brand.parent:id,name,slug',
+            return Product::select($this->listColumns)
+                     ->with([
+             'category:id,name,slug',
+             'brand:id,name,slug,parent_id',
+             'brand.parent:id,name,slug',
+             'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
                 ])
                 ->where('is_featured', true)
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+        });
 
-            $products->each(function ($p) {
-                if ($p->is_promo) {
-                    $now = now();
-                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                    if (!$hasStarted || $hasEnded) {
-                        $p->is_promo = false;
-                        $p->promo_price = null;
-                        $p->reference_price = null;
-                        $p->discount_percentage = null;
-                    }
-                }
-            });
-
-            return $products;
+        // ✅ Formate les promos APRÈS le cache (pas avant !)
+        $products->each(function ($p) {
+            $p->formatPromoForFrontend();
         });
 
         return response()->json($products);
@@ -643,32 +600,22 @@ class ProductController extends Controller
     public function bestsellers()
     {
         $products = Cache::remember('products_bestsellers', 60, function () {
-            $products = Product::select($this->listColumns)
+            return Product::select($this->listColumns)
                         ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
                     'brand.parent:id,name,slug',
+                    'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
                 ])
                 ->where('is_bestseller', true)
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+        });
 
-            $products->each(function ($p) {
-                if ($p->is_promo) {
-                    $now = now();
-                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                    if (!$hasStarted || $hasEnded) {
-                        $p->is_promo = false;
-                        $p->promo_price = null;
-                        $p->reference_price = null;
-                        $p->discount_percentage = null;
-                    }
-                }
-            });
-
-            return $products;
+        // ✅ Formate les promos APRÈS le cache (pas avant !)
+        $products->each(function ($p) {
+            $p->formatPromoForFrontend();
         });
 
         return response()->json($products);
@@ -680,32 +627,22 @@ class ProductController extends Controller
     public function newest()
     {
         $products = Cache::remember('products_newest', 60, function () {
-            $products = Product::select($this->listColumns)
+            return Product::select($this->listColumns)
                              ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
                     'brand.parent:id,name,slug',
+                    'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
                 ])
                 ->where('is_new', true)
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+        });
 
-            $products->each(function ($p) {
-                if ($p->is_promo) {
-                    $now = now();
-                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                    if (!$hasStarted || $hasEnded) {
-                        $p->is_promo = false;
-                        $p->promo_price = null;
-                        $p->reference_price = null;
-                        $p->discount_percentage = null;
-                    }
-                }
-            });
-
-            return $products;
+        // ✅ Formate les promos APRÈS le cache (pas avant !)
+        $products->each(function ($p) {
+            $p->formatPromoForFrontend();
         });
 
         return response()->json($products);
@@ -717,24 +654,26 @@ class ProductController extends Controller
     public function promotions()
     {
         $products = Cache::remember('products_promotions', 60, function () {
-            return Product::select($this->listColumns)
+            $products = Product::select($this->listColumns)
                  ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
                     'brand.parent:id,name,slug',
+                    'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ✅ AJOUT
                 ])
-                ->where('is_promo', true)
+                // ✅ On cherche les produits en promo OU liés à une campagne
                 ->where(function ($q) {
-                    $q->whereNull('promo_starts_at')
-                      ->orWhere('promo_starts_at', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('promo_ends_at')
-                      ->orWhere('promo_ends_at', '>=', now());
+                    $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
                 })
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+
+            // ✅ Formate et filtre uniquement les promos réellement actives
+            return $products
+                ->map(fn ($p) => $p->formatPromoForFrontend())
+                ->filter(fn ($p) => $p->is_promo)
+                ->values();
         });
 
         return response()->json($products);
@@ -749,47 +688,28 @@ class ProductController extends Controller
 
         $product = Cache::remember($cacheKey, 60, function () use ($slug) {
             $product = Product::select([
-    'id', 'name', 'slug', 'description', 'reference',
-    'short_description', 'benefits', 'usage_tips',
-    'price', 'reference_price', 'promo_price', 'discount_percentage',
-    'stock', 'image', 'images', 'category_id', 'brand_id',
-    'loyalty_points', 'is_featured', 'is_new', 'is_bestseller',
+                'id', 'name', 'slug', 'description', 'reference',
+                'short_description', 'benefits', 'usage_tips',
+                'price', 'reference_price', 'promo_price', 'discount_percentage',
+                'stock', 'image', 'images', 'category_id', 'brand_id',
+                'loyalty_points', 'is_featured', 'is_new', 'is_bestseller',
                 'is_promo', 'rating', 'reviews_count', 'created_at',
-    'is_unavailable',
-                  'category2_id', 'display_category1', 'display_category2',
-                           'has_sizes',
-                  'sizes',
-                  'has_colors',
-                  'colors',
-                  'has_age',
-                  'ages',
-                  'promo_starts_at',
-                  'promo_ends_at',
-              ])
-                     ->with([
-                  'category:id,name,slug,parent_id',
-                  'category2:id,name,slug,parent_id',
-                  'brand:id,name,slug,logo,parent_id',
-                  'brand.parent:id,name,slug,logo',
-              ])
-              ->where('slug', $slug)
-              ->firstOrFail();
+                'is_unavailable', 'category2_id', 'display_category1', 'display_category2',
+                'has_sizes', 'sizes', 'has_colors', 'colors', 'has_age', 'ages',
+                'promo_starts_at', 'promo_ends_at', 'promo_campaign_id',
+            ])
+            ->with([
+                'category:id,name,slug,parent_id',
+                'category2:id,name,slug,parent_id',
+                'brand:id,name,slug,logo,parent_id',
+                'brand.parent:id,name,slug,logo',
+                'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ⚠️ IMPORTANT
+            ])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-            // Si la promo n'a pas encore commencé ou est expirée, on la désactive
-            if ($product->is_promo) {
-                $now = now();
-                $hasStarted = !$product->promo_starts_at || $product->promo_starts_at <= $now;
-                $hasEnded = $product->promo_ends_at && $product->promo_ends_at < $now;
-
-                if (!$hasStarted || $hasEnded) {
-                    $product->is_promo = false;
-                    $product->promo_price = null;
-                    $product->reference_price = null;
-                    $product->discount_percentage = null;
-                }
-            }
-
-            return $product;
+            // ✅ Utilise la logique centralisée du Model
+            return $product->formatPromoForFrontend();
         });
 
         return response()->json($product);
@@ -806,73 +726,55 @@ class ProductController extends Controller
                 'category:id,name,slug',
                 'brand:id,name,slug,parent_id',
                 'brand.parent:id,name,slug',
+                'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
             ];
 
             $hygieneIds = $this->getCategoryIdsWithDescendants('hygiene');
 
-            $disableInactivePromos = function ($products) {
-                return $products->each(function ($p) {
-                    if ($p->is_promo) {
-                        $now = now();
-                        $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
-                        $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
-                        if (!$hasStarted || $hasEnded) {
-                            $p->is_promo = false;
-                            $p->promo_price = null;
-                            $p->reference_price = null;
-                            $p->discount_percentage = null;
-                        }
-                    }
-                });
-            };
-
             return [
-                'featured' => $disableInactivePromos(
-                    Product::select($cols)->with($with)
-                        ->where('is_featured', true)
-                        ->inRandomOrder()->limit(8)->get()
-                ),
+                'featured' => Product::select($cols)->with($with)
+                    ->where('is_featured', true)
+                    ->inRandomOrder()->limit(8)->get(),
 
-                'newest' => $disableInactivePromos(
-                    Product::select($cols)->with($with)
-                        ->where('is_new', true)
-                        ->orderBy('created_at', 'desc')->limit(8)->get()
-                ),
+                'newest' => Product::select($cols)->with($with)
+                    ->where('is_new', true)
+                    ->orderBy('created_at', 'desc')->limit(8)->get(),
 
                 'promotions' => Product::select($cols)->with($with)
-                    ->where('is_promo', true)
                     ->where(function ($q) {
-                        $q->whereNull('promo_starts_at')
-                          ->orWhere('promo_starts_at', '<=', now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('promo_ends_at')
-                          ->orWhere('promo_ends_at', '>=', now());
+                        $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
                     })
                     ->orderBy('created_at', 'desc')
                     ->get(),
 
-                'products' => $disableInactivePromos(
-                    Product::select($cols)->with($with)
-                        ->limit(15)->get()
-                ),
+                'products' => Product::select($cols)->with($with)
+                    ->limit(15)->get(),
 
                 'hygiene' => !empty($hygieneIds)
-                    ? $disableInactivePromos(
-                        Product::select($cols)->with($with)
-                            ->whereIn('category_id', $hygieneIds)
-                            ->limit(8)->get()
-                    )
+                    ? Product::select($cols)->with($with)
+                        ->whereIn('category_id', $hygieneIds)
+                        ->limit(8)->get()
                     : collect([]),
 
-                'bestsellers' => $disableInactivePromos(
-                    Product::select($cols)->with($with)
-                        ->where('is_bestseller', true)
-                        ->orderBy('created_at', 'desc')
-                        ->limit(8)->get()
-                ),
+                'bestsellers' => Product::select($cols)->with($with)
+                    ->where('is_bestseller', true)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(8)->get(),
             ];
         });
+
+        // ✅ Formate les promos APRÈS le cache (pas avant !)
+        foreach (['featured', 'newest', 'products', 'hygiene', 'bestsellers'] as $section) {
+            $data[$section]->each(function ($p) {
+                $p->formatPromoForFrontend();
+            });
+        }
+
+        // Pour "promotions", on formate ET on filtre uniquement les actives
+        $data['promotions'] = $data['promotions']
+            ->map(fn ($p) => $p->formatPromoForFrontend())
+            ->filter(fn ($p) => $p->is_promo)
+            ->values();
 
         return response()->json($data);
     }

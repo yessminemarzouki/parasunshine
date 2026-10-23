@@ -1210,7 +1210,14 @@ class AdminProductController extends Controller
             }
         }
 
-        return response()->json($query->paginate($request->per_page ?? 20));
+        $paginated = $query->paginate($request->per_page ?? 20);
+
+        // ✅ Formate les promos pour que l'admin voie les campagnes actives
+        $paginated->getCollection()->each(function ($p) {
+            $p->formatPromoForFrontend();
+        });
+
+        return response()->json($paginated);
     }
 
     public function show(Product $product)
