@@ -84,17 +84,10 @@ export default function ProductPreviewModal({ product, onClose }) {
   const referencePrice = parseFloat(product.reference_price) || price;
   const promoPrice = parseFloat(product.promo_price) || 0;
 
-  // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
-  const now = new Date();
-  const hasStarted =
-    !product.promo_starts_at ||
-    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
-  const hasEnded =
-    product.promo_ends_at &&
-    new Date(product.promo_ends_at.replace(" ", "T")) < now;
-
-  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
-  const isPromoScheduled = product.is_promo && !hasStarted;
+  // 🎯 Utilise les statuts calculés par le backend
+  const isPromoActive = !!product.is_promo_active;
+  const isPromoScheduled = !!product.is_promo_scheduled;
+  const isPromoExpired = !!product.is_promo_expired;
 
   const hasPromo = isPromoActive && promoPrice > 0 && promoPrice < price;
   const discount = hasPromo
@@ -179,9 +172,19 @@ export default function ProductPreviewModal({ product, onClose }) {
                     Nouveau
                   </span>
                 )}
-                {product.is_promo && (
+                {isPromoActive && (
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-[#fefce8] text-[#854d0e] border border-[#fef08a] rounded-full">
-                    {isPromoActive ? "Promo" : "Promo programmée"}
+                    Promo
+                  </span>
+                )}
+                {isPromoScheduled && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-[#f0f9ff] text-[#0369a1] border border-[#bae6fd] rounded-full">
+                    Promo programmée
+                  </span>
+                )}
+                {isPromoExpired && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-full">
+                    Promo expirée
                   </span>
                 )}
                 {product.is_bestseller && (

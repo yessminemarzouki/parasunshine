@@ -320,24 +320,74 @@ class Product extends Model
      */
     public function formatPromoForFrontend()
     {
+        // ⚠️ On ne modifie JAMAIS les champs en base (is_promo, promo_price, etc.)
+        // On ajoute des attributs virtuels pour le frontend.
+
+        // Injecte les dates effectives (produit ou campagne) dans les champs
+        // renvoyés au frontend, sans toucher à la base.
         $this->promo_starts_at = $this->effective_promo_starts_at;
-        $this->promo_ends_at = $this->effective_promo_ends_at;
+        $this->promo_ends_at   = $this->effective_promo_ends_at;
 
-        if ($this->is_promo_active) {
-            $this->is_promo = true;
+        // 🎯 Statut "calculé" (jamais sauvegardé en base)
+        $this->setAttribute('is_promo_active', $this->is_promo_active);
+        $this->setAttribute('is_promo_scheduled', $this->is_promo_scheduled);
+        $this->setAttribute('is_promo_expired', $this->is_promo_expired);
 
-            // Si la campagne a un % mais que le produit n'a pas de prix promo calculé
-            if (!$this->promo_price && $this->promoCampaign && $this->promoCampaign->discount_percentage) {
-                $this->discount_percentage = $this->promoCampaign->discount_percentage;
-                $this->promo_price = round($this->price * (1 - $this->discount_percentage / 100), 3);
-            }
+        // Si la promo est active ET que le prix promo n'est pas calculé
+        // (cas d'une campagne sans prix promo explicite), on le calcule
+        // virtuellement pour le frontend sans toucher à la base.
+        if ($this->is_promo_active && !$this->promo_price && $this->promoCampaign && $this->promoCampaign->discount_percentage) {
+            $this->setAttribute('promo_price', round($this->price * (1 - $this->promoCampaign->discount_percentage / 100), 3));
+            $this->setAttribute('discount_percentage', $this->promoCampaign->discount_percentage);
+        }
+
+        // Si la promo n'est PAS active, on n'efface PAS les champs en base,
+        // mais on ajoute un "prix effectif" virtuel que le frontend public
+        // peut utiliser : le prix promo si actif, sinon le prix normal.
+        if (!$this->is_promo_active) {
+            $this->setAttribute('effective_price', (float) $this->price);
+            $this->setAttribute('effective_reference_price', null);
+            $this->setAttribute('effective_discount_percentage', null);
         } else {
-            $this->is_promo = false;
-            $this->promo_price = null;
-            $this->reference_price = null;
-            $this->discount_percentage = null;
+            $this->setAttribute('effective_price', (float) ($this->promo_price ?? $this->price));
+            $this->setAttribute('effective_reference_price', (float) ($this->reference_price ?? $this->price));
+            $this->setAttribute('effective_discount_percentage', (int) ($this->discount_percentage ?? 0));
         }
 
         return $this;
+
+    }
+    /**
+     * La promo est-elle programmée mais pas encore commencée ? (date future)
+     */
+    public function getIsPromoScheduledAttribute(): bool
+    {
+        if (!$this->is_promo && !$this->promo_campaign_id) {
+            return false;
+        }
+        $startsAt = $this->effective_promo_starts_at;
+        $endsAt   = $this->effective_promo_ends_at;
+        if (!$startsAt) {
+            return false;
+        }
+        if ($startsAt > now()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * La promo est-elle expirée ? (date de fin passée)
+     */
+    public function getIsPromoExpiredAttribute(): bool
+    {
+        if (!$this->is_promo && !$this->promo_campaign_id) {
+            return false;
+        }
+        $endsAt = $this->effective_promo_ends_at;
+        if (!$endsAt) {
+            return false;
+        }
+        return $endsAt < now();
     }
 }

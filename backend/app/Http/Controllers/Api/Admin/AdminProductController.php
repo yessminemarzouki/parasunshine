@@ -1212,7 +1212,8 @@ class AdminProductController extends Controller
 
         $paginated = $query->paginate($request->per_page ?? 20);
 
-        // ✅ Formate les promos pour que l'admin voie les campagnes actives
+        // ✅ Ajoute is_promo_active / is_promo_scheduled / is_promo_expired
+        // pour que l'admin voie le vrai statut
         $paginated->getCollection()->each(function ($p) {
             $p->formatPromoForFrontend();
         });
@@ -1222,7 +1223,9 @@ class AdminProductController extends Controller
 
     public function show(Product $product)
     {
-        return response()->json($product->load(['category', 'category2', 'brand.parent', 'reviews', 'promoCampaign']));
+        $product->load(['category', 'category2', 'brand.parent', 'reviews', 'promoCampaign']);
+        $product->formatPromoForFrontend();
+        return response()->json($product);
     }
 
     private function handleProductData(Request $request): array

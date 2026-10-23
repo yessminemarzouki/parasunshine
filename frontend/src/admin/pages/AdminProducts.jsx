@@ -1829,7 +1829,7 @@ export default function AdminProducts() {
                             {parseFloat(p.price).toFixed(3).replace(".", ",")}{" "}
                             DT
                           </p>
-                          {p.promo_price && (
+                          {p.is_promo_active && p.promo_price && (
                             <p className="text-[11.5px] text-red-500">
                               {parseFloat(p.promo_price)
                                 .toFixed(3)
@@ -1837,9 +1837,20 @@ export default function AdminProducts() {
                               DT
                             </p>
                           )}
-                          {p.reference_price && p.promo_price && (
-                            <p className="text-[10.5px] text-gray-400 line-through">
-                              {parseFloat(p.reference_price)
+                          {p.is_promo_active &&
+                            p.reference_price &&
+                            p.promo_price && (
+                              <p className="text-[10.5px] text-gray-400 line-through">
+                                {parseFloat(p.reference_price)
+                                  .toFixed(3)
+                                  .replace(".", ",")}{" "}
+                                DT
+                              </p>
+                            )}
+                          {p.is_promo_scheduled && p.promo_price && (
+                            <p className="text-[11px] text-blue-500 font-semibold mt-0.5">
+                              ⏳ Programmée :{" "}
+                              {parseFloat(p.promo_price)
                                 .toFixed(3)
                                 .replace(".", ",")}{" "}
                               DT
@@ -1875,11 +1886,19 @@ export default function AdminProducts() {
                                 Nouveau
                               </span>
                             )}
-                            {p.is_promo && (
+                            {p.is_promo_active ? (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#fefce8] text-[#854d0e] border border-[#fef08a] rounded">
                                 Promo
                               </span>
-                            )}
+                            ) : p.is_promo_scheduled ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#f0f9ff] text-[#0369a1] border border-[#bae6fd] rounded">
+                                Programmée
+                              </span>
+                            ) : p.is_promo ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-500 border border-gray-200 rounded">
+                                Promo expirée
+                              </span>
+                            ) : null}
                             {topPromoIds.includes(p.id) &&
                               p.is_promo &&
                               (!p.promo_ends_at ||

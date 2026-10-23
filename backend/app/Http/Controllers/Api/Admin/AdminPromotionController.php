@@ -33,7 +33,7 @@ class AdminPromotionController extends Controller
         ]);
 
         $products = Product::whereIn('id', $validated['product_ids'])
-         ->where('is_promo', false) // Sécurité : pas de calcul sur un produit déjà en promo
+         ->where('is_promo', false) // Produits sans promo configurée
          ->get();
         $results = [];
 
@@ -86,6 +86,8 @@ class AdminPromotionController extends Controller
 
         $products = Product::whereIn('id', $validated['product_ids'])->get();
 
+        $now = now();
+
         foreach ($products as $product) {
             $basePrice = (float) $product->price;
 
@@ -103,10 +105,12 @@ class AdminPromotionController extends Controller
                 ? \Carbon\Carbon::parse($validated['ends_at'], 'Africa/Tunis')
                 : null;
 
-            // Si le produit avait déjà un ancien reference_price d'une ancienne promo, on l'écrase
+            // 🎯 On écrit is_promo = true dans TOUS les cas (passé, maintenant, futur)
+            // C'est ce qui permet à l'admin de voir "Promo programmée" si la date est future.
+            // C'est `is_promo_active` (calculé) qui détermine si la promo est affichée côté client.
             $product->update([
                 'reference_price'     => $referencePrice,
-                'is_promo'            => true,
+                'is_promo'            => true, // ✅ TOUJOURS true, peu importe la date
                 'discount_percentage' => $validated['displayed_discount'],
                 'promo_price'         => $finalPromoPrice,
                 'promo_starts_at'     => $startsAt,
@@ -172,12 +176,11 @@ class AdminPromotionController extends Controller
             $query->where('brand_id', $brandId);
         }
 
+        // 🎯 On utilise `is_promo` en base (configuré) et pas `is_promo_active` (calculé)
         if ($mode === 'remove') {
             $query->where('is_promo', true);
-        } elseif ($mode === 'inflation') {
-            // Pour gonfler les prix, on ne montre que les produits sans promo active
-            $query->where('is_promo', false);
         } else {
+            // 'apply' ou 'inflation' → produits SANS promo configurée
             $query->where('is_promo', false);
         }
 

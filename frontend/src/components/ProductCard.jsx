@@ -126,17 +126,12 @@ const ProductCard = ({ product }) => {
       .catch(() => {});
   };
 
-  // Vérifier si la promo est active selon les dates
-  const now = new Date();
-  const hasStarted =
-    !product.promo_starts_at ||
-    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
-  const hasEnded =
-    product.promo_ends_at &&
-    new Date(product.promo_ends_at.replace(" ", "T")) < now;
-  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+  // 🎯 On utilise le statut calculé par le backend (`is_promo_active`)
+  // qui est TOUJOURS correct (gère date passée, maintenant, future).
+  const isPromoActive = !!product.is_promo_active;
 
   const discountPercentage =
+    product.effective_discount_percentage ||
     product.discount_percentage ||
     (product.promo_price && isPromoActive
       ? Math.round(
@@ -230,22 +225,29 @@ const ProductCard = ({ product }) => {
           </Link>
 
           <div className="flex items-center justify-center gap-1.5 md:gap-2 w-full flex-wrap">
-            {isPromoActive && product.promo_price ? (
+            {isPromoActive && product.effective_price ? (
               <>
                 <span className="text-[13.5px] md:text-[1rem] font-bold text-[#e63946]">
-                  {parseFloat(product.promo_price).toFixed(3).replace(".", ",")}{" "}
-                  DT
-                </span>
-                <span className="text-[11px] md:text-[0.9rem] font-normal text-gray-400 line-through">
-                  {parseFloat(product.reference_price || product.price)
+                  {parseFloat(product.effective_price)
                     .toFixed(3)
                     .replace(".", ",")}{" "}
                   DT
                 </span>
+                {product.effective_reference_price && (
+                  <span className="text-[11px] md:text-[0.9rem] font-normal text-gray-400 line-through">
+                    {parseFloat(product.effective_reference_price)
+                      .toFixed(3)
+                      .replace(".", ",")}{" "}
+                    DT
+                  </span>
+                )}
               </>
             ) : (
               <span className="text-[13.5px] md:text-[1rem] font-bold text-[#1a1a1a]">
-                {parseFloat(product.price).toFixed(3).replace(".", ",")} DT
+                {parseFloat(product.effective_price ?? product.price)
+                  .toFixed(3)
+                  .replace(".", ",")}{" "}
+                DT
               </span>
             )}
           </div>
