@@ -176,7 +176,10 @@ class ProductController extends Controller
 
             if ($request->has('promo') && $request->get('promo') == 'true') {
                 $query->where('is_promo', true)
-                      // AJOUT : ignore les promos expirées
+                      ->where(function ($q) {
+                          $q->whereNull('promo_starts_at')
+                            ->orWhere('promo_starts_at', '<=', now());
+                      })
                       ->where(function ($q) {
                           $q->whereNull('promo_ends_at')
                             ->orWhere('promo_ends_at', '>=', now());
@@ -234,7 +237,10 @@ class ProductController extends Controller
 
         if ($request->boolean('promo')) {
             $query->where('is_promo', true)
-                  // AJOUT : ignore les promos expirées
+                  ->where(function ($q) {
+                      $q->whereNull('promo_starts_at')
+                        ->orWhere('promo_starts_at', '<=', now());
+                  })
                   ->where(function ($q) {
                       $q->whereNull('promo_ends_at')
                         ->orWhere('promo_ends_at', '>=', now());
@@ -619,13 +625,16 @@ class ProductController extends Controller
     {
         $products = Cache::remember('products_promotions', 300, function () {
             return Product::select($this->listColumns)
-                          ->with([
+                 ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
                     'brand.parent:id,name,slug',
                 ])
                 ->where('is_promo', true)
-                // AJOUT : ignore les promos expirées
+                ->where(function ($q) {
+                    $q->whereNull('promo_starts_at')
+                      ->orWhere('promo_starts_at', '<=', now());
+                })
                 ->where(function ($q) {
                     $q->whereNull('promo_ends_at')
                       ->orWhere('promo_ends_at', '>=', now());
@@ -646,7 +655,7 @@ class ProductController extends Controller
         $cacheKey = 'product_' . $slug;
 
         $product = Cache::remember($cacheKey, 300, function () use ($slug) {
-            return Product::select([
+            $product = Product::select([
     'id', 'name', 'slug', 'description', 'reference',
     'short_description', 'benefits', 'usage_tips',
     'price', 'reference_price', 'promo_price', 'discount_percentage',
@@ -672,6 +681,22 @@ class ProductController extends Controller
               ])
               ->where('slug', $slug)
               ->firstOrFail();
+
+            // Si la promo n'a pas encore commencé ou est expirée, on la désactive
+            if ($product->is_promo) {
+                $now = now();
+                $hasStarted = !$product->promo_starts_at || $product->promo_starts_at <= $now;
+                $hasEnded = $product->promo_ends_at && $product->promo_ends_at < $now;
+
+                if (!$hasStarted || $hasEnded) {
+                    $product->is_promo = false;
+                    $product->promo_price = null;
+                    $product->reference_price = null;
+                    $product->discount_percentage = null;
+                }
+            }
+
+            return $product;
         });
 
         return response()->json($product);
@@ -701,9 +726,12 @@ class ProductController extends Controller
                     ->where('is_new', true)
                     ->orderBy('created_at', 'desc')->limit(8)->get(),
 
-                             'promotions' => Product::select($cols)->with($with)
+                                  'promotions' => Product::select($cols)->with($with)
                     ->where('is_promo', true)
-                    // AJOUT : ignore les promos expirées
+                    ->where(function ($q) {
+                        $q->whereNull('promo_starts_at')
+                          ->orWhere('promo_starts_at', '<=', now());
+                    })
                     ->where(function ($q) {
                         $q->whereNull('promo_ends_at')
                           ->orWhere('promo_ends_at', '>=', now());
