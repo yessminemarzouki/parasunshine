@@ -120,16 +120,13 @@ function ResultRow({ p, size = "normal", onSelect }) {
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
         {(() => {
-          const now = new Date();
-          const hasStarted =
-            !p.promo_starts_at ||
-            new Date(p.promo_starts_at.replace(" ", "T")) <= now;
-          const hasEnded =
-            p.promo_ends_at &&
-            new Date(p.promo_ends_at.replace(" ", "T")) < now;
-          const isPromoActive = p.is_promo && hasStarted && !hasEnded;
+          // ✅ On fait confiance au backend (is_promo_active / effective_price)
+          const isPromoActive = !!p.is_promo_active;
+          const displayPrice = parseFloat(p.effective_price ?? p.price) || 0;
+          const referencePrice =
+            parseFloat(p.effective_reference_price ?? 0) || 0;
 
-          return isPromoActive && p.promo_price ? (
+          return isPromoActive && referencePrice > displayPrice ? (
             <>
               <p
                 style={{
@@ -139,7 +136,7 @@ function ResultRow({ p, size = "normal", onSelect }) {
                   margin: 0,
                 }}
               >
-                {parseFloat(p.promo_price).toFixed(3)} DT
+                {displayPrice.toFixed(3)} DT
               </p>
               <p
                 style={{
@@ -149,10 +146,7 @@ function ResultRow({ p, size = "normal", onSelect }) {
                   margin: 0,
                 }}
               >
-                {parseFloat(p.reference_price || p.price)
-                  .toFixed(3)
-                  .replace(".", ",")}{" "}
-                DT
+                {referencePrice.toFixed(3).replace(".", ",")} DT
               </p>
             </>
           ) : (
@@ -164,7 +158,7 @@ function ResultRow({ p, size = "normal", onSelect }) {
                 margin: 0,
               }}
             >
-              {parseFloat(p.price).toFixed(3)} DT
+              {displayPrice.toFixed(3)} DT
             </p>
           );
         })()}

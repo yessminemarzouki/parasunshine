@@ -829,22 +829,10 @@ export default function Checkout() {
               </p>
               <div className="space-y-3 mb-5">
                 {cart.map((item) => {
-                  const price = parseFloat(item.price) || 0;
-                  const promoPrice = parseFloat(item.promo_price) || 0;
-
-                  const now = new Date();
-                  const hasStarted =
-                    !item.promo_starts_at ||
-                    new Date(item.promo_starts_at.replace(" ", "T")) <= now;
-                  const hasEnded =
-                    item.promo_ends_at &&
-                    new Date(item.promo_ends_at.replace(" ", "T")) < now;
-                  const isPromoActive =
-                    item.is_promo && hasStarted && !hasEnded;
-
-                  const hasPromo =
-                    isPromoActive && promoPrice > 0 && promoPrice < price;
-                  const display = hasPromo ? promoPrice : price;
+                  // ✅ On fait confiance au backend (is_promo_active)
+                  const effectivePrice =
+                    parseFloat(item.effective_price ?? item.price) || 0;
+                  const display = effectivePrice;
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       <div className="relative flex-shrink-0">

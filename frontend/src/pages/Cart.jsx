@@ -360,29 +360,22 @@ export default function Cart() {
 
             {/* Items */}
             {cart.map((item, idx) => {
-              const price = parseFloat(item.price) || 0;
-              const referencePrice = parseFloat(item.reference_price) || price;
-              const promoPrice = parseFloat(item.promo_price) || 0;
-
-              // Vérifie si la promo est active selon les dates
-              const now = new Date();
-              const hasStarted =
-                !item.promo_starts_at ||
-                new Date(item.promo_starts_at.replace(" ", "T")) <= now;
-              const hasEnded =
-                item.promo_ends_at &&
-                new Date(item.promo_ends_at.replace(" ", "T")) < now;
-              const isPromoActive = item.is_promo && hasStarted && !hasEnded;
-
-              const hasPromo =
-                isPromoActive && promoPrice > 0 && promoPrice < price;
-              const display = hasPromo ? promoPrice : price;
+              // ✅ On fait confiance au backend (is_promo_active)
+              const effectivePrice =
+                parseFloat(item.effective_price ?? item.price) || 0;
+              const effectiveReferencePrice =
+                parseFloat(item.effective_reference_price ?? 0) || 0;
+              const hasPromo = !!item.is_promo_active && effectivePrice > 0;
+              const display = effectivePrice;
               const itemTotal = (display * item.quantity).toFixed(3);
-              const discPct = hasPromo
-                ? Math.round(
-                    ((referencePrice - promoPrice) / referencePrice) * 100,
-                  )
-                : 0;
+              const discPct =
+                hasPromo && effectiveReferencePrice > effectivePrice
+                  ? Math.round(
+                      ((effectiveReferencePrice - effectivePrice) /
+                        effectiveReferencePrice) *
+                        100,
+                    )
+                  : 0;
 
               return isDesktop ? (
                 <div
@@ -584,7 +577,8 @@ export default function Cart() {
                             margin: "2px 0 0",
                           }}
                         >
-                          {referencePrice.toFixed(3).replace(".", ",")} DT
+                          {effectiveReferencePrice.toFixed(3).replace(".", ",")}{" "}
+                          DT
                         </p>
                       </>
                     ) : (
@@ -938,7 +932,7 @@ export default function Cart() {
                     </div>
 
                     <div style={{ textAlign: "right" }}>
-                      {hasPromo && (
+                      {hasPromo && effectiveReferencePrice > 0 && (
                         <span
                           style={{
                             fontSize: 11,
@@ -947,7 +941,7 @@ export default function Cart() {
                             marginRight: 6,
                           }}
                         >
-                          {(referencePrice * item.quantity)
+                          {(effectiveReferencePrice * item.quantity)
                             .toFixed(3)
                             .replace(".", ",")}{" "}
                           DT
