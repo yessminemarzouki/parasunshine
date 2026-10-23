@@ -83,34 +83,17 @@ export const CartProvider = ({ children }) => {
 
   // ✅ CORRIGÉ : reçoit le cart en paramètre pour éviter la closure stale
   const saveCartToBackend = async (currentCart) => {
-    // Calcul du total directement ici — évite le problème de cartTotal non défini
+    // ✅ Utilise effective_price (calculé par le serveur) pour le total
     const total = currentCart.reduce((sum, item) => {
-      const price = parseFloat(item.price) || 0;
-      const promoPrice = parseFloat(item.promo_price) || 0;
-
-      const now = new Date();
-      const hasStarted =
-        !item.promo_starts_at ||
-        new Date(item.promo_starts_at.replace(" ", "T")) <= now;
-      const hasEnded =
-        item.promo_ends_at &&
-        new Date(item.promo_ends_at.replace(" ", "T")) < now;
-      const isPromoActive = item.is_promo && hasStarted && !hasEnded;
-
-      const finalPrice =
-        isPromoActive && promoPrice > 0 && promoPrice < price
-          ? promoPrice
-          : price;
+      const finalPrice = parseFloat(item.effective_price ?? item.price) || 0;
       return sum + finalPrice * item.quantity;
     }, 0);
 
     const cartData = {
       cart_items: currentCart.map((item) => ({
-        product_id: item.id, // ✅ nécessaire pour les images dans l'admin
+        product_id: item.id,
         quantity: item.quantity,
-        price: item.promo_price
-          ? Math.min(parseFloat(item.price), parseFloat(item.promo_price))
-          : parseFloat(item.price),
+        price: parseFloat(item.effective_price ?? item.price) || 0,
         name: item.name,
       })),
       total: total,
@@ -171,23 +154,8 @@ export const CartProvider = ({ children }) => {
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cart.reduce((total, item) => {
-    const price = parseFloat(item.price) || 0;
-    const promoPrice = parseFloat(item.promo_price) || 0;
-
-    // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
-    const now = new Date();
-    const hasStarted =
-      !item.promo_starts_at ||
-      new Date(item.promo_starts_at.replace(" ", "T")) <= now;
-    const hasEnded =
-      item.promo_ends_at &&
-      new Date(item.promo_ends_at.replace(" ", "T")) < now;
-    const isPromoActive = item.is_promo && hasStarted && !hasEnded;
-
-    const finalPrice =
-      isPromoActive && promoPrice > 0 && promoPrice < price
-        ? promoPrice
-        : price;
+    // ✅ Utilise effective_price (calculé par le serveur) — pas de recalcul local
+    const finalPrice = parseFloat(item.effective_price ?? item.price) || 0;
     return total + finalPrice * item.quantity;
   }, 0);
 

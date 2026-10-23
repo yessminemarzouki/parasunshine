@@ -44,18 +44,26 @@ class AdminPromoSectionController extends Controller
 
         $ids = $section->product_ids ?? [];
 
+        // ⚠️ On ne filtre PAS sur is_promo en base : un produit peut être
+        // configuré en promo mais programmé dans le futur. On laisse passer
+        // tous les produits (avec ou sans promo) et c'est formatPromoForFrontend()
+        // qui décidera si la promo est active à l'instant T.
         $query = Product::select($cols)
-            ->with(['category:id,name,slug','brand:id,name,slug'])
+            ->with([
+                'category:id,name,slug',
+                'brand:id,name,slug',
+                'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active', // ✅ Ajout
+            ])
             ->whereIn('id', $ids)
-            ->where('is_promo', true)
-            ->where('stock', '>', 0)
-            // AJOUT : ignore les promos expirées
-            ->where(function ($q) {
-                $q->whereNull('promo_ends_at')
-                  ->orWhere('promo_ends_at', '>=', now());
-            });
+            ->where('stock', '>', 0);
 
         $products = $this->applyOrderMode($query, $section->order_mode, $ids);
+
+        // ✅ Formate et ne garde QUE les promos actives
+        $products = $products
+            ->map(fn ($p) => $p->formatPromoForFrontend())
+            ->filter(fn ($p) => $p->is_promo_active)
+            ->values();
 
         return response()->json([
             'visible'          => true,
@@ -102,12 +110,15 @@ class AdminPromoSectionController extends Controller
 
         $includedProducts = [];
         if (!empty($includedIds)) {
-            $includedProducts = Product::select(['id','name','slug','price','promo_price','discount_percentage','image','stock','is_promo'])
+            $includedProducts = Product::select(['id','name','slug','price','promo_price','discount_percentage','image','stock','is_promo',
+                'promo_starts_at', 'promo_ends_at', 'promo_campaign_id', 'reference_price'])
+                ->with(['promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active']) // ✅
                 ->whereIn('id', $includedIds)
-                ->where('is_promo', true) // AJOUT : n'affiche que les produits encore en promo
                 ->get()
                 ->sortBy(fn ($p) => array_search($p->id, $includedIds))
-                ->values();
+                ->values()
+                // ✅ Ajoute is_promo_active/scheduled/expired pour l'admin
+                ->each(fn ($p) => $p->formatPromoForFrontend());
         }
 
         return response()->json([
@@ -147,16 +158,24 @@ class AdminPromoSectionController extends Controller
             $excludeIds = array_filter(explode(',', $excludeIds));
         }
 
-        $products = Product::select(['id','name','slug','price','promo_price','discount_percentage','image','stock','is_promo'])
+        $products = Product::select(['id','name','slug','price','promo_price','discount_percentage','image','stock','is_promo',
+            'promo_starts_at', 'promo_ends_at', 'promo_campaign_id', 'reference_price'])
+            ->with(['promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active']) // ✅
             ->where('stock', '>', 0)
-            ->where('is_promo', true)
+            ->where(function ($q) {
+                // ✅ Inclut les promos configurées (actives OU programmées)
+                $q->where('is_promo', true)
+                  ->orWhereNotNull('promo_campaign_id');
+            })
             ->when(!empty($excludeIds), fn ($query) => $query->whereNotIn('id', $excludeIds))
             ->where(function ($query) use ($q) {
                 $query->where('name', 'LIKE', "%{$q}%")
                       ->orWhere('reference', 'LIKE', "%{$q}%");
             })
             ->limit(30)
-            ->get();
+            ->get()
+            // ✅ Formate pour l'admin
+            ->each(fn ($p) => $p->formatPromoForFrontend());
 
         return response()->json($products);
     }
@@ -166,7 +185,10 @@ class AdminPromoSectionController extends Controller
     public function addAllPromoted()
     {
         $section = $this->getOrCreate();
-        $promotedIds = Product::where('is_promo', true)->pluck('id')->toArray();
+        // ✅ Inclut les promos configurées (actives + programmées + campagnes)
+        $promotedIds = Product::where(function ($q) {
+            $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
+        })->pluck('id')->toArray();
         $existing = $section->product_ids ?? [];
         $merged = array_values(array_unique(array_merge($existing, $promotedIds)));
         $section->update(['product_ids' => $merged]);
@@ -190,7 +212,8 @@ class AdminPromoSectionController extends Controller
     {
         $product = Product::findOrFail($productId);
 
-        if (!$product->is_promo) {
+        // ✅ Accepte un produit configuré en promo OU lié à une campagne
+        if (!$product->is_promo && !$product->promo_campaign_id) {
             return response()->json([
                 'message' => "Ce produit n'est pas en promotion.",
             ], 422);

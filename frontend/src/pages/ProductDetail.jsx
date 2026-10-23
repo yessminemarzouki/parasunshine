@@ -240,18 +240,17 @@ export default function ProductDetail() {
   const price = parseFloat(product.price) || 0;
   const promoPrice = parseFloat(product.promo_price) || 0;
 
-  // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
-  const now = new Date();
-  const hasStarted =
-    !product.promo_starts_at ||
-    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
-  const hasEnded =
-    product.promo_ends_at &&
-    new Date(product.promo_ends_at.replace(" ", "T")) < now;
-  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+  // ✅ On fait confiance au backend qui calcule is_promo_active
+  // avec l'heure du SERVEUR (pas celle du PC du visiteur)
+  const isPromoActive = !!product.is_promo_active;
 
-  const hasPromo = isPromoActive && promoPrice > 0 && promoPrice < price;
-  const displayPrice = hasPromo ? promoPrice : price;
+  // Prix effectif envoyé par le backend (promo si actif, normal sinon)
+  const effectivePrice = parseFloat(product.effective_price ?? price) || 0;
+  const effectiveReferencePrice =
+    parseFloat(product.effective_reference_price ?? 0) || 0;
+
+  const hasPromo = isPromoActive;
+  const displayPrice = hasPromo ? effectivePrice : price;
   const inWishlist = isInWishlist(product.id);
   const isUnavailable = product.is_unavailable || product.stock === 0;
 
@@ -597,7 +596,7 @@ export default function ProductDetail() {
       "@type": "Offer",
       url: `https://www.parasunshine.tn/products/${product.slug}`,
       priceCurrency: "TND",
-      price: hasPromo ? promoPrice : price,
+      price: displayPrice,
       availability: isUnavailable
         ? "https://schema.org/OutOfStock"
         : "https://schema.org/InStock",
@@ -804,13 +803,11 @@ export default function ProductDetail() {
                     %
                   </span>
                 )}
-                {!isPromoActive &&
-                  product.is_promo &&
-                  product.promo_starts_at && (
-                    <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white shadow-sm">
-                      Promo à venir
-                    </span>
-                  )}
+                {product.is_promo_scheduled && (
+                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white shadow-sm">
+                    Promo programmée
+                  </span>
+                )}
               </div>
 
               <div className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/85 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-sm">
@@ -1004,18 +1001,15 @@ export default function ProductDetail() {
               >
                 {displayPrice.toFixed(3)} DT
               </span>
-              {hasPromo && (
+              {hasPromo && effectiveReferencePrice > 0 && (
                 <span className="text-[16px] text-gray-400 line-through font-medium">
-                  {parseFloat(product.reference_price || price)
-                    .toFixed(3)
-                    .replace(".", ",")}{" "}
-                  DT
+                  {effectiveReferencePrice.toFixed(3).replace(".", ",")} DT
                 </span>
               )}
-              {hasPromo && (
+              {hasPromo && effectiveReferencePrice > effectivePrice && (
                 <span className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg">
                   Économisez{" "}
-                  {(parseFloat(product.reference_price || price) - promoPrice)
+                  {(effectiveReferencePrice - effectivePrice)
                     .toFixed(3)
                     .replace(".", ",")}{" "}
                   DT
