@@ -87,8 +87,20 @@ export const CartProvider = ({ children }) => {
     const total = currentCart.reduce((sum, item) => {
       const price = parseFloat(item.price) || 0;
       const promoPrice = parseFloat(item.promo_price) || 0;
+
+      const now = new Date();
+      const hasStarted =
+        !item.promo_starts_at ||
+        new Date(item.promo_starts_at.replace(" ", "T")) <= now;
+      const hasEnded =
+        item.promo_ends_at &&
+        new Date(item.promo_ends_at.replace(" ", "T")) < now;
+      const isPromoActive = item.is_promo && hasStarted && !hasEnded;
+
       const finalPrice =
-        promoPrice > 0 && promoPrice < price ? promoPrice : price;
+        isPromoActive && promoPrice > 0 && promoPrice < price
+          ? promoPrice
+          : price;
       return sum + finalPrice * item.quantity;
     }, 0);
 
@@ -161,8 +173,21 @@ export const CartProvider = ({ children }) => {
   const cartTotal = cart.reduce((total, item) => {
     const price = parseFloat(item.price) || 0;
     const promoPrice = parseFloat(item.promo_price) || 0;
+
+    // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
+    const now = new Date();
+    const hasStarted =
+      !item.promo_starts_at ||
+      new Date(item.promo_starts_at.replace(" ", "T")) <= now;
+    const hasEnded =
+      item.promo_ends_at &&
+      new Date(item.promo_ends_at.replace(" ", "T")) < now;
+    const isPromoActive = item.is_promo && hasStarted && !hasEnded;
+
     const finalPrice =
-      promoPrice > 0 && promoPrice < price ? promoPrice : price;
+      isPromoActive && promoPrice > 0 && promoPrice < price
+        ? promoPrice
+        : price;
     return total + finalPrice * item.quantity;
   }, 0);
 

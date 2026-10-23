@@ -444,7 +444,7 @@ export default function ProductPreviewModal({ product, onClose }) {
                           </div>
                         )}
                       </div>
-                      {product.promo_ends_at && (
+                      {isPromoActive && product.promo_ends_at && (
                         <CountdownTimer endDate={product.promo_ends_at} />
                       )}
                     </div>

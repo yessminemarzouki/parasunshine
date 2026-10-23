@@ -196,7 +196,21 @@ class ProductController extends Controller
 
             $query->orderBy($sortBy, $sortDirection);
 
-            return $query->paginate(12);
+            $products = $query->paginate(12);
+            $products->getCollection()->each(function ($p) {
+                if ($p->is_promo) {
+                    $now = now();
+                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                    if (!$hasStarted || $hasEnded) {
+                        $p->is_promo = false;
+                        $p->promo_price = null;
+                        $p->reference_price = null;
+                        $p->discount_percentage = null;
+                    }
+                }
+            });
+            return $products;
         });
 
         return response()->json($products);
@@ -360,7 +374,21 @@ class ProductController extends Controller
         ]);
 
         $perPage = min((int) $request->get('per_page', 20), 50);
-        return $query->paginate($perPage);
+        $products = $query->paginate($perPage);
+        $products->getCollection()->each(function ($p) {
+            if ($p->is_promo) {
+                $now = now();
+                $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                if (!$hasStarted || $hasEnded) {
+                    $p->is_promo = false;
+                    $p->promo_price = null;
+                    $p->reference_price = null;
+                    $p->discount_percentage = null;
+                }
+            }
+        });
+        return $products;
     }
 
     /**

@@ -831,7 +831,19 @@ export default function Checkout() {
                 {cart.map((item) => {
                   const price = parseFloat(item.price) || 0;
                   const promoPrice = parseFloat(item.promo_price) || 0;
-                  const hasPromo = promoPrice > 0 && promoPrice < price;
+
+                  const now = new Date();
+                  const hasStarted =
+                    !item.promo_starts_at ||
+                    new Date(item.promo_starts_at.replace(" ", "T")) <= now;
+                  const hasEnded =
+                    item.promo_ends_at &&
+                    new Date(item.promo_ends_at.replace(" ", "T")) < now;
+                  const isPromoActive =
+                    item.is_promo && hasStarted && !hasEnded;
+
+                  const hasPromo =
+                    isPromoActive && promoPrice > 0 && promoPrice < price;
                   const display = hasPromo ? promoPrice : price;
                   return (
                     <div key={item.id} className="flex items-center gap-3">

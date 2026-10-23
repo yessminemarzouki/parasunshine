@@ -239,7 +239,18 @@ export default function ProductDetail() {
 
   const price = parseFloat(product.price) || 0;
   const promoPrice = parseFloat(product.promo_price) || 0;
-  const hasPromo = promoPrice > 0 && promoPrice < price;
+
+  // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
+  const now = new Date();
+  const hasStarted =
+    !product.promo_starts_at ||
+    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
+  const hasEnded =
+    product.promo_ends_at &&
+    new Date(product.promo_ends_at.replace(" ", "T")) < now;
+  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+
+  const hasPromo = isPromoActive && promoPrice > 0 && promoPrice < price;
   const displayPrice = hasPromo ? promoPrice : price;
   const inWishlist = isInWishlist(product.id);
   const isUnavailable = product.is_unavailable || product.stock === 0;
@@ -793,6 +804,13 @@ export default function ProductDetail() {
                     %
                   </span>
                 )}
+                {!isPromoActive &&
+                  product.is_promo &&
+                  product.promo_starts_at && (
+                    <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white shadow-sm">
+                      Promo à venir
+                    </span>
+                  )}
               </div>
 
               <div className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/85 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-sm">

@@ -361,15 +361,27 @@ export default function Cart() {
             {/* Items */}
             {cart.map((item, idx) => {
               const price = parseFloat(item.price) || 0;
-              const referencePrice = parseFloat(item.reference_price) || price; // ← AJOUT
+              const referencePrice = parseFloat(item.reference_price) || price;
               const promoPrice = parseFloat(item.promo_price) || 0;
-              const hasPromo = promoPrice > 0 && promoPrice < price;
+
+              // Vérifie si la promo est active selon les dates
+              const now = new Date();
+              const hasStarted =
+                !item.promo_starts_at ||
+                new Date(item.promo_starts_at.replace(" ", "T")) <= now;
+              const hasEnded =
+                item.promo_ends_at &&
+                new Date(item.promo_ends_at.replace(" ", "T")) < now;
+              const isPromoActive = item.is_promo && hasStarted && !hasEnded;
+
+              const hasPromo =
+                isPromoActive && promoPrice > 0 && promoPrice < price;
               const display = hasPromo ? promoPrice : price;
               const itemTotal = (display * item.quantity).toFixed(3);
               const discPct = hasPromo
                 ? Math.round(
                     ((referencePrice - promoPrice) / referencePrice) * 100,
-                  ) // ← MODIF
+                  )
                 : 0;
 
               return isDesktop ? (

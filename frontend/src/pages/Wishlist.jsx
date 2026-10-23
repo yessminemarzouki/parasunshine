@@ -243,14 +243,25 @@ export default function Wishlist() {
             if (!product) return null;
 
             const price = parseFloat(product.price) || 0;
-            const referencePrice = parseFloat(product.reference_price) || price; // ← AJOUT
+            const referencePrice = parseFloat(product.reference_price) || price;
             const promoPrice = parseFloat(product.promo_price) || 0;
-            const hasPromo = promoPrice > 0 && promoPrice < price;
+
+            const now = new Date();
+            const hasStarted =
+              !product.promo_starts_at ||
+              new Date(product.promo_starts_at.replace(" ", "T")) <= now;
+            const hasEnded =
+              product.promo_ends_at &&
+              new Date(product.promo_ends_at.replace(" ", "T")) < now;
+            const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+
+            const hasPromo =
+              isPromoActive && promoPrice > 0 && promoPrice < price;
             const display = hasPromo ? promoPrice : price;
             const discount = hasPromo
               ? Math.round(
                   ((referencePrice - promoPrice) / referencePrice) * 100,
-                ) // ← MODIF
+                )
               : 0;
 
             return (
