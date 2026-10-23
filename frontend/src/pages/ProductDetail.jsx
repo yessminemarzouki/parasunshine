@@ -803,11 +803,8 @@ export default function ProductDetail() {
                     %
                   </span>
                 )}
-                {product.is_promo_scheduled && (
-                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-white shadow-sm">
-                    Promo programmée
-                  </span>
-                )}
+                {/* ✅ Aucun badge "Promo programmée" sur le site public.
+                    Le client ne doit rien voir tant que la promo n'a pas commencé. */}
               </div>
 
               <div className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/85 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-sm">
