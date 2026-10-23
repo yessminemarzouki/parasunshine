@@ -468,6 +468,21 @@ class ProductController extends Controller
             ->limit(10)
             ->get();
 
+        // Désactiver la promo si elle n'a pas commencé ou est expirée
+        $results->each(function ($p) {
+            if ($p->is_promo) {
+                $now = now();
+                $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                if (!$hasStarted || $hasEnded) {
+                    $p->is_promo = false;
+                    $p->promo_price = null;
+                    $p->reference_price = null;
+                    $p->discount_percentage = null;
+                }
+            }
+        });
+
         // ── Suggestions (si 0 résultats exacts) ──
         $suggestions = collect([]);
         if ($results->isEmpty() && $keywords->isNotEmpty()) {
@@ -561,7 +576,7 @@ class ProductController extends Controller
     public function featured()
     {
         $products = Cache::remember('products_featured', 300, function () {
-            return Product::select($this->listColumns)
+            $products = Product::select($this->listColumns)
                             ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
@@ -571,6 +586,22 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+
+            $products->each(function ($p) {
+                if ($p->is_promo) {
+                    $now = now();
+                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                    if (!$hasStarted || $hasEnded) {
+                        $p->is_promo = false;
+                        $p->promo_price = null;
+                        $p->reference_price = null;
+                        $p->discount_percentage = null;
+                    }
+                }
+            });
+
+            return $products;
         });
 
         return response()->json($products);
@@ -582,7 +613,7 @@ class ProductController extends Controller
     public function bestsellers()
     {
         $products = Cache::remember('products_bestsellers', 300, function () {
-            return Product::select($this->listColumns)
+            $products = Product::select($this->listColumns)
                         ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
@@ -592,6 +623,22 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+
+            $products->each(function ($p) {
+                if ($p->is_promo) {
+                    $now = now();
+                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                    if (!$hasStarted || $hasEnded) {
+                        $p->is_promo = false;
+                        $p->promo_price = null;
+                        $p->reference_price = null;
+                        $p->discount_percentage = null;
+                    }
+                }
+            });
+
+            return $products;
         });
 
         return response()->json($products);
@@ -603,7 +650,7 @@ class ProductController extends Controller
     public function newest()
     {
         $products = Cache::remember('products_newest', 300, function () {
-            return Product::select($this->listColumns)
+            $products = Product::select($this->listColumns)
                              ->with([
                     'category:id,name,slug',
                     'brand:id,name,slug,parent_id',
@@ -613,6 +660,22 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
+
+            $products->each(function ($p) {
+                if ($p->is_promo) {
+                    $now = now();
+                    $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                    $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                    if (!$hasStarted || $hasEnded) {
+                        $p->is_promo = false;
+                        $p->promo_price = null;
+                        $p->reference_price = null;
+                        $p->discount_percentage = null;
+                    }
+                }
+            });
+
+            return $products;
         });
 
         return response()->json($products);
@@ -717,16 +780,36 @@ class ProductController extends Controller
 
             $hygieneIds = $this->getCategoryIdsWithDescendants('hygiene');
 
+            $disableInactivePromos = function ($products) {
+                return $products->each(function ($p) {
+                    if ($p->is_promo) {
+                        $now = now();
+                        $hasStarted = !$p->promo_starts_at || $p->promo_starts_at <= $now;
+                        $hasEnded = $p->promo_ends_at && $p->promo_ends_at < $now;
+                        if (!$hasStarted || $hasEnded) {
+                            $p->is_promo = false;
+                            $p->promo_price = null;
+                            $p->reference_price = null;
+                            $p->discount_percentage = null;
+                        }
+                    }
+                });
+            };
+
             return [
-                'featured' => Product::select($cols)->with($with)
-                    ->where('is_featured', true)
-                    ->inRandomOrder()->limit(8)->get(),
+                'featured' => $disableInactivePromos(
+                    Product::select($cols)->with($with)
+                        ->where('is_featured', true)
+                        ->inRandomOrder()->limit(8)->get()
+                ),
 
-                'newest' => Product::select($cols)->with($with)
-                    ->where('is_new', true)
-                    ->orderBy('created_at', 'desc')->limit(8)->get(),
+                'newest' => $disableInactivePromos(
+                    Product::select($cols)->with($with)
+                        ->where('is_new', true)
+                        ->orderBy('created_at', 'desc')->limit(8)->get()
+                ),
 
-                                  'promotions' => Product::select($cols)->with($with)
+                'promotions' => Product::select($cols)->with($with)
                     ->where('is_promo', true)
                     ->where(function ($q) {
                         $q->whereNull('promo_starts_at')
@@ -739,19 +822,25 @@ class ProductController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->get(),
 
-                'products' => Product::select($cols)->with($with)
-                    ->limit(15)->get(),
+                'products' => $disableInactivePromos(
+                    Product::select($cols)->with($with)
+                        ->limit(15)->get()
+                ),
 
                 'hygiene' => !empty($hygieneIds)
-                    ? Product::select($cols)->with($with)
-                    ->whereIn('category_id', $hygieneIds)
-                    ->limit(8)->get()
+                    ? $disableInactivePromos(
+                        Product::select($cols)->with($with)
+                            ->whereIn('category_id', $hygieneIds)
+                            ->limit(8)->get()
+                    )
                     : collect([]),
 
-                'bestsellers' => Product::select($cols)->with($with)
-                    ->where('is_bestseller', true)
-                    ->orderBy('created_at', 'desc')
-                    ->limit(8)->get(),
+                'bestsellers' => $disableInactivePromos(
+                    Product::select($cols)->with($with)
+                        ->where('is_bestseller', true)
+                        ->orderBy('created_at', 'desc')
+                        ->limit(8)->get()
+                ),
             ];
         });
 

@@ -83,7 +83,20 @@ export default function ProductPreviewModal({ product, onClose }) {
   const price = parseFloat(product.price) || 0;
   const referencePrice = parseFloat(product.reference_price) || price;
   const promoPrice = parseFloat(product.promo_price) || 0;
-  const hasPromo = promoPrice > 0 && promoPrice < price;
+
+  // Vérifie si la promo est active (date de début atteinte et date de fin non dépassée)
+  const now = new Date();
+  const hasStarted =
+    !product.promo_starts_at ||
+    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
+  const hasEnded =
+    product.promo_ends_at &&
+    new Date(product.promo_ends_at.replace(" ", "T")) < now;
+
+  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+  const isPromoScheduled = product.is_promo && !hasStarted;
+
+  const hasPromo = isPromoActive && promoPrice > 0 && promoPrice < price;
   const discount = hasPromo
     ? Math.round(((referencePrice - promoPrice) / referencePrice) * 100)
     : 0;
@@ -168,7 +181,7 @@ export default function ProductPreviewModal({ product, onClose }) {
                 )}
                 {product.is_promo && (
                   <span className="text-[10px] font-bold px-2 py-0.5 bg-[#fefce8] text-[#854d0e] border border-[#fef08a] rounded-full">
-                    Promo
+                    {isPromoActive ? "Promo" : "Promo programmée"}
                   </span>
                 )}
                 {product.is_bestseller && (
@@ -274,6 +287,20 @@ export default function ProductPreviewModal({ product, onClose }) {
                     </span>
                   )}
                 </div>
+                {isPromoScheduled && (
+                  <p className="text-[12px] text-amber-600 font-semibold mt-1">
+                    Promotion à venir à partir du{" "}
+                    {new Date(
+                      product.promo_starts_at.replace(" ", "T"),
+                    ).toLocaleString("fr-FR", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
               </div>
 
               {/* Description courte */}
@@ -375,7 +402,11 @@ export default function ProductPreviewModal({ product, onClose }) {
               {product.is_promo && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
                   <p className="text-[11px] font-bold text-amber-700 uppercase tracking-widest mb-2">
-                    Promotion active
+                    {isPromoActive
+                      ? "Promotion active"
+                      : isPromoScheduled
+                        ? "Promotion programmée"
+                        : "Promotion expirée"}
                   </p>
                   {product.promo_starts_at || product.promo_ends_at ? (
                     <div className="space-y-2">

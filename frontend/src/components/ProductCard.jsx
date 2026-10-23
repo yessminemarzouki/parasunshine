@@ -126,9 +126,19 @@ const ProductCard = ({ product }) => {
       .catch(() => {});
   };
 
+  // Vérifier si la promo est active selon les dates
+  const now = new Date();
+  const hasStarted =
+    !product.promo_starts_at ||
+    new Date(product.promo_starts_at.replace(" ", "T")) <= now;
+  const hasEnded =
+    product.promo_ends_at &&
+    new Date(product.promo_ends_at.replace(" ", "T")) < now;
+  const isPromoActive = product.is_promo && hasStarted && !hasEnded;
+
   const discountPercentage =
     product.discount_percentage ||
-    (product.promo_price
+    (product.promo_price && isPromoActive
       ? Math.round(
           ((parseFloat(product.reference_price || product.price) -
             parseFloat(product.promo_price)) /
@@ -144,7 +154,7 @@ const ProductCard = ({ product }) => {
         className="relative bg-white border border-gray-200 md:border-[#e8e8e8] rounded-xl md:rounded-lg overflow-hidden flex flex-col transition-all duration-300 hover:border-[#1a5242] hover:shadow-md group"
       >
         {/* Badges */}
-        {product.is_promo && discountPercentage && (
+        {isPromoActive && discountPercentage && (
           <div className="absolute top-2 left-2 md:top-3 md:left-3 z-[2] px-2 py-0.5 md:px-2.5 md:py-1 rounded-md text-[11px] md:text-[0.75rem] font-bold uppercase tracking-wide text-white bg-[#e63946]">
             -{discountPercentage}%
           </div>
@@ -220,7 +230,7 @@ const ProductCard = ({ product }) => {
           </Link>
 
           <div className="flex items-center justify-center gap-1.5 md:gap-2 w-full flex-wrap">
-            {product.promo_price ? (
+            {isPromoActive && product.promo_price ? (
               <>
                 <span className="text-[13.5px] md:text-[1rem] font-bold text-[#e63946]">
                   {parseFloat(product.promo_price).toFixed(3).replace(".", ",")}{" "}

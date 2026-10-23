@@ -119,44 +119,55 @@ function ResultRow({ p, size = "normal", onSelect }) {
         </div>
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        {p.promo_price ? (
-          <>
+        {(() => {
+          const now = new Date();
+          const hasStarted =
+            !p.promo_starts_at ||
+            new Date(p.promo_starts_at.replace(" ", "T")) <= now;
+          const hasEnded =
+            p.promo_ends_at &&
+            new Date(p.promo_ends_at.replace(" ", "T")) < now;
+          const isPromoActive = p.is_promo && hasStarted && !hasEnded;
+
+          return isPromoActive && p.promo_price ? (
+            <>
+              <p
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: 800,
+                  color: "#059669",
+                  margin: 0,
+                }}
+              >
+                {parseFloat(p.promo_price).toFixed(3)} DT
+              </p>
+              <p
+                style={{
+                  fontSize: 11.5,
+                  color: "#9ca3af",
+                  textDecoration: "line-through",
+                  margin: 0,
+                }}
+              >
+                {parseFloat(p.reference_price || p.price)
+                  .toFixed(3)
+                  .replace(".", ",")}{" "}
+                DT
+              </p>
+            </>
+          ) : (
             <p
               style={{
                 fontSize: 13.5,
-                fontWeight: 800,
-                color: "#059669",
+                fontWeight: 700,
+                color: "#1a5242",
                 margin: 0,
               }}
             >
-              {parseFloat(p.promo_price).toFixed(3)} DT
+              {parseFloat(p.price).toFixed(3)} DT
             </p>
-            <p
-              style={{
-                fontSize: 11.5,
-                color: "#9ca3af",
-                textDecoration: "line-through",
-                margin: 0,
-              }}
-            >
-              {parseFloat(p.reference_price || p.price)
-                .toFixed(3)
-                .replace(".", ",")}{" "}
-              DT
-            </p>
-          </>
-        ) : (
-          <p
-            style={{
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "#1a5242",
-              margin: 0,
-            }}
-          >
-            {parseFloat(p.price).toFixed(3)} DT
-          </p>
-        )}
+          );
+        })()}
       </div>
     </button>
   );
