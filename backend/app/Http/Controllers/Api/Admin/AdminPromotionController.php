@@ -95,14 +95,22 @@ class AdminPromotionController extends Controller
             $referencePriceRaw = $finalPromoPrice / (1 - ($validated['displayed_discount'] / 100));
             $referencePrice = $this->roundToPsychologicalPrice($referencePriceRaw);
 
+            // Forcer l'interprétation de la date comme heure de Tunis
+            $startsAt = !empty($validated['starts_at'])
+                ? \Carbon\Carbon::parse($validated['starts_at'], 'Africa/Tunis')
+                : null;
+            $endsAt = !empty($validated['ends_at'])
+                ? \Carbon\Carbon::parse($validated['ends_at'], 'Africa/Tunis')
+                : null;
+
             // Si le produit avait déjà un ancien reference_price d'une ancienne promo, on l'écrase
             $product->update([
                 'reference_price'     => $referencePrice,
                 'is_promo'            => true,
                 'discount_percentage' => $validated['displayed_discount'],
                 'promo_price'         => $finalPromoPrice,
-                'promo_starts_at'     => $validated['starts_at'] ?? null,
-                'promo_ends_at'       => $validated['ends_at'] ?? null,
+                'promo_starts_at'     => $startsAt,
+                'promo_ends_at'       => $endsAt,
                 'promo_campaign_id'   => null,
             ]);
 
@@ -206,15 +214,20 @@ class AdminPromotionController extends Controller
                 3
             );
 
+            // Forcer l'interprétation de la date comme heure de Tunis
+            $startsAt = !empty($validated['starts_at'])
+                ? \Carbon\Carbon::parse($validated['starts_at'], 'Africa/Tunis')
+                : null;
+            $endsAt = !empty($validated['ends_at'])
+                ? \Carbon\Carbon::parse($validated['ends_at'], 'Africa/Tunis')
+                : null;
+
             $product->update([
                 'is_promo'            => true,
                 'discount_percentage' => $validated['discount_percentage'],
                 'promo_price'         => $promoPrice,
-                'promo_starts_at'     => $validated['starts_at'] ?? null,
-                'promo_ends_at'       => $validated['ends_at'] ?? null,
-                // Une application manuelle via l'assistant détache le
-                // produit de toute campagne à laquelle il appartenait —
-                // c'est désormais une promo individuelle, indépendante.
+                'promo_starts_at'     => $startsAt,
+                'promo_ends_at'       => $endsAt,
                 'promo_campaign_id'   => null,
             ]);
 

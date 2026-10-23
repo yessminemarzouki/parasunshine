@@ -1136,6 +1136,11 @@ export default function AdminProducts() {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => {
+        // On force l'envoi de la date brute, sans conversion UTC
+        if (k === "promo_starts_at" || k === "promo_ends_at") {
+          if (v) fd.append(k, v); // v est déjà au format YYYY-MM-DDTHH:mm
+          return;
+        }
         // Ignorer les champs internes qui ne vont pas en base
         if (
           k === "_cmInput" ||
