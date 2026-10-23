@@ -32,10 +32,12 @@ class ProductController extends Controller
         'is_new',
         'is_bestseller',
         'is_promo',
-          'has_sizes',
+        'has_sizes',
         'has_colors',
         'has_age',
         'is_unavailable',
+        'promo_starts_at',
+        'promo_ends_at',
     ];
 
     /**
