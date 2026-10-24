@@ -22,19 +22,16 @@ import {
 } from "../services/adminApi";
 import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
-// ✅ Convertit une date "datetime-local" (fuseau du navigateur) en heure de Tunis
 
 export default function AdminPromotions() {
-  // Arrondi plancher à la centaine inférieure (ex: 8.46 -> 8.400)
   const roundPrice = (price) => {
     if (!price || price <= 0) return 0;
     return (Math.floor(price * 10) / 10).toFixed(3);
   };
 
-  const [mode, setMode] = useState("apply"); // "apply" | "remove" | "inflation"
+  const [mode, setMode] = useState("apply");
   const [discount, setDiscount] = useState("");
 
-  // Nouveaux états pour le mode inflation
   const [displayedDiscount, setDisplayedDiscount] = useState(50);
   const [internalDiscount, setInternalDiscount] = useState(10);
   const [previewData, setPreviewData] = useState([]);
@@ -42,7 +39,7 @@ export default function AdminPromotions() {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
-  const [selected, setSelected] = useState([]); // liste de produits complets
+  const [selected, setSelected] = useState([]);
 
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
@@ -67,7 +64,7 @@ export default function AdminPromotions() {
 
   const runSearch = async (q, currentMode = mode) => {
     setSearching(true);
-    setResults([]); // vide immédiatement l'ancienne liste pendant le chargement
+    setResults([]);
     try {
       const data = await searchPromotionProducts({
         q: q.trim(),
@@ -83,10 +80,9 @@ export default function AdminPromotions() {
     }
   };
 
-  // Relance la recherche à chaque frappe (debouncée), changement de mode ou de filtre
   useEffect(() => {
     runSearch(debouncedQuery, mode);
-    setSelected([]); // la sélection ne doit jamais survivre à un changement de filtre
+    setSelected([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery, mode, filterCategory, filterBrand]);
 
@@ -99,7 +95,6 @@ export default function AdminPromotions() {
       .catch(() => {});
   }, []);
 
-  // Réinitialise la sélection/recherche au changement de mode
   useEffect(() => {
     setSelected([]);
     setQuery("");
@@ -203,7 +198,6 @@ export default function AdminPromotions() {
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* Pile de toasts empilables */}
       <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-5 sm:top-5 z-[9999] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
@@ -224,7 +218,6 @@ export default function AdminPromotions() {
         subtitle="Appliquez ou retirez une promotion sur plusieurs produits en une fois"
       />
 
-      {/* Bascule mode */}
       <div className="flex gap-0.5 bg-gray-100 p-1 rounded-xl mb-5 overflow-x-auto">
         {[
           { key: "apply", label: "Appliquer une promo", icon: Tag },
@@ -251,7 +244,6 @@ export default function AdminPromotions() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5">
-        {/* ── Colonne recherche ── */}
         <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <p className="text-[13px] font-bold text-gray-700">
@@ -382,9 +374,7 @@ export default function AdminPromotions() {
           </div>
         </div>
 
-        {/* ── Colonne sélection + paramètres ── */}
         <div className="space-y-4">
-          {/* Produits sélectionnés */}
           <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <p className="text-[13px] font-bold text-gray-700">
@@ -434,7 +424,6 @@ export default function AdminPromotions() {
                 </p>
               </div>
 
-              {/* Champs de configuration */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <Label required>Vraie remise (interne) %</Label>
@@ -473,10 +462,10 @@ export default function AdminPromotions() {
               </div>
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div>
                   <Label>Début (optionnel)</Label>
-                  <div className="flex gap-1.5 mt-1">
+                  <div className="flex flex-col sm:flex-row gap-1.5 mt-1">
                     <input
                       type="date"
                       value={startsAt ? startsAt.split("T")[0] : ""}
@@ -488,7 +477,7 @@ export default function AdminPromotions() {
                             : "00:00";
                         setStartsAt(date ? `${date}T${time}` : "");
                       }}
-                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="flex-1 min-w-0 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                     <input
                       type="time"
@@ -505,13 +494,13 @@ export default function AdminPromotions() {
                             : new Date().toISOString().slice(0, 10);
                         setStartsAt(date && time ? `${date}T${time}` : "");
                       }}
-                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="w-full sm:w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                   </div>
                 </div>
                 <div>
                   <Label>Fin (optionnel)</Label>
-                  <div className="flex gap-1.5 mt-1">
+                  <div className="flex flex-col sm:flex-row gap-1.5 mt-1">
                     <input
                       type="date"
                       value={endsAt ? endsAt.split("T")[0] : ""}
@@ -523,7 +512,7 @@ export default function AdminPromotions() {
                             : "23:59";
                         setEndsAt(date ? `${date}T${time}` : "");
                       }}
-                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="flex-1 min-w-0 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                     <input
                       type="time"
@@ -540,7 +529,7 @@ export default function AdminPromotions() {
                             : new Date().toISOString().slice(0, 10);
                         setEndsAt(date && time ? `${date}T${time}` : "");
                       }}
-                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="w-full sm:w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                   </div>
                 </div>
@@ -558,8 +547,7 @@ export default function AdminPromotions() {
                 </span>
               </label>
 
-              {/* Boutons d'action */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={async () => {
                     if (selected.length === 0) {
@@ -633,7 +621,6 @@ export default function AdminPromotions() {
                 </Btn>
               </div>
 
-              {/* Tableau d'aperçu */}
               {previewData.length > 0 && (
                 <div className="mt-4 border border-gray-100 rounded-xl overflow-hidden">
                   <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
@@ -714,10 +701,11 @@ export default function AdminPromotions() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Dates */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div>
                   <Label>Début (optionnel)</Label>
-                  <div className="flex gap-1.5 mt-1">
+                  <div className="flex flex-col sm:flex-row gap-1.5 mt-1">
                     <input
                       type="date"
                       value={startsAt ? startsAt.split("T")[0] : ""}
@@ -729,7 +717,7 @@ export default function AdminPromotions() {
                             : "00:00";
                         setStartsAt(date ? `${date}T${time}` : "");
                       }}
-                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="flex-1 min-w-0 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                     <input
                       type="time"
@@ -746,13 +734,13 @@ export default function AdminPromotions() {
                             : new Date().toISOString().slice(0, 10);
                         setStartsAt(date && time ? `${date}T${time}` : "");
                       }}
-                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="w-full sm:w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                   </div>
                 </div>
                 <div>
                   <Label>Fin (optionnel)</Label>
-                  <div className="flex gap-1.5 mt-1">
+                  <div className="flex flex-col sm:flex-row gap-1.5 mt-1">
                     <input
                       type="date"
                       value={endsAt ? endsAt.split("T")[0] : ""}
@@ -764,7 +752,7 @@ export default function AdminPromotions() {
                             : "23:59";
                         setEndsAt(date ? `${date}T${time}` : "");
                       }}
-                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="flex-1 min-w-0 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                     <input
                       type="time"
@@ -781,7 +769,7 @@ export default function AdminPromotions() {
                             : new Date().toISOString().slice(0, 10);
                         setEndsAt(date && time ? `${date}T${time}` : "");
                       }}
-                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                      className="w-full sm:w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
                     />
                   </div>
                 </div>
