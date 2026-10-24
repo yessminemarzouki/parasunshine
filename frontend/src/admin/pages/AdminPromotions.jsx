@@ -476,21 +476,73 @@ export default function AdminPromotions() {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <Label>Début (optionnel)</Label>
-                  <input
-                    type="datetime-local"
-                    value={startsAt}
-                    onChange={(e) => setStartsAt(e.target.value)}
-                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
-                  />
+                  <div className="flex gap-1.5 mt-1">
+                    <input
+                      type="date"
+                      value={startsAt ? startsAt.split("T")[0] : ""}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        const time =
+                          startsAt && startsAt.includes("T")
+                            ? startsAt.split("T")[1]
+                            : "00:00";
+                        setStartsAt(date ? `${date}T${time}` : "");
+                      }}
+                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                    <input
+                      type="time"
+                      value={
+                        startsAt && startsAt.includes("T")
+                          ? startsAt.split("T")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const time = e.target.value;
+                        const date =
+                          startsAt && startsAt.includes("T")
+                            ? startsAt.split("T")[0]
+                            : new Date().toISOString().slice(0, 10);
+                        setStartsAt(date && time ? `${date}T${time}` : "");
+                      }}
+                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label>Fin (optionnel)</Label>
-                  <input
-                    type="datetime-local"
-                    value={endsAt}
-                    onChange={(e) => setEndsAt(e.target.value)}
-                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
-                  />
+                  <div className="flex gap-1.5 mt-1">
+                    <input
+                      type="date"
+                      value={endsAt ? endsAt.split("T")[0] : ""}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        const time =
+                          endsAt && endsAt.includes("T")
+                            ? endsAt.split("T")[1]
+                            : "23:59";
+                        setEndsAt(date ? `${date}T${time}` : "");
+                      }}
+                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                    <input
+                      type="time"
+                      value={
+                        endsAt && endsAt.includes("T")
+                          ? endsAt.split("T")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const time = e.target.value;
+                        const date =
+                          endsAt && endsAt.includes("T")
+                            ? endsAt.split("T")[0]
+                            : new Date().toISOString().slice(0, 10);
+                        setEndsAt(date && time ? `${date}T${time}` : "");
+                      }}
+                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -662,24 +714,76 @@ export default function AdminPromotions() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <Label>Début (optionnel)</Label>
-                  <input
-                    type="datetime-local"
-                    value={startsAt}
-                    onChange={(e) => setStartsAt(e.target.value)}
-                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
-                  />
+                  <div className="flex gap-1.5 mt-1">
+                    <input
+                      type="date"
+                      value={startsAt ? startsAt.split("T")[0] : ""}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        const time =
+                          startsAt && startsAt.includes("T")
+                            ? startsAt.split("T")[1]
+                            : "00:00";
+                        setStartsAt(date ? `${date}T${time}` : "");
+                      }}
+                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                    <input
+                      type="time"
+                      value={
+                        startsAt && startsAt.includes("T")
+                          ? startsAt.split("T")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const time = e.target.value;
+                        const date =
+                          startsAt && startsAt.includes("T")
+                            ? startsAt.split("T")[0]
+                            : new Date().toISOString().slice(0, 10);
+                        setStartsAt(date && time ? `${date}T${time}` : "");
+                      }}
+                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label>Fin (optionnel)</Label>
-                  <input
-                    type="datetime-local"
-                    value={endsAt}
-                    onChange={(e) => setEndsAt(e.target.value)}
-                    className="w-full h-9 px-3 border border-gray-200 rounded-lg text-[12.5px] text-gray-800 bg-white outline-none focus:border-[#1a4731] mt-1"
-                  />
+                  <div className="flex gap-1.5 mt-1">
+                    <input
+                      type="date"
+                      value={endsAt ? endsAt.split("T")[0] : ""}
+                      onChange={(e) => {
+                        const date = e.target.value;
+                        const time =
+                          endsAt && endsAt.includes("T")
+                            ? endsAt.split("T")[1]
+                            : "23:59";
+                        setEndsAt(date ? `${date}T${time}` : "");
+                      }}
+                      className="flex-1 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                    <input
+                      type="time"
+                      value={
+                        endsAt && endsAt.includes("T")
+                          ? endsAt.split("T")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const time = e.target.value;
+                        const date =
+                          endsAt && endsAt.includes("T")
+                            ? endsAt.split("T")[0]
+                            : new Date().toISOString().slice(0, 10);
+                        setEndsAt(date && time ? `${date}T${time}` : "");
+                      }}
+                      className="w-24 h-9 px-2 border border-gray-200 rounded-lg text-[12px] text-gray-800 bg-white outline-none focus:border-[#1a4731]"
+                    />
+                  </div>
                 </div>
               </div>
 
