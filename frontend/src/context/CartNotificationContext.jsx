@@ -7,7 +7,17 @@ export function CartNotificationProvider({ children }) {
   const [notification, setNotification] = useState(null);
 
   const showCartNotification = useCallback((product, quantity = 1) => {
-    setNotification({ product, quantity });
+    // ✅ On force le prix effectif pour ne pas afficher la promo si pas active
+    const safeProduct = {
+      ...product,
+      effective_price: product.is_promo_active
+        ? product.effective_price
+        : product.price,
+      effective_reference_price: product.is_promo_active
+        ? product.effective_reference_price
+        : null,
+    };
+    setNotification({ product: safeProduct, quantity });
   }, []);
 
   const hideCartNotification = useCallback(() => {

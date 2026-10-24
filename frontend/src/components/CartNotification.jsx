@@ -57,19 +57,25 @@ const CartNotification = ({ product, quantity, onClose, isVisible }) => {
 
   if (!isVisible || !product) return null;
 
-  const originalPrice = parseFloat(product.price) || 0;
-  const referencePrice = parseFloat(product.reference_price) || originalPrice; // ← AJOUT
-  const promoPrice = parseFloat(product.promo_price) || 0;
-  const hasPromo = promoPrice > 0 && promoPrice < originalPrice;
-  const displayPrice = hasPromo ? promoPrice : originalPrice;
-  const savings = hasPromo ? (referencePrice - promoPrice) * quantity : 0; // ← MODIF
+  // ✅ On utilise uniquement les données calculées par le serveur
+  const isPromoActive = !!product.is_promo_active;
 
+  // Prix effectif (promo si actif, sinon normal)
+  const displayPrice =
+    parseFloat(product.effective_price ?? product.price) || 0;
+
+  // Prix barré (uniquement si promo active)
+  const referencePrice = isPromoActive
+    ? parseFloat(product.effective_reference_price) || 0
+    : 0;
+
+  const hasPromo = isPromoActive && referencePrice > displayPrice;
+  const savings = hasPromo ? (referencePrice - displayPrice) * quantity : 0;
+
+  // ✅ Total du panier basé sur effective_price du serveur
   const cartTotal = cart.reduce((total, item) => {
-    const price = parseFloat(item.price) || 0;
-    const itemPromoPrice = parseFloat(item.promo_price) || 0;
-    const final =
-      itemPromoPrice > 0 && itemPromoPrice < price ? itemPromoPrice : price;
-    return total + final * item.quantity;
+    const finalPrice = parseFloat(item.effective_price ?? item.price) || 0;
+    return total + finalPrice * item.quantity;
   }, 0);
 
   const freeShippingEnabled = shipping.free_shipping_enabled;
@@ -176,7 +182,7 @@ const CartNotification = ({ product, quantity, onClose, isVisible }) => {
                 <span className="absolute -top-2 -left-2 z-10 text-[10px] font-bold px-2 py-1 rounded-full text-white shadow-sm bg-red-500">
                   -
                   {Math.round(
-                    ((originalPrice - promoPrice) / originalPrice) * 100,
+                    ((referencePrice - displayPrice) / referencePrice) * 100,
                   )}
                   %
                 </span>

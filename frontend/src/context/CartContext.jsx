@@ -124,9 +124,26 @@ export const CartProvider = ({ children }) => {
             : i,
         );
       }
+
+      // ✅ CORRECTION : On force l'utilisation du prix effectif du serveur.
+      // Si la promo n'est pas active, le prix normal est utilisé.
+      const safeProduct = {
+        ...product,
+        effective_price: product.is_promo_active
+          ? parseFloat(product.effective_price) ||
+            parseFloat(product.promo_price) ||
+            parseFloat(product.price)
+          : parseFloat(product.price),
+        effective_reference_price: product.is_promo_active
+          ? parseFloat(product.effective_reference_price) ||
+            parseFloat(product.reference_price) ||
+            null
+          : null,
+      };
+
       return [
         ...prev,
-        { ...product, quantity, selectedSize: size, selectedColor: color },
+        { ...safeProduct, quantity, selectedSize: size, selectedColor: color },
       ];
     });
   };
