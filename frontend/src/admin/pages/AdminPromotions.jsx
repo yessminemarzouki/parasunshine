@@ -22,6 +22,7 @@ import {
 } from "../services/adminApi";
 import { STORAGE_URL } from "../../config/api";
 import { Btn, Input, PageHeader, Label } from "../components/AdminShared";
+// ✅ Convertit une date "datetime-local" (fuseau du navigateur) en heure de Tunis
 
 export default function AdminPromotions() {
   // Arrondi plancher à la centaine inférieure (ex: 8.46 -> 8.400)

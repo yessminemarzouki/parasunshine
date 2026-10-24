@@ -65,6 +65,14 @@ class AdminPromoCampaignController extends Controller
         ]);
         $data['is_active'] = true;
 
+        // ✅ Forcer l'interprétation des dates en heure de Tunis
+        if (!empty($data['starts_at'])) {
+            $data['starts_at'] = \Carbon\Carbon::parse($data['starts_at'], 'Africa/Tunis');
+        }
+        if (!empty($data['ends_at'])) {
+            $data['ends_at'] = \Carbon\Carbon::parse($data['ends_at'], 'Africa/Tunis');
+        }
+
         $campaign = PromoCampaign::create($data);
 
         return response()->json([
@@ -82,6 +90,14 @@ class AdminPromoCampaignController extends Controller
             'starts_at'            => 'nullable|date',
             'ends_at'              => 'nullable|date|after_or_equal:starts_at',
         ]);
+
+        // ✅ Forcer l'interprétation des dates en heure de Tunis
+        if (!empty($data['starts_at'])) {
+            $data['starts_at'] = \Carbon\Carbon::parse($data['starts_at'], 'Africa/Tunis');
+        }
+        if (!empty($data['ends_at'])) {
+            $data['ends_at'] = \Carbon\Carbon::parse($data['ends_at'], 'Africa/Tunis');
+        }
 
         $promoCampaign->update($data);
 
