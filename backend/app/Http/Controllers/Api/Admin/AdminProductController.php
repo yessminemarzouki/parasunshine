@@ -650,9 +650,14 @@ class AdminProductController extends Controller
         set_time_limit(0);
         ini_set('memory_limit', '1024M');
 
-        $products = Product::with(['category:id,name', 'category2:id,name', 'brand:id,name', 'brand.parent:id,name'])
-            ->orderBy('id')
-            ->get();
+        $products = Product::with([
+    'category:id,name',
+    'category2:id,name',
+    'brand:id,name,parent_id',      // ✅ AJOUT de parent_id
+    'brand.parent:id,name',          // ✅ Nécessaire pour charger le parent
+])
+->orderBy('id')
+->get();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
