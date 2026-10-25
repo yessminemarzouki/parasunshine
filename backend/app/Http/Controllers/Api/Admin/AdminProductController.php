@@ -743,6 +743,26 @@ class AdminProductController extends Controller
                 $categoryName = $categoryName . ',' . $p->category2->name;
             }
 
+            // ✅ Logique inverse :
+            // - Si le produit est rattaché à une sous-marque (parent_id non null) :
+            //   → brand = sous-marque, parent_brand = marque mère
+            // - Si le produit est rattaché à une marque mère (parent_id null) :
+            //   → brand = VIDE, parent_brand = marque mère
+            $exportBrand = '';
+            $exportParentBrand = '';
+
+            if ($p->brand) {
+                if ($p->brand->parent_id) {
+                    // C'est une sous-marque
+                    $exportBrand = $p->brand->name;
+                    $exportParentBrand = $p->brand->parent?->name ?? '';
+                } else {
+                    // C'est une marque mère
+                    $exportBrand = '';
+                    $exportParentBrand = $p->brand->name;
+                }
+            }
+
             $values = [
                 $p->reference,
                 $p->name,
@@ -753,8 +773,8 @@ class AdminProductController extends Controller
                 $p->promo_ends_at,
                 $p->stock,
                 $categoryName,
-                $p->brand?->name,
-                $p->brand?->parent?->name,
+                $exportBrand,
+                $exportParentBrand,
                 strip_tags($p->short_description ?? ''),
                 strip_tags($p->description ?? ''),
                 strip_tags($p->benefits ?? ''),
