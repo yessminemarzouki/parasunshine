@@ -365,10 +365,9 @@ export const updateHygieneSection = async (formData) => {
   });
   return response.data;
 };
-export const importProductsCsv = async (file, mode = "create") => {
+export const importProductsCsv = async (file) => {
   const fd = new FormData();
   fd.append("file", file);
-  fd.append("mode", mode);
   const response = await adminApi.post("/admin/products/import", fd, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 10 * 60 * 1000,

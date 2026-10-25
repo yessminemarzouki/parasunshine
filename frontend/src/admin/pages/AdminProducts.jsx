@@ -249,7 +249,7 @@ export default function AdminProducts() {
 
   const [importingMain, setImportingMain] = useState(false);
   const [importingOptional, setImportingOptional] = useState(false);
-  const [upsertMode, setUpsertMode] = useState(false);
+
   const [exportingExcel, setExportingExcel] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // ← ajoute
   const [deleting, setDeleting] = useState(false); // ← ajoute
@@ -395,10 +395,7 @@ export default function AdminProducts() {
     if (!file) return;
     setImporting(true);
     try {
-      const result = await importProductsCsv(
-        file,
-        upsertMode ? "upsert" : "create",
-      );
+      const result = await importProductsCsv(file);
       setImportResult(result);
       fetchProducts();
       showToast(result.message, "success");
@@ -1367,17 +1364,7 @@ export default function AdminProducts() {
               disabled={importing}
             />
           </label>
-          <label className="flex items-center gap-2 px-3 h-9 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={upsertMode}
-              onChange={(e) => setUpsertMode(e.target.checked)}
-              className="w-3.5 h-3.5 accent-[#1a4731]"
-            />
-            <span className="text-[12px] text-gray-600 font-medium whitespace-nowrap">
-              Mettre à jour les produits existants (par référence)
-            </span>
-          </label>
+
           <Btn onClick={openAdd}>
             <Plus size={14} /> Nouveau produit
           </Btn>

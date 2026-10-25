@@ -222,8 +222,7 @@ class AdminProductController extends Controller
             'file' => 'required|file|mimes:csv,txt,xlsx|max:51200', // 50 Mo
         ]);
 
-        // Mode : 'create' (défaut) ou 'upsert' (mise à jour par id)
-        $mode = $request->input('mode', 'create');
+
 
         $file = $request->file('file');
         $extension = $file->getClientOriginalExtension();
@@ -316,17 +315,8 @@ class AdminProductController extends Controller
                 $errors[] = "Ligne $row : référence manquante — '{$reference}' générée automatiquement.";
             }
 
-            // Vérification par référence : si la référence existe déjà
-            //   → en mode upsert : on met à jour le produit existant
-            //   → en mode create : on dédoublonne la référence (nouveau produit)
+            // ✅ Upsert systématique par référence
             $existing = $reference ? \App\Models\Product::where('reference', $reference)->first() : null;
-
-            if ($mode !== 'upsert' && $existing) {
-                $original = $reference;
-                $reference = $original . '-' . strtoupper(\Illuminate\Support\Str::random(4));
-                $errors[] = "Ligne $row : référence '{$original}' déjà utilisée — '{$reference}' utilisée à la place.";
-                $existing = null; // la nouvelle référence n'existe pas encore en base
-            }
 
             // ── Catégorie (optionnelle, tolérante) ──
             $category = null;
@@ -349,6 +339,17 @@ class AdminProductController extends Controller
                         if (!$category2) {
                             $errors[] = "Ligne $row : deuxième catégorie '{$categoryNames[1]}' introuvable — ignorée.";
                         }
+                    }
+                }
+            }
+
+            // ✅ NOUVEAU : support de la colonne 'category2' séparée (fichiers exportés)
+            if (empty($category2) && !empty($data['category2'])) {
+                $category2Name = trim($data['category2']);
+                if ($category2Name !== '' && mb_strtolower($category2Name) !== mb_strtolower($data['category'] ?? '')) {
+                    $category2 = \App\Models\Category::where('name', $category2Name)->first();
+                    if (!$category2) {
+                        $errors[] = "Ligne $row : catégorie secondaire '{$category2Name}' introuvable — ignorée.";
                     }
                 }
             }
@@ -610,12 +611,11 @@ class AdminProductController extends Controller
                     'ages'                => $ages,
                 ];
 
-                if ($mode === 'upsert' && $existing) {
-                    // Mise à jour : on ne touche ni au slug ni aux images
+                // ✅ Upsert : mise à jour si la référence existe, sinon création
+                if ($existing) {
                     $existing->update($payload);
                     $updated++;
                 } else {
-                    // Création
                     $payload['slug']   = $this->generateUniqueProductSlug($data['name']);
                     $payload['image']  = $mainImage;
                     $payload['images'] = !empty($gallery) ? $gallery : null;
@@ -651,27 +651,30 @@ class AdminProductController extends Controller
         ini_set('memory_limit', '1024M');
 
         $products = Product::with([
-    'category:id,name',
-    'category2:id,name',
-    'brand:id,name,parent_id',      // ✅ AJOUT de parent_id
-    'brand.parent:id,name',          // ✅ Nécessaire pour charger le parent
-])
-->orderBy('id')
-->get();
+            'category:id,name',
+            'category2:id,name',
+            'brand:id,name,parent_id',
+            'brand.parent:id,name',
+        ])
+        ->orderBy('id')
+        ->get();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Produits');
 
+        // ✅ Les mêmes colonnes que le modèle d'import, dans le même ordre
         $headers = [
-    'reference', 'name', 'price', 'promo_price', 'promo_percentage',
-    'promo_starts_at', 'promo_ends_at', 'stock',
-    'category', 'category2', 'brand', 'parent_brand',
-    'short_description', 'description', 'benefits', 'usage_tips',
-    'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
-    'display_category1', 'display_category2',
-    'has_sizes', 'sizes', 'has_colors', 'colors', 'has_age', 'ages',
-];
+            'reference', 'name', 'price', 'promo_price', 'promo_percentage',
+            'promo_starts_at', 'promo_ends_at', 'stock',
+            'category', 'brand', 'parent_brand',
+            'short_description', 'description', 'benefits', 'usage_tips',
+            'is_featured', 'is_new', 'is_promo', 'is_bestseller', 'is_unavailable',
+            'image', 'image_2', 'image_3', 'image_4',
+            'sizes', 'colors', 'ages', 'ages_colors',
+            'color_img_1', 'color_img_2', 'color_img_3', 'color_img_4', 'color_img_5',
+            'color_img_6', 'color_img_7', 'color_img_8', 'color_img_9', 'color_img_10',
+        ];
 
         // Écriture des en-têtes (ligne 1)
         $col = 1;
@@ -699,10 +702,13 @@ class AdminProductController extends Controller
                     ->implode(',');
             }
 
+            // Ages + Ages_colors (le modèle d'import sépare les deux)
             $agesStr = '';
+            $agesColorsStr = '';
             if ($p->has_age && is_array($p->ages)) {
                 if ($p->has_colors) {
-                    $agesStr = collect($p->ages)->map(function ($a) {
+                    // Si couleur + âge : on écrit dans 'ages_colors'
+                    $agesColorsStr = collect($p->ages)->map(function ($a) {
                         $label = $a['label'] ?? '';
                         $cols = collect($a['colors'] ?? [])
                             ->map(fn ($c) => ($c['name'] ?? '') . ':' . ($c['stock'] ?? 0))
@@ -710,14 +716,34 @@ class AdminProductController extends Controller
                         return $label . '=' . $cols;
                     })->implode(';');
                 } else {
+                    // Si âge seul : on écrit dans 'ages'
                     $agesStr = collect($p->ages)
                         ->map(fn ($a) => ($a['label'] ?? '') . ':' . ($a['stock'] ?? 999))
                         ->implode(',');
                 }
             }
 
-            $values = [
+            // URLs des images de couleurs (si présentes)
+            $colorImgs = [];
+            if ($p->has_colors && is_array($p->colors)) {
+                foreach ($p->colors as $c) {
+                    $colorImgs[] = $c['image'] ?? '';
+                }
+            }
+            $colorImgs = array_pad($colorImgs, 10, '');
 
+            // Catégorie : on exporte la catégorie principale SEULE
+            // (la catégorie secondaire n'existe pas dans le modèle d'import,
+            // donc on garde une seule valeur pour la colonne 'category')
+            $categoryName = $p->category?->name ?? '';
+
+            // Si le produit a une catégorie2, on l'ajoute après une virgule
+            // pour rester compatible avec l'import existant (cat1,cat2)
+            if ($p->category2?->name) {
+                $categoryName = $categoryName . ',' . $p->category2->name;
+            }
+
+            $values = [
                 $p->reference,
                 $p->name,
                 $p->price,
@@ -726,8 +752,7 @@ class AdminProductController extends Controller
                 $p->promo_starts_at,
                 $p->promo_ends_at,
                 $p->stock,
-                $p->category?->name,
-                $p->category2?->name,
+                $categoryName,
                 $p->brand?->name,
                 $p->brand?->parent?->name,
                 strip_tags($p->short_description ?? ''),
@@ -739,14 +764,16 @@ class AdminProductController extends Controller
                 $p->is_promo ? 1 : 0,
                 $p->is_bestseller ? 1 : 0,
                 $p->is_unavailable ? 1 : 0,
-                $p->display_category1 ? 1 : 0,
-                $p->display_category2 ? 1 : 0,
-                $p->has_sizes ? 1 : 0,
+                '', // image (ignorée à l'import)
+                '', // image_2
+                '', // image_3
+                '', // image_4
                 $sizesStr,
-                $p->has_colors ? 1 : 0,
                 $colorsStr,
-                $p->has_age ? 1 : 0,
                 $agesStr,
+                $agesColorsStr,
+                $colorImgs[0], $colorImgs[1], $colorImgs[2], $colorImgs[3], $colorImgs[4],
+                $colorImgs[5], $colorImgs[6], $colorImgs[7], $colorImgs[8], $colorImgs[9],
             ];
 
             $col = 1;
@@ -754,7 +781,6 @@ class AdminProductController extends Controller
                 $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . $row;
 
                 // Colonne 1 (reference) : force en texte pour éviter la notation scientifique
-                // (sinon Excel transforme 8710123456789 en 8,71E+12)
                 if ($col === 1) {
                     $sheet->setCellValueExplicit(
                         $coord,
