@@ -395,23 +395,20 @@ export default function Navigation() {
           animation: "megaFade 0.25s ease",
         }}
       >
-        {/* Hauteur minimale pour éviter les menus écrasés */}
-        <div className="px-10 pt-9 pb-7 min-h-[320px] flex gap-8">
-          {/* Colonne 1 : Catégories (S'étire pour remplir le vide) */}
-          <div className="flex-1 flex flex-col justify-between gap-4">
+        {/* On garde une hauteur minimale pour que le menu soit équilibré */}
+        <div className="px-10 pt-9 pb-7 min-h-[280px] flex gap-8">
+          {/* Colonne 1 : Catégories (Compactées en haut) */}
+          <div className="flex-1 flex flex-col gap-1 mt-1">
             {cat.children?.map((child) => (
-              <div
-                key={child.id}
-                className="flex-1 flex flex-col justify-center border-b border-gray-100 last:border-0 pb-3"
-              >
+              <div key={child.id} className="mb-3 last:mb-0">
                 <Link
                   to={`/products?category=${child.slug}`}
-                  className="block text-[0.72rem] tracking-[1.8px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
+                  className="block text-[0.72rem] tracking-[1.8px] font-extrabold uppercase text-gray-900 mb-1.5 pb-1 border-b border-gray-100 transition-colors hover:text-[#2d5f4f]"
                 >
                   {child.name.toUpperCase()}
                 </Link>
                 {child.children?.length > 0 && (
-                  <ul className="list-none p-0 m-0 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                  <ul className="list-none p-0 m-0 flex flex-wrap gap-x-4 gap-y-1">
                     {child.children.map((sub) => (
                       <li key={sub.id}>
                         <Link
@@ -428,7 +425,7 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Colonne 2 : Marques (Centrée verticalement) */}
+          {/* Colonne 2 : Marques (Centrée verticalement par rapport au menu) */}
           {brands.length > 0 && (
             <div className="w-[280px] flex-shrink-0 flex flex-col justify-center border-l border-gray-100 pl-8">
               <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-5 pb-2 border-b border-gray-100">
@@ -456,7 +453,7 @@ export default function Navigation() {
             </div>
           )}
 
-          {/* Colonne 3 : Le Pack (Centré verticalement) */}
+          {/* Colonne 3 : Le Pack (Centré verticalement par rapport au menu) */}
           {promo && (
             <div className="w-[320px] flex-shrink-0 flex flex-col justify-center border-l border-gray-100 pl-8">
               <div className="bg-[#f8fcf9] border border-[#1a5242]/10 rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
