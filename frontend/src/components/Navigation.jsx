@@ -270,23 +270,27 @@ export default function Navigation() {
         >
           <div className="px-10 pt-9 pb-7 flex gap-8 h-[450px]">
             {/* Colonne de GAUCHE : Catégories (Liste en 2 colonnes pour équilibrer) */}
-            <div className="w-[300px] flex-shrink-0 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {/* Colonne de GAUCHE : Catégories étirées */}
+            <div className="w-[320px] flex-shrink-0 overflow-y-auto pr-4 custom-scrollbar">
+              <div className="flex flex-col justify-between h-full gap-2">
                 {cat.children?.map((child) => (
-                  <div key={child.id} className="mb-2">
+                  <div
+                    key={child.id}
+                    className="border-b border-gray-100 pb-2 last:border-0 flex-1 flex flex-col justify-center"
+                  >
                     <Link
                       to={`/products?category=${child.slug}`}
-                      className="block text-[0.7rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 pb-1.5 border-b border-gray-100 transition-colors hover:text-[#2d5f4f]"
+                      className="block text-[0.75rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-1 hover:text-[#2d5f4f] transition-colors"
                     >
                       {child.name}
                     </Link>
                     {child.children?.length > 0 && (
-                      <ul className="list-none p-0 m-0">
+                      <ul className="list-none p-0 m-0 flex flex-wrap gap-x-2 gap-y-0.5">
                         {child.children.map((sub) => (
-                          <li key={sub.id} className="mb-1">
+                          <li key={sub.id}>
                             <Link
                               to={`/products?category=${sub.slug}`}
-                              className="text-[0.75rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block truncate w-full"
+                              className="text-[0.7rem] text-gray-500 hover:text-[#2d5f4f] transition-colors"
                             >
                               {sub.name}
                             </Link>
