@@ -144,7 +144,7 @@ export default function Navigation() {
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-10 pt-9 pb-7 flex gap-8 h-[450px]">
+          <div className="px-10 pt-5 pb-5 flex gap-8 h-[400px]">
             {/* Colonne de GAUCHE : Catégories (Liste en 2 colonnes pour équilibrer) */}
             <div className="w-[300px] flex-shrink-0 overflow-y-auto pr-2 custom-scrollbar">
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -268,9 +268,7 @@ export default function Navigation() {
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-10 pt-9 pb-7 flex gap-8 h-[450px]">
-            {/* Colonne de GAUCHE : Catégories (Liste en 2 colonnes pour équilibrer) */}
-            {/* Colonne de GAUCHE : Catégories étirées */}
+          <div className="px-10 pt-5 pb-5 flex gap-8 h-[400px]">
             <div className="w-[320px] flex-shrink-0 overflow-y-auto pr-4 custom-scrollbar">
               <div className="flex flex-col justify-between h-full gap-2">
                 {cat.children?.map((child) => (
@@ -395,9 +393,9 @@ export default function Navigation() {
           animation: "megaFade 0.25s ease",
         }}
       >
-        <div className="px-10 pt-9 pb-7">
+        <div className="px-10 pt-5 pb-7">
           <div className="grid gap-6 lg:gap-8 items-start w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_220px_300px]">
-            <div className="flex flex-col gap-2.5 mt-11">
+            <div className="flex flex-col gap-3 mt-2">
               {cat.children?.map((child) => (
                 <div key={child.id} className="min-w-[180px]">
                   <Link
