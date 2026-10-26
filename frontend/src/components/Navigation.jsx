@@ -487,68 +487,66 @@ export default function Navigation() {
           {/* Suppression du min-h et ajout de justify-center pour centrer verticalement */}
           {/* Conteneur principal : on centre tout verticalement et horizontalement */}
           <div className="px-10 py-10 flex justify-between items-center min-h-[260px]">
-            {/* Colonne de GAUCHE : Catégories parfaitement centrées dans leur espace */}
-            <div className="flex-1 flex justify-center">
-              <div className="flex gap-16">
-                {/* Colonne 1 */}
-                <div className="flex flex-col gap-6">
-                  {cat.children
-                    ?.slice(0, Math.ceil((cat.children?.length || 0) / 2))
-                    .map((child) => (
-                      <div key={child.id} className="flex flex-col">
-                        <Link
-                          to={`/products?category=${child.slug}`}
-                          className="block text-[0.8rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
-                        >
-                          {child.name}
-                        </Link>
-                        {child.children?.length > 0 && (
-                          <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
-                            {child.children.map((sub) => (
-                              <li key={sub.id}>
-                                <Link
-                                  to={`/products?category=${sub.slug}`}
-                                  className="text-[0.8rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block hover:translate-x-1 duration-200"
-                                >
-                                  {sub.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                </div>
+            {/* Colonne de GAUCHE : Catégories (sans le vide à gauche) */}
+            <div className="flex gap-16">
+              {/* Colonne 1 */}
+              <div className="flex flex-col gap-6">
+                {cat.children
+                  ?.slice(0, Math.ceil((cat.children?.length || 0) / 2))
+                  .map((child) => (
+                    <div key={child.id} className="flex flex-col">
+                      <Link
+                        to={`/products?category=${child.slug}`}
+                        className="block text-[0.8rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
+                      >
+                        {child.name}
+                      </Link>
+                      {child.children?.length > 0 && (
+                        <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
+                          {child.children.map((sub) => (
+                            <li key={sub.id}>
+                              <Link
+                                to={`/products?category=${sub.slug}`}
+                                className="text-[0.8rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block hover:translate-x-1 duration-200"
+                              >
+                                {sub.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+              </div>
 
-                {/* Colonne 2 */}
-                <div className="flex flex-col gap-6">
-                  {cat.children
-                    ?.slice(Math.ceil((cat.children?.length || 0) / 2))
-                    .map((child) => (
-                      <div key={child.id} className="flex flex-col">
-                        <Link
-                          to={`/products?category=${child.slug}`}
-                          className="block text-[0.8rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
-                        >
-                          {child.name}
-                        </Link>
-                        {child.children?.length > 0 && (
-                          <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
-                            {child.children.map((sub) => (
-                              <li key={sub.id}>
-                                <Link
-                                  to={`/products?category=${sub.slug}`}
-                                  className="text-[0.8rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block hover:translate-x-1 duration-200"
-                                >
-                                  {sub.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                </div>
+              {/* Colonne 2 */}
+              <div className="flex flex-col gap-6">
+                {cat.children
+                  ?.slice(Math.ceil((cat.children?.length || 0) / 2))
+                  .map((child) => (
+                    <div key={child.id} className="flex flex-col">
+                      <Link
+                        to={`/products?category=${child.slug}`}
+                        className="block text-[0.8rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
+                      >
+                        {child.name}
+                      </Link>
+                      {child.children?.length > 0 && (
+                        <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
+                          {child.children.map((sub) => (
+                            <li key={sub.id}>
+                              <Link
+                                to={`/products?category=${sub.slug}`}
+                                className="text-[0.8rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block hover:translate-x-1 duration-200"
+                              >
+                                {sub.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
               </div>
             </div>
 
