@@ -322,3 +322,17 @@ h6 {
   background: #1a5242;
   border-radius: 2px;
 }
+/* Scrollbar personnalisée pour le Mega Menu (Mosaïque Asymétrique) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
