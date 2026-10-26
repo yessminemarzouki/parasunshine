@@ -729,7 +729,7 @@ export default function Navigation() {
         }
       `}</style>
       <div
-        className="main-nav max-w-[1400px] mx-auto flex justify-center items-center relative gap-1"
+        className="main-nav max-w-[1400px] mx-auto flex justify-start lg:justify-center items-center relative gap-1 overflow-x-auto scrollbar-hide px-2"
         style={{ height: 64 }}
       >
         <Link
