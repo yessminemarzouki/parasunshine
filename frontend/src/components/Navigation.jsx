@@ -117,7 +117,8 @@ export default function Navigation() {
   const renderStandardMenu = (cat) => {
     const isComplement = cat.slug === "complements-alimentaires";
     const isHygiene = cat.slug === "hygiene";
-    const isBio = cat.slug === "bio"; // <--- AJOUTE CETTE LIGNE
+    const isBio = cat.slug === "bio";
+    const isParamedicaux = cat.slug === "paramedicaux"; // <--- AJOUTE CETTE LIGNE
     const brands = cat.brands || [];
     const promo = cat.bundle
       ? {
@@ -467,7 +468,99 @@ export default function Navigation() {
         </div>
       );
     }
+    // ⚕️ STYLE PARAMEDICAUX (Avec Marques Phares)
+    if (isParamedicaux) {
+      return (
+        <div
+          className="absolute z-[1001] bg-white border border-gray-100 rounded-b-xl overflow-hidden"
+          style={{
+            top: 60,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100vw",
+            maxWidth: 1000,
+            boxShadow:
+              "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
+            animation: "megaFade 0.25s ease",
+          }}
+        >
+          <div className="px-8 pt-7 pb-7 flex gap-8 min-h-[260px]">
+            {/* Colonne de GAUCHE : Catégories sur 2 colonnes */}
+            <div className="flex-1">
+              <span className="block text-[0.7rem] tracking-[1.5px] font-extrabold text-gray-400 mb-5 pb-2 border-b border-gray-100 uppercase">
+                Nos gammes Paramédicales
+              </span>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                {cat.children?.map((child) => (
+                  <div key={child.id} className="flex flex-col">
+                    <Link
+                      to={`/products?category=${child.slug}`}
+                      className="block text-[0.8rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-1.5 transition-colors hover:text-[#2d5f4f]"
+                    >
+                      {child.name}
+                    </Link>
+                    {child.children?.length > 0 && (
+                      <ul className="list-none p-0 m-0 flex flex-col gap-1">
+                        {child.children.map((sub) => (
+                          <li key={sub.id}>
+                            <Link
+                              to={`/products?category=${sub.slug}`}
+                              className="text-[0.8rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block hover:translate-x-1 duration-200"
+                            >
+                              {sub.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
+            {/* Colonne de DROITE : Marques Phares */}
+            {brands.length > 0 && (
+              <div className="w-[280px] flex-shrink-0 flex flex-col border-l border-gray-100 pl-8">
+                <span className="block text-[0.7rem] tracking-[1.5px] font-extrabold text-gray-400 mb-4 pb-2 border-b border-gray-100">
+                  MARQUES PHARES
+                </span>
+                <div className="grid grid-cols-2 gap-3">
+                  {brands.slice(0, 4).map((b) => (
+                    <Link
+                      key={b.slug}
+                      to={`/products?brand=${b.slug}`}
+                      className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 h-[60px] hover:shadow-sm transition-all hover:border-gray-300"
+                    >
+                      <img
+                        src={
+                          b.logo?.startsWith("http")
+                            ? b.logo
+                            : `${STORAGE_URL}/${b.logo}`
+                        }
+                        alt={b.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer du Mega Menu */}
+          <div className="bg-[#f2f2e9] border-t border-gray-100 py-3.5 text-center">
+            <Link
+              to={`/products?category=${cat.slug}`}
+              className="text-[0.88rem] font-semibold text-[#2d5f4f] no-underline hover:underline"
+            >
+              Voir tous les produits {cat.name.toLowerCase()} →
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
     // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
     return (
       <div
