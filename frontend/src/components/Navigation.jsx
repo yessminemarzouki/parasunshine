@@ -765,6 +765,17 @@ export default function Navigation() {
         ))}
 
         <Link
+          to="/coffrets"
+          className="group h-full px-3.5 flex items-center gap-1.5 text-gray-900 font-medium text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04] whitespace-nowrap"
+        >
+          <PackageOpen
+            size={14}
+            className="text-[#d4af37] transition-transform duration-200 group-hover:-translate-y-0.5"
+          />
+          <NavLinkText>Nos coffrets</NavLinkText>
+        </Link>
+
+        <Link
           to="/products?promo=true"
           className="group relative h-full px-3.5 flex items-center gap-1.5 font-semibold text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#c62828]/[0.05] whitespace-nowrap"
           style={{ color: "#c62828" }}
@@ -777,17 +788,6 @@ export default function Navigation() {
             Promotions
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[3px] rounded-full bg-[#c62828] transition-all duration-300 group-hover:w-full" />
           </span>
-        </Link>
-
-        <Link
-          to="/coffrets"
-          className="group h-full px-3.5 flex items-center gap-1.5 text-gray-900 font-medium text-[0.86rem] no-underline transition-colors duration-200 hover:bg-[#1a5242]/[0.04] whitespace-nowrap"
-        >
-          <PackageOpen
-            size={14}
-            className="text-[#d4af37] transition-transform duration-200 group-hover:-translate-y-0.5"
-          />
-          <NavLinkText>Nos coffrets</NavLinkText>
         </Link>
       </div>
     </nav>
