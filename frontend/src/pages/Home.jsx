@@ -638,7 +638,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
-              {bestsellers.slice(0, isDesktop ? 8 : 14).map((p) => (
+              {bestsellers.slice(0, isDesktop ? 10 : 14).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
@@ -699,10 +699,37 @@ export default function Home() {
       {/* ── Nouveautés ── */}
       <section className="py-16" style={{ background: "#f9fafb" }}>
         <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-          <SectionTitle>Nouveautés</SectionTitle>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: "#f0fdf4" }}
+                >
+                  <Sparkles size={16} style={{ color: "#16a34a" }} />
+                </div>
+                <span className="text-[11.5px] font-bold uppercase tracking-widest text-green-600">
+                  Nouveautés
+                </span>
+              </div>
+              <h2
+                className="text-[1.6rem] font-bold text-gray-900"
+                style={{ fontFamily: "Segoe UI, sans-serif" }}
+              >
+                Nos nouveautés
+              </h2>
+            </div>
+            <Link
+              to="/products?new=true"
+              className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
+              style={{ color: "#1a5242" }}
+            >
+              Voir tout <ArrowRight size={15} />
+            </Link>
+          </div>
           {data.newest?.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-              {data.newest.slice(0, isDesktop ? 8 : 14).map((p) => (
+              {data.newest.slice(0, isDesktop ? 10 : 14).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
