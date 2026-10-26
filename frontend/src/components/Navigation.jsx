@@ -116,6 +116,7 @@ export default function Navigation() {
 
   const renderStandardMenu = (cat) => {
     const isComplement = cat.slug === "complements-alimentaires";
+    const isHygiene = cat.slug === "hygiene"; // <--- AJOUTE CETTE LIGNE
     const brands = cat.brands || [];
     const promo = cat.bundle
       ? {
@@ -129,6 +130,130 @@ export default function Navigation() {
 
     // 🎨 STYLE MOSAÏQUE ASYMÉTRIQUE (Uniquement pour Compléments Alimentaires)
     if (isComplement) {
+      return (
+        <div
+          className="absolute z-[1001] bg-white border border-gray-100 rounded-b-xl overflow-hidden"
+          style={{
+            top: 60,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100vw",
+            maxWidth: 1200,
+            boxShadow:
+              "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
+            animation: "megaFade 0.25s ease",
+          }}
+        >
+          <div className="px-10 pt-9 pb-7 flex gap-8 h-[450px]">
+            {/* Colonne de GAUCHE : Catégories (Liste en 2 colonnes pour équilibrer) */}
+            <div className="w-[300px] flex-shrink-0 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {cat.children?.map((child) => (
+                  <div key={child.id} className="mb-2">
+                    <Link
+                      to={`/products?category=${child.slug}`}
+                      className="block text-[0.7rem] tracking-[1px] font-extrabold uppercase text-gray-900 mb-2 pb-1.5 border-b border-gray-100 transition-colors hover:text-[#2d5f4f]"
+                    >
+                      {child.name}
+                    </Link>
+                    {child.children?.length > 0 && (
+                      <ul className="list-none p-0 m-0">
+                        {child.children.map((sub) => (
+                          <li key={sub.id} className="mb-1">
+                            <Link
+                              to={`/products?category=${sub.slug}`}
+                              className="text-[0.75rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block truncate w-full"
+                            >
+                              {sub.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Colonne de DROITE : Mosaïque Asymétrique */}
+            <div className="flex-1 flex flex-col gap-4">
+              {/* Zone 1 : Marques Phares (Prend toute la hauteur restante) */}
+              <div className="flex-1 flex flex-col">
+                <span className="block text-[0.7rem] tracking-[1.5px] font-extrabold text-gray-400 mb-3 pb-2 border-b border-gray-100">
+                  MARQUES PHARES
+                </span>
+                {brands.length > 0 ? (
+                  <div className="flex-1 grid grid-cols-4 gap-3 auto-rows-fr">
+                    {brands.map((b) => (
+                      <Link
+                        key={b.slug}
+                        to={`/products?brand=${b.slug}`}
+                        className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 hover:shadow-md transition-all hover:border-gray-300"
+                      >
+                        <img
+                          src={
+                            b.logo?.startsWith("http")
+                              ? b.logo
+                              : `${STORAGE_URL}/${b.logo}`
+                          }
+                          alt={b.name}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-400 text-sm italic">
+                    Aucune marque configurée.
+                  </div>
+                )}
+              </div>
+
+              {/* Zone 2 : Le Pack (Carte horizontale en bas) */}
+              {promo && (
+                <div className="h-[130px] flex-shrink-0 bg-[#f8fcf9] border border-[#1a5242]/10 rounded-xl overflow-hidden flex group hover:shadow-md transition-shadow cursor-pointer">
+                  <Link to={promo.link} className="flex w-full h-full">
+                    {promo.img && (
+                      <div className="w-[180px] h-full flex-shrink-0 bg-white">
+                        <img
+                          src={`${STORAGE_URL}/${promo.img}`}
+                          alt={promo.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 p-4 flex flex-col justify-center">
+                      <h4 className="text-[0.95rem] font-bold text-[#1a5242] mb-1">
+                        {promo.title}
+                      </h4>
+                      <p className="text-[0.8rem] text-gray-500 line-clamp-2 mb-2">
+                        {promo.text}
+                      </p>
+                      <span className="text-[0.8rem] font-bold text-[#2d5f4f] group-hover:underline">
+                        {promo.cta} →
+                      </span>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer du Mega Menu */}
+          <div className="bg-[#f2f2e9] border-t border-gray-100 py-3.5 text-center">
+            <Link
+              to={`/products?category=${cat.slug}`}
+              className="text-[0.88rem] font-semibold text-[#2d5f4f] no-underline hover:underline"
+            >
+              Voir tous les produits {cat.name.toLowerCase()} →
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // 🎨 STYLE MOSAÏQUE ASYMÉTRIQUE (Uniquement pour Hygiène)
+    if (isHygiene) {
       return (
         <div
           className="absolute z-[1001] bg-white border border-gray-100 rounded-b-xl overflow-hidden"
