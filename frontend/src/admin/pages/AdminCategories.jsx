@@ -249,35 +249,37 @@ function MegaMenuContent({ category, draftBundle }) {
           </div>
         )}
       </div>
-      <div className="border-l border-gray-100 pl-5">
-        {hasPromo ? (
-          <>
-            {activeBundle?.image && (
-              <img
-                src={`${STORAGE_URL}/${activeBundle.image}`}
-                alt=""
-                className="w-full h-24 object-cover rounded-lg mb-2"
-              />
-            )}
-            <p className="text-[12.5px] font-bold text-gray-900">
-              {category.promo_title}
+      {category.slug !== "bio" && (
+        <div className="border-l border-gray-100 pl-5">
+          {hasPromo ? (
+            <>
+              {activeBundle?.image && (
+                <img
+                  src={`${STORAGE_URL}/${activeBundle.image}`}
+                  alt=""
+                  className="w-full h-24 object-cover rounded-lg mb-2"
+                />
+              )}
+              <p className="text-[12.5px] font-bold text-gray-900">
+                {category.promo_title}
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1">
+                {category.promo_text}
+              </p>
+              <p
+                className="text-[11px] font-bold mt-1.5"
+                style={{ color: "#2d5f4f" }}
+              >
+                {category.promo_cta || "Découvrir"} →
+              </p>
+            </>
+          ) : (
+            <p className="text-[11px] text-gray-400 italic">
+              Aucun pack configuré
             </p>
-            <p className="text-[11px] text-gray-500 mt-1">
-              {category.promo_text}
-            </p>
-            <p
-              className="text-[11px] font-bold mt-1.5"
-              style={{ color: "#2d5f4f" }}
-            >
-              {category.promo_cta || "Découvrir"} →
-            </p>
-          </>
-        ) : (
-          <p className="text-[11px] text-gray-400 italic">
-            Aucun pack configuré
-          </p>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -882,38 +884,6 @@ export default function AdminCategories() {
                   setAddLogoPreview(null);
                 }}
               />
-
-              {category.slug !== "bio" && (
-                <div className="border-l border-gray-100 pl-5">
-                  {hasPromo ? (
-                    <>
-                      {activeBundle?.image && (
-                        <img
-                          src={`${STORAGE_URL}/${activeBundle.image}`}
-                          alt=""
-                          className="w-full h-24 object-cover rounded-lg mb-2"
-                        />
-                      )}
-                      <p className="text-[12.5px] font-bold text-gray-900">
-                        {category.promo_title}
-                      </p>
-                      <p className="text-[11px] text-gray-500 mt-1">
-                        {category.promo_text}
-                      </p>
-                      <p
-                        className="text-[11px] font-bold mt-1.5"
-                        style={{ color: "#2d5f4f" }}
-                      >
-                        {category.promo_cta || "Découvrir"} →
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-[11px] text-gray-400 italic">
-                      Aucun pack configuré
-                    </p>
-                  )}
-                </div>
-              )}
 
               <div className="flex gap-2 justify-end pt-1">
                 <Btn
@@ -2088,148 +2058,150 @@ function CategoryConfigPanel({
                 </p>
               </div>
 
-              <div>
-                <p className="flex items-center gap-2 text-[13px] font-bold text-gray-700 mb-2.5">
-                  <Megaphone size={14} /> Coffret mis en avant
-                </p>
-                <div className="space-y-2.5">
-                  <div>
-                    <label className="block text-[11.5px] font-semibold text-gray-500 mb-1">
-                      Coffret à afficher
-                    </label>
-                    {loadingBundles ? (
-                      <p className="text-[12.5px] text-gray-400 py-2">
-                        Chargement des coffrets...
-                      </p>
-                    ) : (
-                      <div className="relative">
-                        <Input
-                          value={bundleSearch}
-                          onChange={(e) => setBundleSearch(e.target.value)}
-                          placeholder="Rechercher un coffret par nom..."
-                          className="w-full mb-2"
-                        />
-                        {bundleId && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBundleId("");
-                              setBundleSearch("");
-                            }}
-                            className="text-[11.5px] font-semibold text-red-500 hover:opacity-70 mb-2 block"
-                          >
-                            Retirer la sélection
-                          </button>
-                        )}
-                        <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto">
-                          {filteredBundles.length === 0 ? (
-                            <p className="text-[12.5px] text-gray-400 text-center py-6">
-                              {bundlesError
-                                ? "Impossible de charger les coffrets."
-                                : "Aucun coffret trouvé"}
-                            </p>
-                          ) : (
-                            filteredBundles.map((b) => (
-                              <button
-                                key={b.id}
-                                type="button"
-                                onClick={() => setBundleId(String(b.id))}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2 border-b border-gray-100 last:border-0 text-left transition-colors ${
-                                  String(bundleId) === String(b.id)
-                                    ? "bg-[#edf7f3]"
-                                    : "hover:bg-gray-50"
-                                }`}
-                              >
-                                <div className="w-9 h-9 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
-                                  {b.image ? (
-                                    <img
-                                      src={`${STORAGE_URL}/${b.image}`}
-                                      alt=""
-                                      className="w-full h-full object-contain p-0.5"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                      <ImageIcon size={13} />
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="flex-1 min-w-0 text-[12.5px] font-semibold text-gray-800 truncate">
-                                  {b.name}
-                                </span>
-                                <span
-                                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
-                                    b.is_available
-                                      ? "bg-emerald-50 text-emerald-600"
-                                      : "bg-red-50 text-red-500"
+              {category.slug !== "bio" && (
+                <div>
+                  <p className="flex items-center gap-2 text-[13px] font-bold text-gray-700 mb-2.5">
+                    <Megaphone size={14} /> Coffret mis en avant
+                  </p>
+                  <div className="space-y-2.5">
+                    <div>
+                      <label className="block text-[11.5px] font-semibold text-gray-500 mb-1">
+                        Coffret à afficher
+                      </label>
+                      {loadingBundles ? (
+                        <p className="text-[12.5px] text-gray-400 py-2">
+                          Chargement des coffrets...
+                        </p>
+                      ) : (
+                        <div className="relative">
+                          <Input
+                            value={bundleSearch}
+                            onChange={(e) => setBundleSearch(e.target.value)}
+                            placeholder="Rechercher un coffret par nom..."
+                            className="w-full mb-2"
+                          />
+                          {bundleId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBundleId("");
+                                setBundleSearch("");
+                              }}
+                              className="text-[11.5px] font-semibold text-red-500 hover:opacity-70 mb-2 block"
+                            >
+                              Retirer la sélection
+                            </button>
+                          )}
+                          <div className="border border-gray-200 rounded-xl max-h-52 overflow-y-auto">
+                            {filteredBundles.length === 0 ? (
+                              <p className="text-[12.5px] text-gray-400 text-center py-6">
+                                {bundlesError
+                                  ? "Impossible de charger les coffrets."
+                                  : "Aucun coffret trouvé"}
+                              </p>
+                            ) : (
+                              filteredBundles.map((b) => (
+                                <button
+                                  key={b.id}
+                                  type="button"
+                                  onClick={() => setBundleId(String(b.id))}
+                                  className={`w-full flex items-center gap-2.5 px-3 py-2 border-b border-gray-100 last:border-0 text-left transition-colors ${
+                                    String(bundleId) === String(b.id)
+                                      ? "bg-[#edf7f3]"
+                                      : "hover:bg-gray-50"
                                   }`}
                                 >
-                                  {b.is_available ? "Disponible" : "Indispo."}
-                                </span>
-                                {String(bundleId) === String(b.id) && (
-                                  <span className="w-4 h-4 rounded-full bg-[#1a4731] flex items-center justify-center flex-shrink-0">
-                                    <Check size={10} className="text-white" />
+                                  <div className="w-9 h-9 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
+                                    {b.image ? (
+                                      <img
+                                        src={`${STORAGE_URL}/${b.image}`}
+                                        alt=""
+                                        className="w-full h-full object-contain p-0.5"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        <ImageIcon size={13} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="flex-1 min-w-0 text-[12.5px] font-semibold text-gray-800 truncate">
+                                    {b.name}
                                   </span>
-                                )}
-                              </button>
-                            ))
+                                  <span
+                                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${
+                                      b.is_available
+                                        ? "bg-emerald-50 text-emerald-600"
+                                        : "bg-red-50 text-red-500"
+                                    }`}
+                                  >
+                                    {b.is_available ? "Disponible" : "Indispo."}
+                                  </span>
+                                  {String(bundleId) === String(b.id) && (
+                                    <span className="w-4 h-4 rounded-full bg-[#1a4731] flex items-center justify-center flex-shrink-0">
+                                      <Check size={10} className="text-white" />
+                                    </span>
+                                  )}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedBundle && (
+                      <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="w-14 h-14 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
+                          {selectedBundle.image ? (
+                            <img
+                              src={`${STORAGE_URL}/${selectedBundle.image}`}
+                              alt=""
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <ImageIcon size={16} />
+                            </div>
                           )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12.5px] font-semibold text-gray-800 truncate">
+                            {selectedBundle.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            Image utilisée automatiquement dans la carte du mega
+                            menu
+                          </p>
                         </div>
                       </div>
                     )}
+
+                    <Input
+                      value={promoTitle}
+                      onChange={(e) => setPromoTitle(e.target.value)}
+                      placeholder="Titre (ex: Coffret Hydratation Intense)"
+                      className="w-full"
+                    />
+                    <textarea
+                      value={promoText}
+                      onChange={(e) => setPromoText(e.target.value)}
+                      placeholder="Texte descriptif court..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] text-gray-700 outline-none focus:border-[#1a4731] resize-none"
+                    />
+                    <Input
+                      value={promoCta}
+                      onChange={(e) => setPromoCta(e.target.value)}
+                      placeholder="Texte du bouton (ex: Découvrir le coffret)"
+                      className="w-full"
+                    />
+                    <p className="text-[11px] text-gray-400">
+                      Le lien redirige automatiquement vers la fiche du coffret
+                      sélectionné — aucune saisie manuelle nécessaire.
+                    </p>
                   </div>
-
-                  {selectedBundle && (
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-200">
-                      <div className="w-14 h-14 rounded-lg border border-gray-200 bg-white flex-shrink-0 overflow-hidden">
-                        {selectedBundle.image ? (
-                          <img
-                            src={`${STORAGE_URL}/${selectedBundle.image}`}
-                            alt=""
-                            className="w-full h-full object-contain p-1"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <ImageIcon size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[12.5px] font-semibold text-gray-800 truncate">
-                          {selectedBundle.name}
-                        </p>
-                        <p className="text-[11px] text-gray-400">
-                          Image utilisée automatiquement dans la carte du mega
-                          menu
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <Input
-                    value={promoTitle}
-                    onChange={(e) => setPromoTitle(e.target.value)}
-                    placeholder="Titre (ex: Coffret Hydratation Intense)"
-                    className="w-full"
-                  />
-                  <textarea
-                    value={promoText}
-                    onChange={(e) => setPromoText(e.target.value)}
-                    placeholder="Texte descriptif court..."
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] text-gray-700 outline-none focus:border-[#1a4731] resize-none"
-                  />
-                  <Input
-                    value={promoCta}
-                    onChange={(e) => setPromoCta(e.target.value)}
-                    placeholder="Texte du bouton (ex: Découvrir le coffret)"
-                    className="w-full"
-                  />
-                  <p className="text-[11px] text-gray-400">
-                    Le lien redirige automatiquement vers la fiche du coffret
-                    sélectionné — aucune saisie manuelle nécessaire.
-                  </p>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
