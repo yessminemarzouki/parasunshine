@@ -125,14 +125,15 @@ function SingleHygieneSection({ config }) {
                   onClick={() => setActiveTab(tab.slug)}
                   className={`pb-4 text-[14px] md:text-[15px] font-semibold transition-all border-b-2 -mb-px flex-shrink-0 whitespace-nowrap ${
                     activeTab === tab.slug
-                      ? "border-current"
+                      ? "border-gray-900" // <-- Ligne noire bien visible
                       : "border-transparent text-gray-800 hover:opacity-80"
                   }`}
                   style={{
                     ...(activeTab === tab.slug
                       ? {
                           color: config.tab_active_color,
-                          borderColor: config.tab_active_color,
+                          // On force la bordure à être foncée, peu importe la couleur du thème
+                          borderColor: "#111827",
                         }
                       : {}),
                     flex: 1,
