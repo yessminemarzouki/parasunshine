@@ -123,23 +123,24 @@ function SingleHygieneSection({ config }) {
                 <button
                   key={tab.slug}
                   onClick={() => setActiveTab(tab.slug)}
-                  className={`pb-4 text-[14px] md:text-[15px] font-semibold transition-all flex-shrink-0 whitespace-nowrap ${
-                    activeTab === tab.slug
-                      ? "border-b-[3px] border-black relative z-10 -mb-[2px]"
-                      : "border-b-2 border-transparent text-gray-800 hover:opacity-80 -mb-px"
-                  }`}
+                  className="pb-4 text-[14px] md:text-[15px] font-semibold transition-all flex-shrink-0 whitespace-nowrap"
                   style={{
-                    ...(activeTab === tab.slug
-                      ? {
-                          color: config.tab_active_color,
-                          // ON FORCE LA BORDURE À ÊTRE NOIRE, PEU IMPORTE LA CONFIG
-                          borderBottomColor: "#000000",
-                        }
-                      : {}),
                     flex: 1,
                     textAlign: "center",
                     minWidth: "fit-content",
                     padding: "0 16px 16px 16px",
+                    // Style de base (onglet inactif)
+                    borderBottom: "2px solid transparent",
+                    marginBottom: "-2px",
+                    // Style de l'onglet actif (force la bordure noire)
+                    ...(activeTab === tab.slug
+                      ? {
+                          color: config.tab_active_color,
+                          borderBottom: "3px solid #000000", // FORCE la ligne noire épaisse
+                        }
+                      : {
+                          color: "#1f2937",
+                        }),
                   }}
                 >
                   {tab.label}
