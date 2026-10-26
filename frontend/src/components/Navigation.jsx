@@ -478,13 +478,15 @@ export default function Navigation() {
             left: "50%",
             transform: "translateX(-50%)",
             width: "100vw",
-            maxWidth: 1000,
+            maxWidth: 850,
             boxShadow:
               "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-10 py-10 flex gap-12 items-center justify-center min-h-[260px]">
+          {/* Suppression du min-h et ajout de justify-center pour centrer verticalement */}
+          {/* Conteneur principal : on centre tout verticalement et horizontalement */}
+          <div className="px-10 py-10 flex gap-16 items-center min-h-[260px]">
             {/* Colonne de GAUCHE : Catégories (sans le vide à gauche) */}
             <div className="flex gap-16">
               {/* Colonne 1 */}
