@@ -484,8 +484,9 @@ export default function Navigation() {
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-10 pt-6 pb-6 flex gap-10 min-h-[240px]">
-            {/* Colonne de GAUCHE : Catégories (Largeur limitée et centrée) */}
+          {/* Suppression du min-h et ajout de justify-center pour centrer verticalement */}
+          <div className="px-10 py-8 flex gap-10 justify-center">
+            {/* Colonne de GAUCHE : Catégories */}
             <div className="flex-1 flex justify-center">
               <div className="flex gap-16 w-full max-w-[550px]">
                 {/* Colonne 1 */}
@@ -552,7 +553,7 @@ export default function Navigation() {
 
             {/* Colonne de DROITE : Marques Phares */}
             {brands.length > 0 && (
-              <div className="w-[280px] flex-shrink-0 flex flex-col border-l border-gray-100 pl-10">
+              <div className="w-[280px] flex-shrink-0 flex flex-col justify-center border-l border-gray-100 pl-10">
                 <span className="block text-[0.7rem] tracking-[1.5px] font-extrabold text-gray-400 mb-4 pb-2 border-b border-gray-100">
                   MARQUES PHARES
                 </span>
