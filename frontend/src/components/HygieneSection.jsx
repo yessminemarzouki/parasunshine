@@ -123,17 +123,16 @@ function SingleHygieneSection({ config }) {
                 <button
                   key={tab.slug}
                   onClick={() => setActiveTab(tab.slug)}
-                  className={`pb-4 text-[14px] md:text-[15px] font-semibold transition-all border-b-2 -mb-px flex-shrink-0 whitespace-nowrap ${
+                  className={`pb-4 text-[14px] md:text-[15px] font-semibold transition-all flex-shrink-0 whitespace-nowrap ${
                     activeTab === tab.slug
-                      ? "border-gray-900" // <-- Ligne noire bien visible
-                      : "border-transparent text-gray-800 hover:opacity-80"
+                      ? "border-b-[3px] border-gray-900 relative z-10 -mb-[2px]" // <-- Bordure plus épaisse et z-index
+                      : "border-b-2 border-transparent text-gray-800 hover:opacity-80 -mb-px"
                   }`}
                   style={{
                     ...(activeTab === tab.slug
                       ? {
                           color: config.tab_active_color,
-                          // On force la bordure à être foncée, peu importe la couleur du thème
-                          borderColor: "#111827",
+                          borderColor: "#111827", // Couleur foncée forcée
                         }
                       : {}),
                     flex: 1,
