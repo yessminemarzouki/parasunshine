@@ -112,7 +112,7 @@ function SingleHygieneSection({ config }) {
           <div className="flex flex-col gap-5">
             {/* Onglets avec scroll horizontal */}
             <div
-              className="hygiene-tabs flex border-b border-gray-200 overflow-x-auto"
+              className="hygiene-tabs flex overflow-x-auto"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: `${config.tab_active_color}40 transparent`,
@@ -129,18 +129,14 @@ function SingleHygieneSection({ config }) {
                     textAlign: "center",
                     minWidth: "fit-content",
                     padding: "0 16px 16px 16px",
-                    // Style de base (onglet inactif)
-                    borderBottom: "2px solid transparent",
-                    marginBottom: "-2px",
-                    // Style de l'onglet actif (force la bordure noire)
+                    // On dessine la ligne DIRECTEMENT sur chaque onglet
+                    borderBottom:
+                      activeTab === tab.slug
+                        ? "3px solid #000000"
+                        : "2px solid #e5e7eb", // Ligne grise pour les inactifs
                     ...(activeTab === tab.slug
-                      ? {
-                          color: config.tab_active_color,
-                          borderBottom: "3px solid #000000", // FORCE la ligne noire épaisse
-                        }
-                      : {
-                          color: "#1f2937",
-                        }),
+                      ? { color: config.tab_active_color }
+                      : { color: "#1f2937" }),
                   }}
                 >
                   {tab.label}
