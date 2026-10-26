@@ -381,6 +381,7 @@ export default function Navigation() {
 
     // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
     // 🌿 STYLE FOCUS VERTICAL (Uniquement pour Bio)
+    // 🌿 STYLE FOCUS VERTICAL (Uniquement pour Bio)
     if (isBio) {
       return (
         <div
@@ -390,30 +391,31 @@ export default function Navigation() {
             left: "50%",
             transform: "translateX(-50%)",
             width: "100vw",
-            maxWidth: 1200,
+            maxWidth: 1000, // Réduit la largeur totale du menu
             boxShadow:
               "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-10 pt-8 pb-8 flex gap-12 h-[320px]">
-            {/* Colonne de GAUCHE : Catégories étirées (Focus Vertical) */}
-            <div className="w-[400px] flex-shrink-0 flex flex-col justify-between py-2">
+          {/* Hauteur totale réduite et espacement entre les deux zones réduit */}
+          <div className="px-8 pt-6 pb-6 flex gap-6 min-h-[220px]">
+            {/* Colonne de GAUCHE : Catégories compactées */}
+            <div className="w-[320px] flex-shrink-0 flex flex-col gap-4 py-1">
               {cat.children?.map((child) => (
-                <div key={child.id} className="flex flex-col justify-center">
+                <div key={child.id} className="flex flex-col">
                   <Link
                     to={`/products?category=${child.slug}`}
-                    className="block text-[0.85rem] tracking-[1.5px] font-extrabold uppercase text-gray-900 mb-2 pb-2 border-b border-gray-100 transition-colors hover:text-[#2d5f4f] hover:border-[#2d5f4f]"
+                    className="block text-[0.75rem] tracking-[1.5px] font-extrabold uppercase text-gray-900 mb-1.5 pb-1 border-b border-gray-100 transition-colors hover:text-[#2d5f4f]"
                   >
                     {child.name}
                   </Link>
                   {child.children?.length > 0 && (
-                    <ul className="list-none p-0 m-0 flex flex-wrap gap-x-4 gap-y-1">
+                    <ul className="list-none p-0 m-0 flex flex-wrap gap-x-3 gap-y-0.5">
                       {child.children.map((sub) => (
                         <li key={sub.id}>
                           <Link
                             to={`/products?category=${sub.slug}`}
-                            className="text-[0.82rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block"
+                            className="text-[0.78rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block"
                           >
                             {sub.name}
                           </Link>
@@ -425,40 +427,44 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* Colonne de DROITE : Marques centrées */}
+            {/* Colonne de DROITE : Marques limitées à 4 (Grille 2x2) */}
             {brands.length > 0 && (
-              <div className="flex-1 flex flex-col justify-center border-l border-gray-100 pl-10">
-                <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-5 pb-2 border-b border-gray-100">
+              <div className="flex-1 flex flex-col justify-center border-l border-gray-100 pl-6">
+                <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-3 pb-2 border-b border-gray-100">
                   MARQUES POPULAIRES
                 </span>
-                <div className="grid grid-cols-3 gap-4">
-                  {brands.map((b) => (
-                    <Link
-                      key={b.slug}
-                      to={`/products?brand=${b.slug}`}
-                      className="flex items-center justify-center bg-white border border-gray-100 rounded-xl p-3 h-[80px] hover:shadow-md transition-all hover:border-gray-300"
-                    >
-                      <img
-                        src={
-                          b.logo?.startsWith("http")
-                            ? b.logo
-                            : `${STORAGE_URL}/${b.logo}`
-                        }
-                        alt={b.name}
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </Link>
-                  ))}
+                <div className="grid grid-cols-2 gap-3">
+                  {brands.slice(0, 4).map(
+                    (
+                      b, // <-- slice(0, 4) limite à 4 marques
+                    ) => (
+                      <Link
+                        key={b.slug}
+                        to={`/products?brand=${b.slug}`}
+                        className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 h-[60px] hover:shadow-sm transition-all hover:border-gray-300"
+                      >
+                        <img
+                          src={
+                            b.logo?.startsWith("http")
+                              ? b.logo
+                              : `${STORAGE_URL}/${b.logo}`
+                          }
+                          alt={b.name}
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </Link>
+                    ),
+                  )}
                 </div>
               </div>
             )}
           </div>
 
           {/* Footer du Mega Menu */}
-          <div className="bg-[#f2f2e9] border-t border-gray-100 py-3.5 text-center">
+          <div className="bg-[#f2f2e9] border-t border-gray-100 py-2.5 text-center">
             <Link
               to={`/products?category=${cat.slug}`}
-              className="text-[0.88rem] font-semibold text-[#2d5f4f] no-underline hover:underline"
+              className="text-[0.85rem] font-semibold text-[#2d5f4f] no-underline hover:underline"
             >
               Voir tous les produits {cat.name.toLowerCase()} →
             </Link>
