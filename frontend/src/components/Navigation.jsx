@@ -486,7 +486,7 @@ export default function Navigation() {
         >
           {/* Suppression du min-h et ajout de justify-center pour centrer verticalement */}
           {/* Conteneur principal : on centre tout verticalement et horizontalement */}
-          <div className="px-10 py-10 flex justify-between items-center min-h-[260px]">
+          <div className="px-10 py-10 flex gap-16 items-center min-h-[260px]">
             {/* Colonne de GAUCHE : Catégories (sans le vide à gauche) */}
             <div className="flex gap-16">
               {/* Colonne 1 */}
