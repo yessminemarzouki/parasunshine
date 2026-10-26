@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HomepageVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class AdminHomepageVideoController extends Controller
 {
@@ -91,12 +92,17 @@ class AdminHomepageVideoController extends Controller
 
         $video = HomepageVideo::updateOrCreate(['position' => $data['position']], $data);
 
+        Cache::forget('homepage_videos_public'); // <--- AJOUT
+
         return response()->json($video, 201);
     }
 
     public function toggleActive(HomepageVideo $homepageVideo)
     {
         $homepageVideo->update(['is_active' => !$homepageVideo->is_active]);
+
+        Cache::forget('homepage_videos_public'); // <--- AJOUT
+
         return response()->json($homepageVideo->fresh());
     }
 
@@ -109,6 +115,9 @@ class AdminHomepageVideoController extends Controller
             Storage::disk('public')->delete($homepageVideo->poster);
         }
         $homepageVideo->delete();
+
+        Cache::forget('homepage_videos_public'); // <--- AJOUT
+
         return response()->json(['message' => 'Vidéo supprimée.']);
     }
 }
