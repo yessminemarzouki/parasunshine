@@ -533,6 +533,7 @@ class ProductController extends Controller
     {
         return Cache::remember('all_brands', 60, function () {
             return Brand::select('id', 'name', 'slug', 'logo', 'parent_id')
+                ->whereNull('parent_id') // <--- AJOUTE CETTE LIGNE
                 ->orderBy('name')
                 ->get();
         });
