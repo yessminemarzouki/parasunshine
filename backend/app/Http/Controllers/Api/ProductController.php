@@ -733,13 +733,13 @@ class ProductController extends Controller
             $hygieneIds = $this->getCategoryIdsWithDescendants('hygiene');
 
             return [
-                'featured' => Product::select($cols)->with($with)
+                            'featured' => Product::select($cols)->with($with)
                     ->where('is_featured', true)
-                    ->inRandomOrder()->limit(8)->get(),
+                    ->inRandomOrder()->limit(20)->get(),
 
-                'newest' => Product::select($cols)->with($with)
+                            'newest' => Product::select($cols)->with($with)
                     ->where('is_new', true)
-                    ->orderBy('created_at', 'desc')->limit(8)->get(),
+                    ->orderBy('created_at', 'desc')->limit(20)->get(),
 
                 'promotions' => Product::select($cols)->with($with)
                     ->where(function ($q) {
@@ -757,10 +757,10 @@ class ProductController extends Controller
                         ->limit(8)->get()
                     : collect([]),
 
-                'bestsellers' => Product::select($cols)->with($with)
+                            'bestsellers' => Product::select($cols)->with($with)
                     ->where('is_bestseller', true)
                     ->orderBy('created_at', 'desc')
-                    ->limit(8)->get(),
+                    ->limit(20)->get(),
             ];
         });
 
