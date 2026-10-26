@@ -125,14 +125,15 @@ function SingleHygieneSection({ config }) {
                   onClick={() => setActiveTab(tab.slug)}
                   className={`pb-4 text-[14px] md:text-[15px] font-semibold transition-all flex-shrink-0 whitespace-nowrap ${
                     activeTab === tab.slug
-                      ? "border-b-[3px] border-gray-900 relative z-10 -mb-[2px]" // <-- Bordure plus épaisse et z-index
+                      ? "border-b-[3px] border-black relative z-10 -mb-[2px]"
                       : "border-b-2 border-transparent text-gray-800 hover:opacity-80 -mb-px"
                   }`}
                   style={{
                     ...(activeTab === tab.slug
                       ? {
                           color: config.tab_active_color,
-                          borderColor: "#111827", // Couleur foncée forcée
+                          // ON FORCE LA BORDURE À ÊTRE NOIRE, PEU IMPORTE LA CONFIG
+                          borderBottomColor: "#000000",
                         }
                       : {}),
                     flex: 1,
