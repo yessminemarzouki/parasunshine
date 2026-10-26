@@ -132,8 +132,8 @@ function SingleHygieneSection({ config }) {
                     // On dessine la ligne DIRECTEMENT sur chaque onglet
                     borderBottom:
                       activeTab === tab.slug
-                        ? "3px solid #000000"
-                        : "2px solid #e5e7eb", // Ligne grise pour les inactifs
+                        ? "2px solid #000000" // <-- Ligne active plus fine (2px au lieu de 3px)
+                        : "1px solid #e5e7eb", // <-- Ligne inactive encore plus discrète
                     ...(activeTab === tab.slug
                       ? { color: config.tab_active_color }
                       : { color: "#1f2937" }),
