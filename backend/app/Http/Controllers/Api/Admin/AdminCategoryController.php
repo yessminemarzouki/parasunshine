@@ -81,6 +81,9 @@ class AdminCategoryController extends Controller
         if (isset($data['name'])) {
             $data['slug'] = Str::slug($data['name']);
         }
+        if ($request->has('bundle_id') && empty($request->bundle_id)) {
+            $data['bundle_id'] = null;
+        }
 
         if ($request->hasFile('image')) {
             if ($category->image) {

@@ -157,11 +157,15 @@ const IconPicker = ({ value, onChange }) => {
 };
 
 // ── Aperçu du mega menu — contenu réutilisable (modal ou inline) ──
-function MegaMenuContent({ category }) {
+function MegaMenuContent({ category, draftBundle }) {
   const isImageStyle =
     category.slug === "soin" || category.children?.some((c) => c.image);
   const brands = category.brands || [];
-  const hasPromo = category.bundle && category.promo_title;
+
+  // Utilise le bundle en cours d'édition (draft) s'il existe, sinon celui sauvegardé
+  const activeBundle =
+    draftBundle !== undefined ? draftBundle : category.bundle;
+  const hasPromo = activeBundle && category.promo_title;
 
   if (!category.children?.length) {
     return (
@@ -1908,7 +1912,7 @@ export default function AdminCategories() {
               chaque image via l'icône 🖼️ ci-contre.
             </p>
           )}
-          <MegaMenuContent category={selectedTop} />
+          <MegaMenuContent category={selectedTop} draftBundle={draftBundle} />
         </div>
       </div>
     </div>
@@ -1966,7 +1970,17 @@ function CategoryConfigPanel({
     (category.brands || []).map((b) => b.id),
   );
   const [saving, setSaving] = useState(false);
-
+  const [draftBundle, setDraftBundle] = useState(category.bundle);
+  useEffect(() => {
+    if (bundleId) {
+      const found = availableBundles.find(
+        (b) => String(b.id) === String(bundleId),
+      );
+      setDraftBundle(found || null);
+    } else {
+      setDraftBundle(null);
+    }
+  }, [bundleId, availableBundles]);
   useEffect(() => {
     if (!isTopLevel) return;
     adminApi
@@ -2000,7 +2014,8 @@ function CategoryConfigPanel({
         fd.append("promo_title", promoTitle);
         fd.append("promo_text", promoText);
         fd.append("promo_cta", promoCta);
-        if (bundleId) fd.append("bundle_id", bundleId);
+        // On envoie TOUJOURS bundle_id, même vide, pour écraser l'ancienne valeur
+        fd.append("bundle_id", bundleId || "");
       }
       await adminApi.post(`/admin/categories/${category.id}`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
