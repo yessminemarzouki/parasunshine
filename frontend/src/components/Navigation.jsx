@@ -116,7 +116,8 @@ export default function Navigation() {
 
   const renderStandardMenu = (cat) => {
     const isComplement = cat.slug === "complements-alimentaires";
-    const isHygiene = cat.slug === "hygiene"; // <--- AJOUTE CETTE LIGNE
+    const isHygiene = cat.slug === "hygiene";
+    const isBio = cat.slug === "bio"; // <--- AJOUTE CETTE LIGNE
     const brands = cat.brands || [];
     const promo = cat.bundle
       ? {
@@ -363,6 +364,94 @@ export default function Navigation() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Footer du Mega Menu */}
+          <div className="bg-[#f2f2e9] border-t border-gray-100 py-3.5 text-center">
+            <Link
+              to={`/products?category=${cat.slug}`}
+              className="text-[0.88rem] font-semibold text-[#2d5f4f] no-underline hover:underline"
+            >
+              Voir tous les produits {cat.name.toLowerCase()} →
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
+    // 🌿 STYLE FOCUS VERTICAL (Uniquement pour Bio)
+    if (isBio) {
+      return (
+        <div
+          className="absolute z-[1001] bg-white border border-gray-100 rounded-b-xl overflow-hidden"
+          style={{
+            top: 60,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100vw",
+            maxWidth: 1200,
+            boxShadow:
+              "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
+            animation: "megaFade 0.25s ease",
+          }}
+        >
+          <div className="px-10 pt-8 pb-8 flex gap-12 h-[320px]">
+            {/* Colonne de GAUCHE : Catégories étirées (Focus Vertical) */}
+            <div className="w-[400px] flex-shrink-0 flex flex-col justify-between py-2">
+              {cat.children?.map((child) => (
+                <div key={child.id} className="flex flex-col justify-center">
+                  <Link
+                    to={`/products?category=${child.slug}`}
+                    className="block text-[0.85rem] tracking-[1.5px] font-extrabold uppercase text-gray-900 mb-2 pb-2 border-b border-gray-100 transition-colors hover:text-[#2d5f4f] hover:border-[#2d5f4f]"
+                  >
+                    {child.name}
+                  </Link>
+                  {child.children?.length > 0 && (
+                    <ul className="list-none p-0 m-0 flex flex-wrap gap-x-4 gap-y-1">
+                      {child.children.map((sub) => (
+                        <li key={sub.id}>
+                          <Link
+                            to={`/products?category=${sub.slug}`}
+                            className="text-[0.82rem] text-gray-500 hover:text-[#2d5f4f] transition-colors inline-block"
+                          >
+                            {sub.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Colonne de DROITE : Marques centrées */}
+            {brands.length > 0 && (
+              <div className="flex-1 flex flex-col justify-center border-l border-gray-100 pl-10">
+                <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-5 pb-2 border-b border-gray-100">
+                  MARQUES POPULAIRES
+                </span>
+                <div className="grid grid-cols-3 gap-4">
+                  {brands.map((b) => (
+                    <Link
+                      key={b.slug}
+                      to={`/products?brand=${b.slug}`}
+                      className="flex items-center justify-center bg-white border border-gray-100 rounded-xl p-3 h-[80px] hover:shadow-md transition-all hover:border-gray-300"
+                    >
+                      <img
+                        src={
+                          b.logo?.startsWith("http")
+                            ? b.logo
+                            : `${STORAGE_URL}/${b.logo}`
+                        }
+                        alt={b.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer du Mega Menu */}
