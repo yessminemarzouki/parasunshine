@@ -152,7 +152,7 @@ class AdminCategoryController extends Controller
         return response()->json(
             Brand::withCount('products')
                 ->with('parent:id,name,slug,logo')
-                ->whereNull('parent_id') // <--- AJOUTE CETTE LIGNE
+
                 ->orderBy('name')
                 ->get()
         );
