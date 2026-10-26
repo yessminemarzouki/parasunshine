@@ -380,7 +380,7 @@ export default function Navigation() {
       );
     }
 
-    // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
+    // 🎨 STYLE CLASSIQUE (Optimisé pour l'espace)
     return (
       <div
         className="absolute z-[1001] bg-white border border-gray-100 rounded-b-xl overflow-hidden"
@@ -395,96 +395,99 @@ export default function Navigation() {
           animation: "megaFade 0.25s ease",
         }}
       >
-        <div className="px-10 pt-9 pb-7">
-          <div className="grid gap-6 lg:gap-8 items-start w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_220px_300px]">
-            <div className="flex flex-col gap-2.5 mt-11">
-              {cat.children?.map((child) => (
-                <div key={child.id} className="min-w-[180px]">
-                  <Link
-                    to={`/products?category=${child.slug}`}
-                    className="block text-[0.72rem] tracking-[1.8px] font-extrabold uppercase text-gray-900 mb-3.5 pb-2 border-b border-gray-100 transition-colors hover:text-[#2d5f4f] hover:border-[#2d5f4f]"
-                  >
-                    {child.name.toUpperCase()}
-                  </Link>
-                  {child.children?.length > 0 && (
-                    <ul className="list-none p-0 m-0 mt-1.5">
-                      {child.children.map((sub) => (
-                        <li key={sub.id} className="mb-1.5">
-                          <Link
-                            to={`/products?category=${sub.slug}`}
-                            className="text-[0.87rem] text-gray-500 font-normal transition-all hover:text-[#2d5f4f] hover:pl-1 inline-block"
-                          >
-                            {sub.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {brands.length > 0 && (
-              <div className="min-w-[180px]">
-                <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-4 pb-2 border-b border-gray-100">
-                  MARQUES POPULAIRES
-                </span>
-                <div
-                  className="grid gap-2.5"
-                  style={{ gridTemplateColumns: "1fr 1fr" }}
+        {/* Hauteur minimale pour éviter les menus écrasés */}
+        <div className="px-10 pt-9 pb-7 min-h-[320px] flex gap-8">
+          {/* Colonne 1 : Catégories (S'étire pour remplir le vide) */}
+          <div className="flex-1 flex flex-col justify-between gap-4">
+            {cat.children?.map((child) => (
+              <div
+                key={child.id}
+                className="flex-1 flex flex-col justify-center border-b border-gray-100 last:border-0 pb-3"
+              >
+                <Link
+                  to={`/products?category=${child.slug}`}
+                  className="block text-[0.72rem] tracking-[1.8px] font-extrabold uppercase text-gray-900 mb-2 transition-colors hover:text-[#2d5f4f]"
                 >
-                  {brands.map((b) => (
-                    <Link
-                      key={b.slug}
-                      to={`/products?brand=${b.slug}`}
-                      className="block"
-                    >
-                      <img
-                        src={
-                          b.logo?.startsWith("http")
-                            ? b.logo
-                            : `${STORAGE_URL}/${b.logo}`
-                        }
-                        alt={b.name}
-                        className="w-full bg-white border border-gray-100 rounded-md p-2 object-contain"
-                        style={{ height: 60, maxWidth: 110 }}
-                      />
-                    </Link>
-                  ))}
-                </div>
+                  {child.name.toUpperCase()}
+                </Link>
+                {child.children?.length > 0 && (
+                  <ul className="list-none p-0 m-0 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                    {child.children.map((sub) => (
+                      <li key={sub.id}>
+                        <Link
+                          to={`/products?category=${sub.slug}`}
+                          className="text-[0.82rem] text-gray-500 font-normal transition-all hover:text-[#2d5f4f] hover:pl-1 inline-block"
+                        >
+                          {sub.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            )}
+            ))}
+          </div>
 
-            {promo && (
-              <div className="hidden lg:block border-l border-gray-100 pl-7 min-w-0">
-                <div>
-                  {promo.img && (
+          {/* Colonne 2 : Marques (Centrée verticalement) */}
+          {brands.length > 0 && (
+            <div className="w-[280px] flex-shrink-0 flex flex-col justify-center border-l border-gray-100 pl-8">
+              <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-5 pb-2 border-b border-gray-100">
+                MARQUES POPULAIRES
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                {brands.map((b) => (
+                  <Link
+                    key={b.slug}
+                    to={`/products?brand=${b.slug}`}
+                    className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 h-[70px] hover:shadow-sm transition-all hover:border-gray-300"
+                  >
                     <img
-                      src={`${STORAGE_URL}/${promo.img}`}
-                      alt={promo.title}
-                      className="w-full block object-cover"
-                      style={{ height: 140 }}
+                      src={
+                        b.logo?.startsWith("http")
+                          ? b.logo
+                          : `${STORAGE_URL}/${b.logo}`
+                      }
+                      alt={b.name}
+                      className="max-w-full max-h-full object-contain"
                     />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Colonne 3 : Le Pack (Centré verticalement) */}
+          {promo && (
+            <div className="w-[320px] flex-shrink-0 flex flex-col justify-center border-l border-gray-100 pl-8">
+              <div className="bg-[#f8fcf9] border border-[#1a5242]/10 rounded-xl overflow-hidden group hover:shadow-md transition-shadow">
+                <Link to={promo.link} className="block">
+                  {promo.img && (
+                    <div className="w-full h-[160px] bg-white overflow-hidden">
+                      <img
+                        src={`${STORAGE_URL}/${promo.img}`}
+                        alt={promo.title}
+                        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
                   )}
-                  <div className="pt-3">
-                    <h4 className="text-[0.85rem] text-gray-900 mb-1.5">
+                  <div className="p-4 bg-[#f8fcf9]">
+                    <h4 className="text-[0.95rem] font-bold text-[#1a5242] mb-1">
                       {promo.title}
                     </h4>
-                    <p className="text-[0.75rem] text-gray-500 leading-relaxed mb-2.5">
+                    <p className="text-[0.8rem] text-gray-500 line-clamp-2 mb-3">
                       {promo.text}
                     </p>
-                    <Link
-                      to={promo.link}
-                      className="text-[0.75rem] font-bold text-[#2d5f4f] no-underline hover:underline"
-                    >
-                      {promo.cta}
-                    </Link>
+                    <span className="text-[0.8rem] font-bold text-[#2d5f4f] group-hover:underline">
+                      {promo.cta} →
+                    </span>
                   </div>
-                </div>
+                </Link>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+
+        {/* Footer du Mega Menu */}
         <div className="bg-[#f2f2e9] border-t border-gray-100 py-3.5 text-center">
           <Link
             to={`/products?category=${cat.slug}`}
@@ -496,6 +499,7 @@ export default function Navigation() {
       </div>
     );
   };
+
   const hasMegaMenu = (cat) =>
     cat.children?.length > 0 && !NO_MEGA.includes(cat.slug);
   const isSoin = (cat) => cat.slug === "soin";
