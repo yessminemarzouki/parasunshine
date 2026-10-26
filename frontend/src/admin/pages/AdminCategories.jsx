@@ -208,7 +208,7 @@ function MegaMenuContent({ category, draftBundle }) {
     </div>
   ) : (
     <div
-      className={`grid gap-6 grid-cols-1 ${category.slug === "bio" ? "sm:grid-cols-[1fr_280px]" : "sm:grid-cols-[1fr_180px_240px]"}`}
+      className={`grid gap-6 grid-cols-1 ${category.slug === "bio" || category.slug === "paramedicaux" ? "sm:grid-cols-[1fr_280px]" : "sm:grid-cols-[1fr_180px_240px]"}`}
     >
       <div className="space-y-3.5">
         {category.children.map((child) => (
@@ -249,7 +249,7 @@ function MegaMenuContent({ category, draftBundle }) {
           </div>
         )}
       </div>
-      {category.slug !== "bio" && (
+      {category.slug !== "bio" && category.slug !== "paramedicaux" && (
         <div className="border-l border-gray-100 pl-5">
           {hasPromo ? (
             <>
@@ -2058,7 +2058,7 @@ function CategoryConfigPanel({
                 </p>
               </div>
 
-              {category.slug !== "bio" && (
+              {category.slug !== "bio" && category.slug !== "paramedicaux" && (
                 <div>
                   <p className="flex items-center gap-2 text-[13px] font-bold text-gray-700 mb-2.5">
                     <Megaphone size={14} /> Coffret mis en avant
