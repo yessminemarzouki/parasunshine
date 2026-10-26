@@ -250,9 +250,9 @@ function MegaMenuContent({ category, draftBundle }) {
       <div className="border-l border-gray-100 pl-5">
         {hasPromo ? (
           <>
-            {category.bundle?.image && (
+            {activeBundle?.image && (
               <img
-                src={`${STORAGE_URL}/${category.bundle.image}`}
+                src={`${STORAGE_URL}/${activeBundle.image}`}
                 alt=""
                 className="w-full h-24 object-cover rounded-lg mb-2"
               />
@@ -1912,7 +1912,7 @@ export default function AdminCategories() {
               chaque image via l'icône 🖼️ ci-contre.
             </p>
           )}
-          <MegaMenuContent category={selectedTop} draftBundle={draftBundle} />
+          <MegaMenuContent category={selectedTop} />
         </div>
       </div>
     </div>
