@@ -207,7 +207,9 @@ function MegaMenuContent({ category, draftBundle }) {
       ))}
     </div>
   ) : (
-    <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px_240px] gap-6">
+    <div
+      className={`grid gap-6 grid-cols-1 ${category.slug === "bio" ? "sm:grid-cols-[1fr_280px]" : "sm:grid-cols-[1fr_180px_240px]"}`}
+    >
       <div className="space-y-3.5">
         {category.children.map((child) => (
           <div key={child.id}>
@@ -881,67 +883,37 @@ export default function AdminCategories() {
                 }}
               />
 
-              <div className="border-t border-gray-100 pt-3 mt-1">
-                <label className="block text-[12px] font-semibold text-gray-500 mb-2">
-                  Sous-marques (optionnel)
-                </label>
-                <div className="flex gap-2 mb-2.5">
-                  <Input
-                    value={addSubBrandInput}
-                    onChange={(e) => setAddSubBrandInput(e.target.value)}
-                    placeholder="Nom de la sous marque"
-                    className="flex-1"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        const val = addSubBrandInput.trim();
-                        if (val && !addSubBrandsList.includes(val)) {
-                          setAddSubBrandsList((prev) => [...prev, val]);
-                          setAddSubBrandInput("");
-                        }
-                      }
-                    }}
-                  />
-                  <Btn
-                    type="button"
-                    onClick={() => {
-                      const val = addSubBrandInput.trim();
-                      if (val && !addSubBrandsList.includes(val)) {
-                        setAddSubBrandsList((prev) => [...prev, val]);
-                        setAddSubBrandInput("");
-                      }
-                    }}
-                  >
-                    <Plus size={14} />
-                  </Btn>
-                </div>
-                {addSubBrandsList.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {addSubBrandsList.map((name) => (
-                      <span
-                        key={name}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-[#edf7f3] text-[#1a4731] rounded-lg text-[12.5px] font-semibold"
+              {category.slug !== "bio" && (
+                <div className="border-l border-gray-100 pl-5">
+                  {hasPromo ? (
+                    <>
+                      {activeBundle?.image && (
+                        <img
+                          src={`${STORAGE_URL}/${activeBundle.image}`}
+                          alt=""
+                          className="w-full h-24 object-cover rounded-lg mb-2"
+                        />
+                      )}
+                      <p className="text-[12.5px] font-bold text-gray-900">
+                        {category.promo_title}
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {category.promo_text}
+                      </p>
+                      <p
+                        className="text-[11px] font-bold mt-1.5"
+                        style={{ color: "#2d5f4f" }}
                       >
-                        {name}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAddSubBrandsList((prev) =>
-                              prev.filter((n) => n !== name),
-                            )
-                          }
-                        >
-                          <X size={12} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-[11px] text-gray-400 mt-2">
-                  Chaque sous-marque affichera automatiquement le logo de "
-                  {addBrandName || "cette marque"}".
-                </p>
-              </div>
+                        {category.promo_cta || "Découvrir"} →
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-gray-400 italic">
+                      Aucun pack configuré
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-2 justify-end pt-1">
                 <Btn
