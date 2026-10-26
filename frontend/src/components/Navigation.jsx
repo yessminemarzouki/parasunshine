@@ -389,17 +389,17 @@ export default function Navigation() {
             left: "50%",
             transform: "translateX(-50%)",
             width: "100vw",
-            maxWidth: 850, // <-- On réduit la largeur totale du menu (était 1000)
+            maxWidth: 850,
             boxShadow:
               "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
             animation: "megaFade 0.25s ease",
           }}
         >
-          <div className="px-8 pt-6 pb-6 flex gap-6 min-h-[220px]">
-            {/* Colonne de GAUCHE : Catégories */}
-            <div className="w-[280px] flex-shrink-0 flex flex-col gap-4 py-1">
-              {" "}
-              {/* Largeur réduite */}
+          {/* J'ai retiré le min-h pour que la hauteur soit dictée par le contenu */}
+          <div className="px-8 pt-6 pb-6 flex gap-6">
+            {/* Colonne de GAUCHE : Catégories centrées verticalement */}
+            {/* Ajout de justify-center et retrait du py-1 */}
+            <div className="w-[280px] flex-shrink-0 flex flex-col justify-center gap-5">
               {cat.children?.map((child) => (
                 <div key={child.id} className="flex flex-col">
                   <Link
@@ -426,13 +426,12 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* Colonne de DROITE : Marques limitées à 4 (Grille 2x2) */}
+            {/* Colonne de DROITE : Marques */}
             {brands.length > 0 && (
               <div className="flex-1 flex flex-col justify-center border-l border-gray-100 pl-6">
                 <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-3 pb-2 border-b border-gray-100">
                   MARQUES POPULAIRES
                 </span>
-                {/* On fixe une largeur max pour cette grille pour éviter qu'elle s'étire à l'infini */}
                 <div className="grid grid-cols-2 gap-3 max-w-[400px]">
                   {brands.slice(0, 4).map((b) => (
                     <Link
