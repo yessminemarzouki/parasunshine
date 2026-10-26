@@ -379,8 +379,6 @@ export default function Navigation() {
       );
     }
 
-    // 🎨 STYLE CLASSIQUE (Pour les autres catégories, inchangé)
-    // 🌿 STYLE FOCUS VERTICAL (Uniquement pour Bio)
     // 🌿 STYLE FOCUS VERTICAL (Uniquement pour Bio)
     if (isBio) {
       return (
@@ -391,16 +389,17 @@ export default function Navigation() {
             left: "50%",
             transform: "translateX(-50%)",
             width: "100vw",
-            maxWidth: 1000, // Réduit la largeur totale du menu
+            maxWidth: 850, // <-- On réduit la largeur totale du menu (était 1000)
             boxShadow:
               "0 10px 25px rgba(0,0,0,0.06), 0 20px 50px rgba(0,0,0,0.08)",
             animation: "megaFade 0.25s ease",
           }}
         >
-          {/* Hauteur totale réduite et espacement entre les deux zones réduit */}
           <div className="px-8 pt-6 pb-6 flex gap-6 min-h-[220px]">
-            {/* Colonne de GAUCHE : Catégories compactées */}
-            <div className="w-[320px] flex-shrink-0 flex flex-col gap-4 py-1">
+            {/* Colonne de GAUCHE : Catégories */}
+            <div className="w-[280px] flex-shrink-0 flex flex-col gap-4 py-1">
+              {" "}
+              {/* Largeur réduite */}
               {cat.children?.map((child) => (
                 <div key={child.id} className="flex flex-col">
                   <Link
@@ -433,28 +432,25 @@ export default function Navigation() {
                 <span className="block text-[0.72rem] tracking-[1.5px] font-extrabold text-gray-400 mb-3 pb-2 border-b border-gray-100">
                   MARQUES POPULAIRES
                 </span>
-                <div className="grid grid-cols-2 gap-3">
-                  {brands.slice(0, 4).map(
-                    (
-                      b, // <-- slice(0, 4) limite à 4 marques
-                    ) => (
-                      <Link
-                        key={b.slug}
-                        to={`/products?brand=${b.slug}`}
-                        className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 h-[60px] hover:shadow-sm transition-all hover:border-gray-300"
-                      >
-                        <img
-                          src={
-                            b.logo?.startsWith("http")
-                              ? b.logo
-                              : `${STORAGE_URL}/${b.logo}`
-                          }
-                          alt={b.name}
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </Link>
-                    ),
-                  )}
+                {/* On fixe une largeur max pour cette grille pour éviter qu'elle s'étire à l'infini */}
+                <div className="grid grid-cols-2 gap-3 max-w-[400px]">
+                  {brands.slice(0, 4).map((b) => (
+                    <Link
+                      key={b.slug}
+                      to={`/products?brand=${b.slug}`}
+                      className="flex items-center justify-center bg-white border border-gray-100 rounded-lg p-2 h-[60px] hover:shadow-sm transition-all hover:border-gray-300"
+                    >
+                      <img
+                        src={
+                          b.logo?.startsWith("http")
+                            ? b.logo
+                            : `${STORAGE_URL}/${b.logo}`
+                        }
+                        alt={b.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
