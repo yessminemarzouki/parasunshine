@@ -56,7 +56,7 @@ const HeroCarousel = () => {
   // Placeholder pendant le chargement
   if (loading) {
     return (
-      <div className="px-0 pb-0 pt-0 sm:px-5 sm:pb-0 sm:pt-2 md:px-5 md:pb-0 md:pt-2 max-w-[1500px] mx-auto">
+      <div className="px-0 pb-0 pt-0 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
         <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] rounded-[5px]" />
       </div>
     );
@@ -65,8 +65,8 @@ const HeroCarousel = () => {
   if (slides.length === 0) return null;
 
   return (
-    <div className="px-0 pb-0 pt-0 sm:px-5 sm:pb-0 sm:pt-2 md:px-5 md:pb-0 md:pt-2 max-w-[1500px] mx-auto">
-      <div className="relative w-full aspect-[16/9] sm:aspect-[3/1] rounded-[5px] overflow-hidden">
+    <div className="px-0 pb-0 pt-0 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
+      <div className="relative w-full aspect-[16/9] sm:aspect-[3/1] rounded-[5px] overflow-hidden bg-gray-100">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{
