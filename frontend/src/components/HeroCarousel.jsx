@@ -8,20 +8,7 @@ const HeroCarousel = () => {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ 1. On précharge la première image dès que le composant est monté
-  // (même si l'API n'a pas encore répondu)
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    // On suppose que la première image est /storage/... si l'API renvoie un chemin
-    // On utilise une URL de fallback si l'API met du temps
-    link.href = `${STORAGE_URL}/hero-fallback.webp`; // ⚠️ À adapter
-    link.fetchPriority = "high";
-    document.head.appendChild(link);
-    return () => document.head.removeChild(link);
-  }, []);
-
+  // ✅ Chargement des slides via l'API
   useEffect(() => {
     getHeroSlides()
       .then((data) => {
@@ -33,21 +20,32 @@ const HeroCarousel = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // ✅ Preload dynamique de la première image dès que les slides sont chargés
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length === 0 || !slides[0].image) return;
+
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = getImageUrl(slides[0].image);
+    link.fetchPriority = "high";
+    document.head.appendChild(link);
+
+    return () => {
+      if (document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [slides]);
+
+  // ✅ Rotation automatique
+  useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
   }, [slides.length]);
-
-  // Sur mobile (< 768px), on ne rend pas le carrousel.
-  // L'image statique dans index.html prend le relais pour un LCP ultra-rapide.
-  if (typeof window !== "undefined" && window.innerWidth < 768) {
-    return null;
-  }
-
-  if (loading || slides.length === 0) return null;
 
   const goToSlide = (index) => setCurrentSlide(index);
 
@@ -56,6 +54,18 @@ const HeroCarousel = () => {
     if (image.startsWith("http")) return image;
     return `${STORAGE_URL}/${image}`;
   };
+
+  // ✅ Placeholder pendant le chargement (évite le CLS)
+  if (loading) {
+    return (
+      <div className="p-3 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
+        <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] rounded-[5px] bg-gray-100 animate-pulse" />
+      </div>
+    );
+  }
+
+  // ✅ Si aucune slide, on n'affiche rien
+  if (slides.length === 0) return null;
 
   return (
     <div className="p-3 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
@@ -72,7 +82,7 @@ const HeroCarousel = () => {
               <>
                 <img
                   src={getImageUrl(slide.image)}
-                  alt={slide.title || ""}
+                  alt={slide.title || "ParaSunshine"}
                   width="1200"
                   height="450"
                   loading={index === 0 ? "eager" : "lazy"}

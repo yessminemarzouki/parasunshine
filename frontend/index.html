@@ -177,42 +177,7 @@
   </head>
 
   <body>
-    <!-- CSS critique inline pour l'image Hero -->
-    <style>
-      #hero-static {
-        max-width: 1500px;
-        margin: 0 auto;
-        padding: 12px;
-      }
-      #hero-static img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 5px;
-      }
-      @media (min-width: 640px) {
-        #hero-static img {
-          height: 320px;
-        }
-      }
-      @media (min-width: 768px) {
-        #hero-static img {
-          height: 450px;
-        }
-      }
-    </style>
-
-    <div id="root">
-      <div id="hero-static">
-        <img
-          src="https://www.parasunshine.tn/storage/hero-slides/TON_IMAGE.webp"
-          alt="ParaSunshine"
-          fetchpriority="high"
-          width="1200"
-          height="450"
-        />
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx" defer></script>
   </body>
 </html>
