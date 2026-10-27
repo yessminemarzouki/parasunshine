@@ -8,6 +8,20 @@ const HeroCarousel = () => {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ 1. On précharge la première image dès que le composant est monté
+  // (même si l'API n'a pas encore répondu)
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    // On suppose que la première image est /storage/... si l'API renvoie un chemin
+    // On utilise une URL de fallback si l'API met du temps
+    link.href = `${STORAGE_URL}/hero-fallback.webp`; // ⚠️ À adapter
+    link.fetchPriority = "high";
+    document.head.appendChild(link);
+    return () => document.head.removeChild(link);
+  }, []);
+
   useEffect(() => {
     getHeroSlides()
       .then((data) => {
@@ -40,7 +54,7 @@ const HeroCarousel = () => {
 
   return (
     <div className="p-3 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
-      <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] rounded-[5px] overflow-hidden">
+      <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] rounded-[5px] overflow-hidden bg-gray-100">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{

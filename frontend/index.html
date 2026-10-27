@@ -166,6 +166,13 @@
       onload="this.media = 'all'"
     />
 
+    <!-- Précharge l'image du Hero pour améliorer le LCP -->
+    <link
+      rel="preload"
+      as="image"
+      href="URL_DE_TON_IMAGE_HERO"
+      fetchpriority="high"
+    />
     <script src="/preload.js" async></script>
   </head>
 
