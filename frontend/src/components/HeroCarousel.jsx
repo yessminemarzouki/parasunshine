@@ -66,7 +66,7 @@ const HeroCarousel = () => {
 
   return (
     <div className="px-0 pb-0 pt-0 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
-      <div className="relative w-full aspect-[16/9] sm:aspect-[3/1] rounded-[5px] overflow-hidden bg-gray-100">
+      <div className="relative w-full rounded-[5px] overflow-hidden bg-gray-100">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{
@@ -83,7 +83,7 @@ const HeroCarousel = () => {
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "auto"}
                   decoding="async"
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto block"
                 />
                 {(slide.title || slide.subtitle || slide.button_text) && (
                   <div

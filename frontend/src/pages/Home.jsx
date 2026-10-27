@@ -464,7 +464,7 @@ export default function Home() {
 
       {/* ── Catégories showcase ── */}
       {categoryShowcase.length > 0 && (
-        <section className="py-2 sm:py-12 bg-white">
+        <section className="py-0 sm:py-12 bg-white">
           <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
               {categoryShowcase.map(({ id, link, image, title, subtitle }) => (
