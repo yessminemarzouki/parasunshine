@@ -15,8 +15,11 @@ import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import { CartNotificationProvider } from "./context/CartNotificationContext";
 import ScrollToTop from "./components/ScrollToTop";
-import GoogleCallback from "./pages/GoogleCallback";
 import FloatingQuizButton from "./components/FloatingQuizButton";
+
+// GoogleCallback est maintenant lazy (était en import direct)
+const GoogleCallback = lazy(() => import("./pages/GoogleCallback"));
+
 const AdminCategoryShowcase = lazy(
   () => import("./admin/pages/AdminCategoryShowcase"),
 );
@@ -90,6 +93,7 @@ const AdminPromoCodes = lazy(() => import("./admin/pages/AdminPromoCodes"));
 const AdminHomepageVideos = lazy(
   () => import("./admin/pages/AdminHomepageVideos"),
 );
+
 const PageLoader = () => (
   <div
     style={{
@@ -128,146 +132,479 @@ function App() {
               <CartNotificationProvider>
                 <ScrollToTop />
                 <LayoutWrapper>
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/products" element={<ProductList />} />
+                  {/* Suspense local par route → le Hero ne bloque plus */}
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Home />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/products"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <ProductList />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/products/:slug"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <ProductDetail />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="coffrets"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <BundleList />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="coffrets/:slug"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <BundleDetail />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/cart"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Cart />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/checkout"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Checkout />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/order-confirmation/:orderId"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <OrderConfirmation />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/login"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Login />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/register"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Register />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/account"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Account />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/account/orders/:orderId"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <OrderDetail />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/favoris"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Wishlist />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/blog"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Blog />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/blog/:id"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <BlogPost />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/quiz"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Quiz />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/forgot-password"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <ForgotPassword />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/reset-password"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <ResetPassword />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/auth/google/callback"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <GoogleCallback />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/terms"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Terms />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/mentions-legales"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <LegalNotice />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/politique-confidentialite"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <PrivacyPolicy />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/about"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <About />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/engagement"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Commitments />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/faq"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <FAQ />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/contact"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Contact />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/livraison"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Delivery />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/paiement"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <HowToOrder />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/garantie"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <Guarantee />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/admin/login"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminLogin />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="/admin"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminLayout />
+                        </Suspense>
+                      }
+                    >
                       <Route
-                        path="/products/:slug"
-                        element={<ProductDetail />}
-                      />
-                      <Route path="coffrets" element={<BundleList />} />
-                      <Route path="coffrets/:slug" element={<BundleDetail />} />
-                      <Route path="/cart" element={<Cart />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route
-                        path="/order-confirmation/:orderId"
-                        element={<OrderConfirmation />}
-                      />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/register" element={<Register />} />
-                      <Route path="/account" element={<Account />} />
-                      <Route
-                        path="/account/orders/:orderId"
-                        element={<OrderDetail />}
-                      />
-                      <Route path="/favoris" element={<Wishlist />} />
-                      <Route path="/blog" element={<Blog />} />
-                      <Route path="/blog/:id" element={<BlogPost />} />
-                      <Route path="/quiz" element={<Quiz />} />
-                      <Route
-                        path="/forgot-password"
-                        element={<ForgotPassword />}
+                        path="dashboard"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminDashboard />
+                          </Suspense>
+                        }
                       />
                       <Route
-                        path="/reset-password"
-                        element={<ResetPassword />}
+                        path="orders"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminOrders />
+                          </Suspense>
+                        }
                       />
                       <Route
-                        path="/auth/google/callback"
-                        element={<GoogleCallback />}
+                        path="products"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminProducts />
+                          </Suspense>
+                        }
                       />
-                      <Route path="/terms" element={<Terms />} />
                       <Route
-                        path="/mentions-legales"
-                        element={<LegalNotice />}
+                        path="bundles"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminBundles />
+                          </Suspense>
+                        }
                       />
                       <Route
-                        path="/politique-confidentialite"
-                        element={<PrivacyPolicy />}
+                        path="bundle-categories"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminBundleCategories />
+                          </Suspense>
+                        }
                       />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/engagement" element={<Commitments />} />
-                      <Route path="/faq" element={<FAQ />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/livraison" element={<Delivery />} />
-                      <Route path="/paiement" element={<HowToOrder />} />
-                      <Route path="/garantie" element={<Guarantee />} />
-                      <Route path="/admin/login" element={<AdminLogin />} />
-                      <Route path="/admin" element={<AdminLayout />}>
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="bundles" element={<AdminBundles />} />
+                      <Route
+                        path="stock-requests"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminStockRequests />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="promo-codes"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminPromoCodes />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="homepage-videos"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminHomepageVideos />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="users"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminUsers />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="reviews"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminReviews />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="contacts"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminContacts />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="newsletter"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminNewsletter />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="categories"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminCategories />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="blog"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminBlog />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="hygiene-section"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminHygieneSection />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="quiz"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminQuiz />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="shipping"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminShipping />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="site-settings"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminSiteSettings />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="category-showcase"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminCategoryShowcase />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="featured-section"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminFeaturedSection />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="hero-slides"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminHeroSlides />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="promotions"
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminPromotionsLayout />
+                          </Suspense>
+                        }
+                      >
                         <Route
-                          path="bundle-categories"
-                          element={<AdminBundleCategories />}
+                          index
+                          element={<Navigate to="banniere" replace />}
                         />
                         <Route
-                          path="stock-requests"
-                          element={<AdminStockRequests />}
+                          path="banniere"
+                          element={
+                            <Suspense fallback={<PageLoader />}>
+                              <AdminPromoBanner />
+                            </Suspense>
+                          }
                         />
                         <Route
-                          path="promo-codes"
-                          element={<AdminPromoCodes />}
+                          path="top-promo"
+                          element={
+                            <Suspense fallback={<PageLoader />}>
+                              <AdminPromoSection />
+                            </Suspense>
+                          }
                         />
                         <Route
-                          path="homepage-videos"
-                          element={<AdminHomepageVideos />}
-                        />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="reviews" element={<AdminReviews />} />
-                        <Route path="contacts" element={<AdminContacts />} />
-                        <Route
-                          path="newsletter"
-                          element={<AdminNewsletter />}
+                          path="assistant"
+                          element={
+                            <Suspense fallback={<PageLoader />}>
+                              <AdminPromotions />
+                            </Suspense>
+                          }
                         />
                         <Route
-                          path="categories"
-                          element={<AdminCategories />}
+                          path="campagnes"
+                          element={
+                            <Suspense fallback={<PageLoader />}>
+                              <AdminPromoCampaigns />
+                            </Suspense>
+                          }
                         />
-                        <Route path="blog" element={<AdminBlog />} />
-                        <Route
-                          path="hygiene-section"
-                          element={<AdminHygieneSection />}
-                        />
-                        <Route path="quiz" element={<AdminQuiz />} />
-                        <Route path="shipping" element={<AdminShipping />} />
-                        <Route
-                          path="site-settings"
-                          element={<AdminSiteSettings />}
-                        />
-                        <Route
-                          path="category-showcase"
-                          element={<AdminCategoryShowcase />}
-                        />
-                        <Route
-                          path="featured-section"
-                          element={<AdminFeaturedSection />}
-                        />
-                        <Route
-                          path="hero-slides"
-                          element={<AdminHeroSlides />}
-                        />
-                        <Route
-                          path="promotions"
-                          element={<AdminPromotionsLayout />}
-                        >
-                          <Route
-                            index
-                            element={<Navigate to="banniere" replace />}
-                          />
-                          <Route
-                            path="banniere"
-                            element={<AdminPromoBanner />}
-                          />
-                          <Route
-                            path="top-promo"
-                            element={<AdminPromoSection />}
-                          />
-                          <Route
-                            path="assistant"
-                            element={<AdminPromotions />}
-                          />
-                          <Route
-                            path="campagnes"
-                            element={<AdminPromoCampaigns />}
-                          />
-                        </Route>
                       </Route>
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
+                    </Route>
+                    <Route
+                      path="*"
+                      element={
+                        <Suspense fallback={<PageLoader />}>
+                          <NotFound />
+                        </Suspense>
+                      }
+                    />
+                  </Routes>
                 </LayoutWrapper>
               </CartNotificationProvider>
             </NotificationProvider>

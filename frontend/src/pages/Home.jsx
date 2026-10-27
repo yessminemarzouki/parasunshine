@@ -360,16 +360,8 @@ export default function Home() {
   const bestsellers = data.bestsellers || [];
   const maxIdx = Math.max(0, promoProducts.length - 5);
 
-  if (loading)
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <div
-          className="w-12 h-12 rounded-full animate-spin"
-          style={{ border: "4px solid #f3f4f6", borderTopColor: "#1a5242" }}
-        />
-        <p className="text-gray-400">Chargement...</p>
-      </div>
-    );
+  // Ne bloque plus l'affichage du Hero : on garde un état "loading"
+  // pour les sections du bas, mais le Hero s'affiche immédiatement.
 
   if (error)
     return (
@@ -461,7 +453,9 @@ export default function Home() {
       />
       {/* ── Hero ── */}
       <HeroCarousel />
-      <HomeVideoSection video={videoFor("after_hero")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_hero")} />
+      </Suspense>
 
       {/* ── Catégories showcase ── */}
       {categoryShowcase.length > 0 && (
@@ -508,7 +502,9 @@ export default function Home() {
           </div>
         </section>
       )}
-      <HomeVideoSection video={videoFor("after_category_showcase")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_category_showcase")} />
+      </Suspense>
 
       {/* ── Top Promo Carrousel ── */}
       {promoSection?.visible && promoSection.products?.length > 0 && (
@@ -604,7 +600,9 @@ export default function Home() {
           </div>
         </section>
       )}
-      <HomeVideoSection video={videoFor("after_top_promo")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_top_promo")} />
+      </Suspense>
 
       {/* ── Meilleures Ventes ── */}
       {bestsellers.length > 0 && (
@@ -646,7 +644,9 @@ export default function Home() {
           </div>
         </section>
       )}
-      <HomeVideoSection video={videoFor("after_bestsellers")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_bestsellers")} />
+      </Suspense>
 
       {/* ── Sélection Vedette ── */}
       {featuredVisible && featuredProducts.length > 0 && (
@@ -695,7 +695,9 @@ export default function Home() {
           </div>
         </section>
       )}
-      <HomeVideoSection video={videoFor("after_featured")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_featured")} />
+      </Suspense>
 
       {/* ── Nouveautés ── */}
       <section className="py-16" style={{ background: "#f9fafb" }}>
@@ -739,11 +741,17 @@ export default function Home() {
           )}
         </div>
       </section>
-      <HomeVideoSection video={videoFor("after_newest")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_newest")} />
+      </Suspense>
 
       {/* ── Hygiène ── */}
-      <HygieneSection />
-      <HomeVideoSection video={videoFor("after_hygiene")} />
+      <Suspense fallback={null}>
+        <HygieneSection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_hygiene")} />
+      </Suspense>
 
       {/* ── Marques partenaires ── */}
       {brands.length > 0 && (
@@ -824,7 +832,9 @@ export default function Home() {
         </section>
       )}
 
-      <HomeVideoSection video={videoFor("after_brands")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_brands")} />
+      </Suspense>
 
       {blogSectionVisible && blogPosts.length > 0 && (
         <section className="py-16 md:py-20 bg-white">
@@ -995,7 +1005,9 @@ export default function Home() {
           </div>
         </section>
       )}
-      <HomeVideoSection video={videoFor("after_blog")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_blog")} />
+      </Suspense>
 
       {/* ── Services ── */}
       <section
@@ -1056,7 +1068,9 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <HomeVideoSection video={videoFor("after_services")} />
+      <Suspense fallback={null}>
+        <HomeVideoSection video={videoFor("after_services")} />
+      </Suspense>
     </div>
   );
 }
