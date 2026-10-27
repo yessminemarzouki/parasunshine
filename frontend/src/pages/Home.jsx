@@ -32,6 +32,8 @@ const HygieneSection = lazy(() => import("../components/HygieneSection"));
 const HomeVideoSection = lazy(() => import("../components/HomeVideoSection"));
 import Seo from "../components/Seo";
 
+const MOBILE_CARDS_PER_VIEW = 2;
+
 const CONCERNS = [
   {
     to: "/products?category=visage",
@@ -279,7 +281,6 @@ export default function Home() {
     const cardIndex = pageIndex * MOBILE_CARDS_PER_VIEW;
     el.scrollTo({ left: cardIndex * (cardWidth + gap), behavior: "smooth" });
   };
-  const MOBILE_CARDS_PER_VIEW = 2;
 
   const scrollBrandsBy = (direction) => {
     const container = document.getElementById("brands-scroller");

@@ -1,28 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import prerender from "vite-plugin-prerender";
+import reactSsg from "vite-plugin-react-ssg";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // On pré-rend la page d'accueil pour un LCP instantané
-    prerender({
-      routes: ["/"],
-      rendererOptions: {
-        // On attend que l'API ait répondu et que le carrousel soit monté
-        renderAfterTime: 5000,
-      },
-    }),
-  ],
+  plugins: [react(), reactSsg()],
 
   build: {
     target: "es2015",
     minify: "terser",
     terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
+      compress: { drop_console: true, drop_debugger: true },
     },
     rollupOptions: {
       output: {
@@ -51,20 +38,14 @@ export default defineConfig({
     port: 3000,
     host: true,
     allowedHosts: true,
-    warmup: {
-      clientFiles: ["./src/pages/*.jsx", "./src/components/*.jsx"],
-    },
+    warmup: { clientFiles: ["./src/pages/*.jsx", "./src/components/*.jsx"] },
     proxy: {
       "/api": {
         target: "http://localhost:80",
         changeOrigin: true,
         timeout: 600000,
-        proxyTimeout: 600000,
       },
-      "/storage": {
-        target: "http://localhost:80",
-        changeOrigin: true,
-      },
+      "/storage": { target: "http://localhost:80", changeOrigin: true },
     },
   },
 

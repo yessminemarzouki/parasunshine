@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\HeroSlide;
+use Intervention\Image\Laravel\Facades\Image;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -30,7 +32,13 @@ class AdminHeroSlideController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('hero_slides', 'public');
+            $optimized = Image::read($request->file('image')->getRealPath())
+                ->scaleDown(width: 1600) // Largeur max pour un Hero desktop
+                ->toWebp(quality: 82);
+            $filename = 'hero-' . Str::lower(Str::random(10)) . '.webp';
+            $fullPath = 'hero_slides/' . $filename;
+            Storage::disk('public')->put($fullPath, (string) $optimized);
+            $data['image'] = $fullPath;
         }
 
         $slide = HeroSlide::create($data);
@@ -55,7 +63,13 @@ class AdminHeroSlideController extends Controller
             if ($heroSlide->image) {
                 Storage::disk('public')->delete($heroSlide->image);
             }
-            $data['image'] = $request->file('image')->store('hero_slides', 'public');
+            $optimized = Image::read($request->file('image')->getRealPath())
+                ->scaleDown(width: 1600)
+                ->toWebp(quality: 82);
+            $filename = 'hero-' . Str::lower(Str::random(10)) . '.webp';
+            $fullPath = 'hero_slides/' . $filename;
+            Storage::disk('public')->put($fullPath, (string) $optimized);
+            $data['image'] = $fullPath;
         }
 
         $heroSlide->update($data);

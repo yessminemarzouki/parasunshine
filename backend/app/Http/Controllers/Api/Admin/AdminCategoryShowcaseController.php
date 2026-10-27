@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use Intervention\Image\Laravel\Facades\Image;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\CategoryShowcase;
 use Illuminate\Http\Request;
@@ -29,7 +31,13 @@ class AdminCategoryShowcaseController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('category-showcase', 'public');
+            $optimized = Image::read($request->file('image')->getRealPath())
+                ->scaleDown(width: 800, height: 800) // Format carré pour les cartes
+                ->toWebp(quality: 82);
+            $filename = 'cat-showcase-' . Str::lower(Str::random(10)) . '.webp';
+            $fullPath = 'category-showcase/' . $filename;
+            Storage::disk('public')->put($fullPath, (string) $optimized);
+            $data['image'] = $fullPath;
         }
 
         $item = CategoryShowcase::create($data);
@@ -53,7 +61,13 @@ class AdminCategoryShowcaseController extends Controller
             if ($categoryShowcase->image) {
                 Storage::disk('public')->delete($categoryShowcase->image);
             }
-            $data['image'] = $request->file('image')->store('category-showcase', 'public');
+            $optimized = Image::read($request->file('image')->getRealPath())
+                ->scaleDown(width: 800, height: 800)
+                ->toWebp(quality: 82);
+            $filename = 'cat-showcase-' . Str::lower(Str::random(10)) . '.webp';
+            $fullPath = 'category-showcase/' . $filename;
+            Storage::disk('public')->put($fullPath, (string) $optimized);
+            $data['image'] = $fullPath;
         }
 
         $categoryShowcase->update($data);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, ShoppingCart, Bell, X, CheckCircle2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
@@ -440,4 +440,4 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);
