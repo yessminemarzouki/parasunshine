@@ -83,7 +83,7 @@ const HeroCarousel = () => {
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "auto"}
                   decoding="async"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
                 {(slide.title || slide.subtitle || slide.button_text) && (
                   <div
