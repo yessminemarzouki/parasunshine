@@ -17,7 +17,8 @@ export default function Seo({
   jsonLd,
 }) {
   const fullTitle = title ? `${title} - ${SITE_NAME}` : DEFAULT_TITLE;
-  const canonical = url ? `${SITE_URL}${url}` : SITE_URL;
+  // Canonical propre : on retire les paramètres de tri/pagination pour éviter le duplicate content
+  const canonical = url ? `${SITE_URL}${url.split("?")[0]}` : SITE_URL;
   // Après const canonical = ...
   const breadcrumb =
     url?.startsWith("/products") && url?.includes("category=")
