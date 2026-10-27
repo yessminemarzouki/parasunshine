@@ -5,6 +5,10 @@ import reactSsg from "vite-plugin-react-ssg";
 export default defineConfig({
   plugins: [react(), reactSsg()],
 
+  ssr: {
+    noExternal: ["vite-plugin-react-ssg", "react-router", "react-router-dom"],
+  },
+
   build: {
     target: "es2015",
     minify: "terser",
