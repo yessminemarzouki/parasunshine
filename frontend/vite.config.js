@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import reactSsg from "vite-plugin-react-ssg";
+// import reactSsg from "vite-plugin-react-ssg"; // Désactivé temporairement (conflit CJS/ESM)
 
 export default defineConfig({
-  plugins: [react(), reactSsg()],
+  // plugins: [react(), reactSsg()],
+  plugins: [react()],
 
   ssr: {
-    noExternal: ["vite-plugin-react-ssg", "react-router", "react-router-dom"],
+    noExternal: ["react-router", "react-router-dom"],
   },
 
   build: {
@@ -54,6 +55,12 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "lucide-react"],
+    include: [
+      "react",
+      "react-dom",
+      "react-router",
+      "react-router-dom",
+      "lucide-react",
+    ],
   },
 });
