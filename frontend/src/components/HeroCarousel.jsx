@@ -66,7 +66,7 @@ const HeroCarousel = () => {
 
   return (
     <div className="p-3 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
-      <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] rounded-[5px] overflow-hidden">
+      <div className="relative w-full aspect-[16/9] sm:aspect-[3/1] rounded-[5px] overflow-hidden">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{
@@ -80,12 +80,10 @@ const HeroCarousel = () => {
                 <img
                   src={getImageUrl(slide.image)}
                   alt={slide.title || "ParaSunshine"}
-                  width="1200"
-                  height="450"
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "auto"}
                   decoding="async"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 {(slide.title || slide.subtitle || slide.button_text) && (
                   <div
