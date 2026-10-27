@@ -8,7 +8,6 @@ const HeroCarousel = () => {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Chargement des slides via l'API
   useEffect(() => {
     getHeroSlides()
       .then((data) => {
@@ -20,7 +19,7 @@ const HeroCarousel = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // ✅ Preload dynamique de la première image dès que les slides sont chargés
+  // Preload dynamique de la première image
   useEffect(() => {
     if (slides.length === 0 || !slides[0].image) return;
 
@@ -38,7 +37,6 @@ const HeroCarousel = () => {
     };
   }, [slides]);
 
-  // ✅ Rotation automatique
   useEffect(() => {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
@@ -55,7 +53,7 @@ const HeroCarousel = () => {
     return `${STORAGE_URL}/${image}`;
   };
 
-  // ✅ Placeholder pendant le chargement (évite le CLS)
+  // Placeholder pendant le chargement
   if (loading) {
     return (
       <div className="p-3 sm:px-5 sm:py-4 md:px-5 md:py-5 max-w-[1500px] mx-auto">
@@ -64,7 +62,6 @@ const HeroCarousel = () => {
     );
   }
 
-  // ✅ Si aucune slide, on n'affiche rien
   if (slides.length === 0) return null;
 
   return (

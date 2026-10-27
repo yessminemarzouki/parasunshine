@@ -12,9 +12,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </React.StrictMode>,
 );
 
-// Nettoyage : désenregistre tous les SW existants
+// Désenregistre tous les Service Workers existants (force la mise à jour)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => registration.unregister());
+    registrations.forEach((registration) => {
+      registration.unregister();
+    });
   });
 }
