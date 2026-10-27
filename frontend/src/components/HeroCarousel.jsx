@@ -41,7 +41,12 @@ const HeroCarousel = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  // ✅ APRÈS les hooks : on peut return null
+  // Sur mobile (< 768px), on ne rend pas le carrousel.
+  // L'image statique dans index.html prend le relais pour un LCP ultra-rapide.
+  if (typeof window !== "undefined" && window.innerWidth < 768) {
+    return null;
+  }
+
   if (loading || slides.length === 0) return null;
 
   const goToSlide = (index) => setCurrentSlide(index);
