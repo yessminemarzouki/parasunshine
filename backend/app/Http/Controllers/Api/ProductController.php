@@ -721,8 +721,13 @@ class ProductController extends Controller
      */
     public function home()
     {
-        $data = Cache::remember('home_data', 60, function () {
-            $cols = $this->listColumns;
+        $data = Cache::remember('home_data', 300, function () {
+            $cols = [
+                'id', 'name', 'slug', 'price', 'promo_price', 'discount_percentage',
+                'image', 'stock', 'category_id', 'brand_id', 'is_featured', 'is_new',
+                'is_bestseller', 'is_promo', 'reference', 'short_description',
+                'has_sizes', 'has_colors', 'reference_price', 'loyalty_points',
+            ];
             $with = [
                 'category:id,name,slug',
                 'brand:id,name,slug,parent_id',
