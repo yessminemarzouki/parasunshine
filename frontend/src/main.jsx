@@ -4,15 +4,30 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.jsx";
 import "./styles/index.css";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <App />
-    </HelmetProvider>
-  </React.StrictMode>,
-);
+const rootElement = document.getElementById("root");
 
-// Désenregistre tous les Service Workers existants (force la mise à jour)
+// Si le HTML a été pré-rendu (en production), on utilise hydrateRoot
+// Sinon (en développement), on utilise createRoot classique
+if (rootElement.hasChildNodes()) {
+  ReactDOM.hydrateRoot(
+    rootElement,
+    <React.StrictMode>
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    </React.StrictMode>,
+  );
+} else {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    </React.StrictMode>,
+  );
+}
+
+// Désenregistre tous les Service Workers existants
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
     registrations.forEach((registration) => {

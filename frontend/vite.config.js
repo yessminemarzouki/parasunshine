@@ -1,11 +1,21 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import prerender from "vite-plugin-prerender";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // On pré-rend la page d'accueil pour un LCP instantané
+    prerender({
+      routes: ["/"],
+      rendererOptions: {
+        // On attend que l'API ait répondu et que le carrousel soit monté
+        renderAfterTime: 5000,
+      },
+    }),
+  ],
 
   build: {
-    // Optimisations de build
     target: "es2015",
     minify: "terser",
     terserOptions: {
@@ -14,12 +24,9 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-
-    // Code splitting avancé
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Vendors uniquement — les pages restent dans le chunk par défaut
           if (id.includes("node_modules")) {
             if (id.includes("@tiptap")) return "tiptap";
             if (id.includes("xlsx")) return "xlsx";
@@ -31,20 +38,12 @@ export default defineConfig({
             if (id.includes("framer-motion")) return "motion";
             return undefined;
           }
-
-          // Admin séparé
           if (id.includes("/admin/")) return "admin";
-
-          // Le HeroCarousel reste dans le chunk principal (pas de preload admin)
           if (id.includes("HeroCarousel")) return undefined;
-
-          // Pas de chunk par page
           return undefined;
         },
       },
     },
-
-    // Augmente la limite de warning
     chunkSizeWarningLimit: 1000,
   },
 
