@@ -35,6 +35,9 @@ export default defineConfig({
           // Admin séparé
           if (id.includes("/admin/")) return "admin";
 
+          // Le HeroCarousel reste dans le chunk principal (pas de preload admin)
+          if (id.includes("HeroCarousel")) return undefined;
+
           // Pas de chunk par page
           return undefined;
         },

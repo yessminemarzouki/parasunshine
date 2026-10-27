@@ -170,26 +170,46 @@
     <link
       rel="preload"
       as="image"
-      href="URL_DE_TON_IMAGE_HERO"
+      href="https://www.parasunshine.tn/storage/hero-slides/TON_IMAGE.webp"
       fetchpriority="high"
     />
     <script src="/preload.js" async></script>
   </head>
 
   <body>
+    <!-- CSS critique inline pour l'image Hero -->
+    <style>
+      #hero-static {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 12px;
+      }
+      #hero-static img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 5px;
+      }
+      @media (min-width: 640px) {
+        #hero-static img {
+          height: 320px;
+        }
+      }
+      @media (min-width: 768px) {
+        #hero-static img {
+          height: 450px;
+        }
+      }
+    </style>
+
     <div id="root">
-      <!-- Image Hero statique visible immédiatement (avant React) -->
-      <div style="max-width: 1500px; margin: 0 auto; padding: 12px">
+      <div id="hero-static">
         <img
-          src="URL_DE_TON_IMAGE_HERO"
+          src="https://www.parasunshine.tn/storage/hero-slides/TON_IMAGE.webp"
           alt="ParaSunshine"
-          style="
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 5px;
-          "
           fetchpriority="high"
+          width="1200"
+          height="450"
         />
       </div>
     </div>
