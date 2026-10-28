@@ -42,7 +42,6 @@ import {
   bulkToggleProducts,
   removePromoCampaignProducts,
 } from "../services/adminApi";
-import { downloadProductTemplate } from "../utils/excel";
 
 import {
   Badge,
