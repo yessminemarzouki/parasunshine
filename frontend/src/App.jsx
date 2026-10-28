@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -24,7 +24,20 @@ const PageLoader = () => (
   </div>
 );
 
-const LayoutWrapper = ({ children }) => {
+// Version SSG du layout : pas de useLocation, pas de FloatingQuizButton
+function LayoutSsg({ children }) {
+  return (
+    <div className="app">
+      <Header />
+      <Navigation />
+      <main className="main-content">{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
+// Version client du layout : utilise useLocation + FloatingQuizButton
+function LayoutClient({ children }) {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
 
@@ -37,21 +50,29 @@ const LayoutWrapper = ({ children }) => {
       {!isAdminPath && <FloatingQuizButton />}
     </div>
   );
-};
+}
 
 export default function App() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const Layout = isClient ? LayoutClient : LayoutSsg;
+
   return (
     <SiteSettingsProvider>
       <CartProvider>
         <WishlistProvider>
           <NotificationProvider>
             <CartNotificationProvider>
-              <ScrollToTop />
-              <LayoutWrapper>
+              {isClient && <ScrollToTop />}
+              <Layout>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
                 </Suspense>
-              </LayoutWrapper>
+              </Layout>
             </CartNotificationProvider>
           </NotificationProvider>
         </WishlistProvider>

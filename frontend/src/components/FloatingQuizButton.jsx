@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { Sparkles } from "lucide-react";
-
-export default function FloatingQuizButton() {
+import { useState, useEffect } from "react";
+// Composant interne qui utilise useLocation — monté uniquement côté client
+function FloatingQuizButtonInner() {
   const location = useLocation();
 
   if (location.pathname === "/quiz") return null;
@@ -54,4 +55,17 @@ export default function FloatingQuizButton() {
       </span>
     </Link>
   );
+}
+
+// Wrapper qui protège le build SSG
+export default function FloatingQuizButton() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) return null;
+
+  return <FloatingQuizButtonInner />;
 }
