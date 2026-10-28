@@ -3,7 +3,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { lazy } from "react";
 import App from "./App.jsx";
 import "./styles/index.css";
-import AdminWrapper from "./AdminWrapper.jsx";
+
+// Pages publiques
 const Home = lazy(() => import("./pages/Home"));
 const ProductList = lazy(() => import("./pages/ProductList"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -35,8 +36,8 @@ const BundleList = lazy(() => import("./pages/BundleList"));
 const BundleDetail = lazy(() => import("./pages/BundleDetail"));
 const GoogleCallback = lazy(() => import("./pages/GoogleCallback"));
 
-// Admin : un seul lazy
-const AdminApp = lazy(() => import("./AdminApp.jsx"));
+// Admin : un seul lazy, monté uniquement côté client via AdminWrapper
+const AdminWrapper = lazy(() => import("./AdminWrapper.jsx"));
 
 export const createRoot = ViteReactSSG(
   {
@@ -77,12 +78,10 @@ export const createRoot = ViteReactSSG(
           { path: "livraison", element: <Delivery /> },
           { path: "paiement", element: <HowToOrder /> },
           { path: "garantie", element: <Guarantee /> },
+          // ⚠️ La route admin est maintenant un enfant de App
+          { path: "admin/*", element: <AdminWrapper /> },
           { path: "*", element: <NotFound /> },
         ],
-      },
-      {
-        path: "/admin/*",
-        element: <AdminWrapper />,
       },
     ],
   },
