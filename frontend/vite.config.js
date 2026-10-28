@@ -11,6 +11,7 @@ export default defineConfig({
   build: {
     target: "es2015",
     minify: "terser",
+    modulePreload: false,
     terserOptions: {
       compress: { drop_console: true, drop_debugger: true },
     },
