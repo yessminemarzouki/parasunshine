@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { Head } from "vite-react-ssg";
 
 const SITE_URL = "https://www.parasunshine.tn";
 const SITE_NAME = "ParaSunshine";
@@ -47,7 +47,7 @@ export default function Seo({
         }
       : null;
   return (
-    <Helmet>
+    <Head>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
@@ -78,6 +78,6 @@ export default function Seo({
           </script>
         ));
       })()}
-    </Helmet>
+    </Head>
   );
 }

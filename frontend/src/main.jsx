@@ -1,5 +1,5 @@
 import { ViteReactSSG } from "vite-react-ssg";
-import { HelmetProvider } from "react-helmet-async";
+
 import { lazy } from "react";
 import App from "./App.jsx";
 import "./styles/index.css";
@@ -39,51 +39,48 @@ const GoogleCallback = lazy(() => import("./pages/GoogleCallback"));
 // Admin : un seul lazy
 const AdminWrapper = lazy(() => import("./AdminWrapper.jsx"));
 
-export const createRoot = ViteReactSSG(
-  {
-    routes: [
-      {
-        path: "/",
-        element: <App />,
-        children: [
-          { index: true, element: <Home /> },
-          { path: "products", element: <ProductList /> },
-          { path: "products/:slug", element: <ProductDetail /> },
-          { path: "coffrets", element: <BundleList /> },
-          { path: "coffrets/:slug", element: <BundleDetail /> },
-          { path: "cart", element: <Cart /> },
-          { path: "checkout", element: <Checkout /> },
-          {
-            path: "order-confirmation/:orderId",
-            element: <OrderConfirmation />,
-          },
-          { path: "login", element: <Login /> },
-          { path: "register", element: <Register /> },
-          { path: "account", element: <Account /> },
-          { path: "account/orders/:orderId", element: <OrderDetail /> },
-          { path: "favoris", element: <Wishlist /> },
-          { path: "blog", element: <Blog /> },
-          { path: "blog/:id", element: <BlogPost /> },
-          { path: "quiz", element: <Quiz /> },
-          { path: "forgot-password", element: <ForgotPassword /> },
-          { path: "reset-password", element: <ResetPassword /> },
-          { path: "auth/google/callback", element: <GoogleCallback /> },
-          { path: "terms", element: <Terms /> },
-          { path: "mentions-legales", element: <LegalNotice /> },
-          { path: "politique-confidentialite", element: <PrivacyPolicy /> },
-          { path: "about", element: <About /> },
-          { path: "engagement", element: <Commitments /> },
-          { path: "faq", element: <FAQ /> },
-          { path: "contact", element: <Contact /> },
-          { path: "livraison", element: <Delivery /> },
-          { path: "paiement", element: <HowToOrder /> },
-          { path: "garantie", element: <Guarantee /> },
-          // Admin : route enfant, donc AdminWrapper n'est monté que sur /admin/*
-          { path: "admin/*", element: <AdminWrapper /> },
-          { path: "*", element: <NotFound /> },
-        ],
-      },
-    ],
-  },
-  ({ app }) => <HelmetProvider>{app}</HelmetProvider>,
-);
+export const createRoot = ViteReactSSG({
+  routes: [
+    {
+      path: "/",
+      element: <App />,
+      children: [
+        { index: true, element: <Home /> },
+        { path: "products", element: <ProductList /> },
+        { path: "products/:slug", element: <ProductDetail /> },
+        { path: "coffrets", element: <BundleList /> },
+        { path: "coffrets/:slug", element: <BundleDetail /> },
+        { path: "cart", element: <Cart /> },
+        { path: "checkout", element: <Checkout /> },
+        {
+          path: "order-confirmation/:orderId",
+          element: <OrderConfirmation />,
+        },
+        { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
+        { path: "account", element: <Account /> },
+        { path: "account/orders/:orderId", element: <OrderDetail /> },
+        { path: "favoris", element: <Wishlist /> },
+        { path: "blog", element: <Blog /> },
+        { path: "blog/:id", element: <BlogPost /> },
+        { path: "quiz", element: <Quiz /> },
+        { path: "forgot-password", element: <ForgotPassword /> },
+        { path: "reset-password", element: <ResetPassword /> },
+        { path: "auth/google/callback", element: <GoogleCallback /> },
+        { path: "terms", element: <Terms /> },
+        { path: "mentions-legales", element: <LegalNotice /> },
+        { path: "politique-confidentialite", element: <PrivacyPolicy /> },
+        { path: "about", element: <About /> },
+        { path: "engagement", element: <Commitments /> },
+        { path: "faq", element: <FAQ /> },
+        { path: "contact", element: <Contact /> },
+        { path: "livraison", element: <Delivery /> },
+        { path: "paiement", element: <HowToOrder /> },
+        { path: "garantie", element: <Guarantee /> },
+        // Admin : route enfant, donc AdminWrapper n'est monté que sur /admin/*
+        { path: "admin/*", element: <AdminWrapper /> },
+        { path: "*", element: <NotFound /> },
+      ],
+    },
+  ],
+});
