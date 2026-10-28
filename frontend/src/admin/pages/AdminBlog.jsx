@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import RichTextEditor from "../components/RichTextEditor";
+import { lazy, Suspense } from "react";
+const RichTextEditor = lazy(() => import("../components/RichTextEditor"));
 import { STORAGE_URL } from "../../config/api";
 import {
   Plus,
@@ -568,12 +569,18 @@ export default function AdminBlog() {
             <div className="col-span-1 sm:col-span-2">
               <Label>Contenu *</Label>
               <div className="mt-1">
-                <RichTextEditor
-                  key={`content_${editPost?.id || "new"}`}
-                  value={form.content}
-                  onChange={(val) => f("content", val)}
-                  placeholder="Contenu de l'article..."
-                />
+                <Suspense
+                  fallback={
+                    <div className="h-[120px] bg-gray-50 rounded-xl animate-pulse" />
+                  }
+                >
+                  <RichTextEditor
+                    key={`content_${editPost?.id || "new"}`}
+                    value={form.content}
+                    onChange={(val) => f("content", val)}
+                    placeholder="Contenu de l'article..."
+                  />
+                </Suspense>
               </div>
             </div>
 
