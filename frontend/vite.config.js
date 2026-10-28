@@ -30,6 +30,8 @@ export default defineConfig({
             if (id.includes("framer-motion")) return "motion";
             return undefined;
           }
+          if (id.includes("AdminWrapper")) return "admin-wrapper";
+          if (id.includes("AdminApp")) return "admin-wrapper";
           if (id.includes("RichTextEditor")) return "rich-text-editor";
           if (id.includes("useCategories")) return undefined;
           if (id.includes("/admin/")) return "admin";
