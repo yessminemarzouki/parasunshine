@@ -31,6 +31,7 @@ export default defineConfig({
             return undefined;
           }
           if (id.includes("RichTextEditor")) return "rich-text-editor";
+          if (id.includes("useCategories")) return undefined;
           if (id.includes("/admin/")) return "admin";
           if (id.includes("HeroCarousel")) return undefined;
           return undefined;
