@@ -746,12 +746,7 @@ class ProductController extends Controller
                     ->where('is_new', true)
                     ->orderBy('created_at', 'desc')->limit(20)->get(),
 
-                'promotions' => Product::select($cols)->with($with)
-                    ->where(function ($q) {
-                        $q->where('is_promo', true)->orWhereNotNull('promo_campaign_id');
-                    })
-                    ->orderBy('created_at', 'desc')
-                    ->get(),
+
 
                 'products' => Product::select($cols)->with($with)
                     ->limit(15)->get(),
@@ -776,11 +771,7 @@ class ProductController extends Controller
             });
         }
 
-        // Pour "promotions", on formate ET on filtre uniquement les actives
-        $data['promotions'] = $data['promotions']
-            ->map(fn ($p) => $p->formatPromoForFrontend())
-            ->filter(fn ($p) => $p->is_promo)
-            ->values();
+
 
         return response()->json($data);
     }
