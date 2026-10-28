@@ -50,8 +50,9 @@ const AdminCategoryShowcase = lazy(
 export default function AdminApp() {
   return (
     <Routes>
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route path="login" element={<AdminLogin />} />
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="products" element={<AdminProducts />} />
