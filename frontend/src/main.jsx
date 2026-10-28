@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { lazy } from "react";
 import App from "./App.jsx";
 import "./styles/index.css";
-
+import AdminWrapper from "./AdminWrapper.jsx";
 const Home = lazy(() => import("./pages/Home"));
 const ProductList = lazy(() => import("./pages/ProductList"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -82,7 +82,7 @@ export const createRoot = ViteReactSSG(
       },
       {
         path: "/admin/*",
-        element: <AdminApp />,
+        element: <AdminWrapper />,
       },
     ],
   },
