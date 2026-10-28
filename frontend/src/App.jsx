@@ -24,8 +24,6 @@ const PageLoader = () => (
   </div>
 );
 
-// Version SSG : on n'affiche ni Header, ni Navigation, ni FloatingQuizButton
-// qui utilisent des hooks React Router
 function LayoutSsg({ children }) {
   return (
     <div className="app">
@@ -34,11 +32,9 @@ function LayoutSsg({ children }) {
   );
 }
 
-// Version client : tout est affiché
 function LayoutClient({ children }) {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
-
   return (
     <div className="app">
       {!isAdminPath && <Header />}
@@ -52,11 +48,9 @@ function LayoutClient({ children }) {
 
 export default function App() {
   const [isClient, setIsClient] = useState(false);
-
   useEffect(() => {
     setIsClient(true);
   }, []);
-
   const Layout = isClient ? LayoutClient : LayoutSsg;
 
   return (
