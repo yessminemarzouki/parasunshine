@@ -208,13 +208,12 @@ export default function Home() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      setData(await cachedFetch(`${API_URL}/home`));
 
-      // Tous ces appels passent désormais par cachedFetch (comme /home
-      // déjà), avec son cache mémoire de 5 minutes — évite de refaire ces
-      // 6 requêtes réseau à chaque retour sur Home, alors que React
-      // Router démonte/remonte entièrement le composant à la navigation.
+      // Toutes les requêtes partent en même temps, et l'état n'est mis à
+      // jour qu'une fois tout reçu : les sections apparaissent ensemble
+      // au lieu de s'insérer une à une (ce qui décalait la page).
       const [
+        homeData,
         blogData,
         brandsData,
         promoData,
@@ -223,6 +222,7 @@ export default function Home() {
         shippingData,
         videosData,
       ] = await Promise.all([
+        cachedFetch(`${API_URL}/home`),
         cachedFetch(`${API_URL}/blog`),
         cachedFetch(`${API_URL}/brands`),
         cachedFetch(`${API_URL}/promo-section`),
@@ -232,7 +232,7 @@ export default function Home() {
         cachedFetch(`${API_URL}/homepage-videos`),
       ]);
 
-      // Ne garder que les marques principales (pas les sous-marques)
+      setData(homeData);
       const mainBrands = (brandsData || []).filter((b) => !b.parent_id);
       setBrands(mainBrands);
       setBlogPosts(blogData.posts || []);
@@ -456,375 +456,393 @@ export default function Home() {
       />
       {/* ── Hero ── */}
       <HeroCarousel />
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_hero")} />
-      </Suspense>
+      {loading ? (
+        <div style={{ minHeight: 1600 }} aria-hidden="true" />
+      ) : (
+        <>
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_hero")} />
+          </Suspense>
 
-      {/* ── Catégories showcase ── */}
-      {categoryShowcase.length > 0 && (
-        <section className="pt-0 pb-6 sm:py-12 bg-white">
-          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-              {categoryShowcase.map(({ id, link, image, title, subtitle }) => (
-                <Link
-                  key={id}
-                  to={link}
-                  className="relative h-48 sm:h-56 lg:h-64 rounded-lg overflow-hidden block group"
-                  style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
-                >
-                  <img
-                    src={`${STORAGE_URL}/${image}`}
-                    alt={title}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0 flex flex-col justify-end p-8"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(0,0,0,0.85), transparent)",
-                    }}
-                  >
-                    <h3
-                      className="text-white text-[1.4rem] mb-1.5"
-                      style={{
-                        fontWeight: 530,
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {title}
-                    </h3>
-                    {subtitle && (
-                      <p className="text-white/90 text-[0.95rem]">{subtitle}</p>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_category_showcase")} />
-      </Suspense>
+          {/* ── Catégories showcase ── */}
+          {categoryShowcase.length > 0 && (
+            <section className="pt-0 pb-6 sm:py-12 bg-white">
+              <div
+                style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+                  {categoryShowcase.map(
+                    ({ id, link, image, title, subtitle }) => (
+                      <Link
+                        key={id}
+                        to={link}
+                        className="relative h-48 sm:h-56 lg:h-64 rounded-lg overflow-hidden block group"
+                        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
+                      >
+                        <img
+                          src={`${STORAGE_URL}/${image}`}
+                          alt={title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div
+                          className="absolute inset-0 flex flex-col justify-end p-8"
+                          style={{
+                            background:
+                              "linear-gradient(to top, rgba(0,0,0,0.85), transparent)",
+                          }}
+                        >
+                          <h3
+                            className="text-white text-[1.4rem] mb-1.5"
+                            style={{
+                              fontWeight: 530,
+                              fontFamily: "'Inter', sans-serif",
+                            }}
+                          >
+                            {title}
+                          </h3>
+                          {subtitle && (
+                            <p className="text-white/90 text-[0.95rem]">
+                              {subtitle}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ),
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_category_showcase")} />
+          </Suspense>
 
-      {/* ── Top Promo Carrousel ── */}
-      {promoSection?.visible && promoSection.products?.length > 0 && (
-        <section
-          className="py-10"
-          style={{ background: promoSection.background_color }}
-        >
-          <div
-            className="relative mx-auto px-5 md:px-14"
-            style={{ maxWidth: 1400 }}
-          >
-            <SectionTitle
-              style={{
-                color: promoSection.title_color,
-                fontSize: "1.8rem",
-              }}
-            >
-              {promoSection.title}
-            </SectionTitle>
-
-            <button
-              onClick={() => setPromoIdx((p) => Math.max(p - 1, 0))}
-              disabled={promoIdx === 0}
-              className="hidden md:flex absolute left-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            <div
-              ref={promoScrollRef}
-              onScroll={handlePromoScroll}
-              className="overflow-x-auto md:overflow-hidden w-full pt-2 pb-4 md:py-3 snap-x snap-mandatory md:snap-none scrollbar-hide"
+          {/* ── Top Promo Carrousel ── */}
+          {promoSection?.visible && promoSection.products?.length > 0 && (
+            <section
+              className="py-10"
+              style={{ background: promoSection.background_color }}
             >
               <div
-                className="flex gap-3 md:gap-6 transition-transform duration-400"
-                style={
-                  isDesktop
-                    ? { transform: `translateX(-${promoIdx * 20}%)` }
-                    : undefined
-                }
+                className="relative mx-auto px-5 md:px-14"
+                style={{ maxWidth: 1400 }}
               >
-                {promoSection.products.map((p) => (
+                <SectionTitle
+                  style={{
+                    color: promoSection.title_color,
+                    fontSize: "1.8rem",
+                  }}
+                >
+                  {promoSection.title}
+                </SectionTitle>
+
+                <button
+                  onClick={() => setPromoIdx((p) => Math.max(p - 1, 0))}
+                  disabled={promoIdx === 0}
+                  className="hidden md:flex absolute left-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                <div
+                  ref={promoScrollRef}
+                  onScroll={handlePromoScroll}
+                  className="overflow-x-auto md:overflow-hidden w-full pt-2 pb-4 md:py-3 snap-x snap-mandatory md:snap-none scrollbar-hide"
+                >
                   <div
-                    key={p.id}
-                    className="flex-none w-[46%] sm:w-[32%] md:w-auto snap-start"
+                    className="flex gap-3 md:gap-6 transition-transform duration-400"
                     style={
                       isDesktop
-                        ? { width: "calc((100% - 96px) / 5)" }
+                        ? { transform: `translateX(-${promoIdx * 20}%)` }
                         : undefined
                     }
                   >
-                    <ProductCard product={p} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="md:hidden flex justify-center gap-1.5 mt-1">
-              {Array.from({
-                length: Math.ceil(
-                  promoSection.products.length / MOBILE_CARDS_PER_VIEW,
-                ),
-              }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToPromoPage(i)}
-                  aria-label={`Aller à la page ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    mobilePromoActive === i
-                      ? "w-5 bg-[#1a5242]"
-                      : "w-1.5 bg-[#1a5242]/25"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={() =>
-                setPromoIdx((p) =>
-                  Math.min(
-                    p + 1,
-                    Math.max(0, promoSection.products.length - 5),
-                  ),
-                )
-              }
-              disabled={
-                promoIdx >= Math.max(0, promoSection.products.length - 5)
-              }
-              className="hidden md:flex absolute right-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </section>
-      )}
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_top_promo")} />
-      </Suspense>
-
-      {/* ── Meilleures Ventes ── */}
-      {bestsellers.length > 0 && (
-        <section className="py-16 bg-white">
-          <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: "#fef2f2" }}
-                  >
-                    <TrendingUp size={16} className="text-red-500" />
-                  </div>
-                  <span className="text-[11.5px] font-bold uppercase tracking-widest text-red-500">
-                    Les plus vendus
-                  </span>
-                </div>
-                <h2
-                  className="text-[1.6rem] font-bold text-gray-900"
-                  style={{ fontFamily: "Segoe UI, sans-serif" }}
-                >
-                  Meilleures ventes
-                </h2>
-              </div>
-              <Link
-                to="/products?bestseller=true"
-                className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
-                style={{ color: "#1a5242" }}
-              >
-                Voir tout <ArrowRight size={15} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
-              {bestsellers.slice(0, isDesktop ? 10 : 14).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_bestsellers")} />
-      </Suspense>
-
-      {/* ── Sélection Vedette ── */}
-      {featuredVisible && featuredProducts.length > 0 && (
-        <section className="py-16 bg-white">
-          <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: "#fdf9ec" }}
-                  >
-                    <Star
-                      size={16}
-                      style={{ color: "#d4af37" }}
-                      fill="#d4af37"
-                    />
-                  </div>
-                  <span
-                    className="text-[11.5px] font-bold uppercase tracking-widest"
-                    style={{ color: "#d4af37" }}
-                  >
-                    Sélection ParaSunshine
-                  </span>
-                </div>
-                <h2
-                  className="text-[1.6rem] font-bold text-gray-900"
-                  style={{ fontFamily: "Segoe UI, sans-serif" }}
-                >
-                  Nos produits vedettes
-                </h2>
-              </div>
-              <Link
-                to="/products?featured=true"
-                className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
-                style={{ color: "#1a5242" }}
-              >
-                Voir tout <ArrowRight size={15} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-              {featuredProducts.slice(0, isDesktop ? 10 : 14).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_featured")} />
-      </Suspense>
-
-      {/* ── Nouveautés ── */}
-      <section className="py-16" style={{ background: "#f9fafb" }}>
-        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-2.5 mb-2">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: "#f0fdf4" }}
-                >
-                  <Sparkles size={16} style={{ color: "#16a34a" }} />
-                </div>
-                <span className="text-[11.5px] font-bold uppercase tracking-widest text-green-600">
-                  Nouveautés
-                </span>
-              </div>
-              <h2
-                className="text-[1.6rem] font-bold text-gray-900"
-                style={{ fontFamily: "Segoe UI, sans-serif" }}
-              >
-                Nos nouveautés
-              </h2>
-            </div>
-            <Link
-              to="/products?new=true"
-              className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
-              style={{ color: "#1a5242" }}
-            >
-              Voir tout <ArrowRight size={15} />
-            </Link>
-          </div>
-          {data.newest?.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-              {data.newest.slice(0, isDesktop ? 10 : 14).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-400 py-10">Aucune nouveauté</p>
-          )}
-        </div>
-      </section>
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_newest")} />
-      </Suspense>
-
-      {/* ── Hygiène ── */}
-      <Suspense fallback={null}>
-        <HygieneSection />
-      </Suspense>
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_hygiene")} />
-      </Suspense>
-
-      {/* ── Marques partenaires ── */}
-      {brands.length > 0 && (
-        <section className="py-16 bg-white">
-          <div
-            className="relative mx-auto px-5 md:px-14"
-            style={{ maxWidth: 1400 }}
-          >
-            <SectionTitle>Nos marques partenaires</SectionTitle>
-
-            {/* Flèche gauche */}
-            <button
-              onClick={() => scrollBrandsBy(-1)}
-              aria-label="Marques précédentes"
-              className="hidden md:flex absolute left-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-20 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            {/* Le conteneur qui gère l'animation ET le scroll natif */}
-            <div
-              id="brands-scroller"
-              className="relative overflow-x-auto py-5 scrollbar-hide group cursor-grab active:cursor-grabbing"
-              style={{
-                maskImage:
-                  "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
-                WebkitMaskImage:
-                  "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
-              }}
-            >
-              <div
-                className="flex w-max group-hover:[animation-play-state:paused]"
-                style={{
-                  willChange: "transform",
-                  animation: `scrollMarquee ${Math.max(40, brands.length * 4)}s linear infinite`,
-                }}
-              >
-                {[1, 2].map((loop) => (
-                  <div key={loop} className="flex gap-10 pr-10">
-                    {brands.map((brand) => (
-                      <button
-                        key={`${loop}-${brand.id}`}
-                        type="button"
-                        onClick={() => handleBrandClick(brand)}
-                        className="flex-none w-48 h-20 md:w-52 md:h-28 flex items-center justify-center p-2 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all"
+                    {promoSection.products.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex-none w-[46%] sm:w-[32%] md:w-auto snap-start"
+                        style={
+                          isDesktop
+                            ? { width: "calc((100% - 96px) / 5)" }
+                            : undefined
+                        }
                       >
-                        <img
-                          src={`${STORAGE_URL}/${brand.logo}`}
-                          alt={brand.name}
-                          loading="lazy"
-                          draggable={false}
-                          className="max-w-full max-h-full object-contain transition-all duration-300 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100 select-none"
-                        />
-                      </button>
+                        <ProductCard product={p} />
+                      </div>
                     ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Flèche droite */}
-            <button
-              onClick={() => scrollBrandsBy(1)}
-              aria-label="Marques suivantes"
-              className="hidden md:flex absolute right-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-20 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
+                <div className="md:hidden flex justify-center gap-1.5 mt-1">
+                  {Array.from({
+                    length: Math.ceil(
+                      promoSection.products.length / MOBILE_CARDS_PER_VIEW,
+                    ),
+                  }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => scrollToPromoPage(i)}
+                      aria-label={`Aller à la page ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        mobilePromoActive === i
+                          ? "w-5 bg-[#1a5242]"
+                          : "w-1.5 bg-[#1a5242]/25"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setPromoIdx((p) =>
+                      Math.min(
+                        p + 1,
+                        Math.max(0, promoSection.products.length - 5),
+                      ),
+                    )
+                  }
+                  disabled={
+                    promoIdx >= Math.max(0, promoSection.products.length - 5)
+                  }
+                  className="hidden md:flex absolute right-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </section>
+          )}
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_top_promo")} />
+          </Suspense>
+
+          {/* ── Meilleures Ventes ── */}
+          {bestsellers.length > 0 && (
+            <section className="py-16 bg-white">
+              <div
+                style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: "#fef2f2" }}
+                      >
+                        <TrendingUp size={16} className="text-red-500" />
+                      </div>
+                      <span className="text-[11.5px] font-bold uppercase tracking-widest text-red-500">
+                        Les plus vendus
+                      </span>
+                    </div>
+                    <h2
+                      className="text-[1.6rem] font-bold text-gray-900"
+                      style={{ fontFamily: "Segoe UI, sans-serif" }}
+                    >
+                      Meilleures ventes
+                    </h2>
+                  </div>
+                  <Link
+                    to="/products?bestseller=true"
+                    className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
+                    style={{ color: "#1a5242" }}
+                  >
+                    Voir tout <ArrowRight size={15} />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
+                  {bestsellers.slice(0, isDesktop ? 10 : 14).map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_bestsellers")} />
+          </Suspense>
+
+          {/* ── Sélection Vedette ── */}
+          {featuredVisible && featuredProducts.length > 0 && (
+            <section className="py-16 bg-white">
+              <div
+                style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: "#fdf9ec" }}
+                      >
+                        <Star
+                          size={16}
+                          style={{ color: "#d4af37" }}
+                          fill="#d4af37"
+                        />
+                      </div>
+                      <span
+                        className="text-[11.5px] font-bold uppercase tracking-widest"
+                        style={{ color: "#d4af37" }}
+                      >
+                        Sélection ParaSunshine
+                      </span>
+                    </div>
+                    <h2
+                      className="text-[1.6rem] font-bold text-gray-900"
+                      style={{ fontFamily: "Segoe UI, sans-serif" }}
+                    >
+                      Nos produits vedettes
+                    </h2>
+                  </div>
+                  <Link
+                    to="/products?featured=true"
+                    className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
+                    style={{ color: "#1a5242" }}
+                  >
+                    Voir tout <ArrowRight size={15} />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
+                  {featuredProducts.slice(0, isDesktop ? 10 : 14).map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_featured")} />
+          </Suspense>
+
+          {/* ── Nouveautés ── */}
+          <section className="py-16" style={{ background: "#f9fafb" }}>
+            <div
+              style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}
             >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-          <style>{`
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "#f0fdf4" }}
+                    >
+                      <Sparkles size={16} style={{ color: "#16a34a" }} />
+                    </div>
+                    <span className="text-[11.5px] font-bold uppercase tracking-widest text-green-600">
+                      Nouveautés
+                    </span>
+                  </div>
+                  <h2
+                    className="text-[1.6rem] font-bold text-gray-900"
+                    style={{ fontFamily: "Segoe UI, sans-serif" }}
+                  >
+                    Nos nouveautés
+                  </h2>
+                </div>
+                <Link
+                  to="/products?new=true"
+                  className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
+                  style={{ color: "#1a5242" }}
+                >
+                  Voir tout <ArrowRight size={15} />
+                </Link>
+              </div>
+              {data.newest?.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
+                  {data.newest.slice(0, isDesktop ? 10 : 14).map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-400 py-10">
+                  Aucune nouveauté
+                </p>
+              )}
+            </div>
+          </section>
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_newest")} />
+          </Suspense>
+
+          {/* ── Hygiène ── */}
+          <Suspense fallback={null}>
+            <HygieneSection />
+          </Suspense>
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_hygiene")} />
+          </Suspense>
+
+          {/* ── Marques partenaires ── */}
+          {brands.length > 0 && (
+            <section className="py-16 bg-white">
+              <div
+                className="relative mx-auto px-5 md:px-14"
+                style={{ maxWidth: 1400 }}
+              >
+                <SectionTitle>Nos marques partenaires</SectionTitle>
+
+                {/* Flèche gauche */}
+                <button
+                  onClick={() => scrollBrandsBy(-1)}
+                  aria-label="Marques précédentes"
+                  className="hidden md:flex absolute left-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-20 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                {/* Le conteneur qui gère l'animation ET le scroll natif */}
+                <div
+                  id="brands-scroller"
+                  className="relative overflow-x-auto py-5 scrollbar-hide group cursor-grab active:cursor-grabbing"
+                  style={{
+                    maskImage:
+                      "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
+                    WebkitMaskImage:
+                      "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
+                  }}
+                >
+                  <div
+                    className="flex w-max group-hover:[animation-play-state:paused]"
+                    style={{
+                      willChange: "transform",
+                      animation: `scrollMarquee ${Math.max(40, brands.length * 4)}s linear infinite`,
+                    }}
+                  >
+                    {[1, 2].map((loop) => (
+                      <div key={loop} className="flex gap-10 pr-10">
+                        {brands.map((brand) => (
+                          <button
+                            key={`${loop}-${brand.id}`}
+                            type="button"
+                            onClick={() => handleBrandClick(brand)}
+                            className="flex-none w-48 h-20 md:w-52 md:h-28 flex items-center justify-center p-2 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all"
+                          >
+                            <img
+                              src={`${STORAGE_URL}/${brand.logo}`}
+                              alt={brand.name}
+                              loading="lazy"
+                              draggable={false}
+                              className="max-w-full max-h-full object-contain transition-all duration-300 md:grayscale md:opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-100 select-none"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Flèche droite */}
+                <button
+                  onClick={() => scrollBrandsBy(1)}
+                  aria-label="Marques suivantes"
+                  className="hidden md:flex absolute right-0 top-[calc(50%+24px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-20 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242]"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+              <style>{`
             @keyframes scrollMarquee { 
               0% { transform: translateX(0); } 
               100% { transform: translateX(-50%); } 
@@ -832,248 +850,255 @@ export default function Home() {
             .scrollbar-hide::-webkit-scrollbar { display: none; }
             .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
           `}</style>
-        </section>
-      )}
+            </section>
+          )}
 
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_brands")} />
-      </Suspense>
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_brands")} />
+          </Suspense>
 
-      {blogSectionVisible && blogPosts.length > 0 && (
-        <section className="py-16 md:py-20 bg-white">
-          <div
-            className="relative mx-auto px-5 md:px-14"
-            style={{ maxWidth: 1400 }}
-          >
-            {/* Titre + lien "Voir tous" */}
-            <div className="flex items-end justify-between mb-8 md:mb-10 flex-wrap gap-3">
-              <div>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: "#f0f7f4" }}
-                  >
-                    <Sparkles size={16} style={{ color: "#1a5242" }} />
+          {blogSectionVisible && blogPosts.length > 0 && (
+            <section className="py-16 md:py-20 bg-white">
+              <div
+                className="relative mx-auto px-5 md:px-14"
+                style={{ maxWidth: 1400 }}
+              >
+                {/* Titre + lien "Voir tous" */}
+                <div className="flex items-end justify-between mb-8 md:mb-10 flex-wrap gap-3">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: "#f0f7f4" }}
+                      >
+                        <Sparkles size={16} style={{ color: "#1a5242" }} />
+                      </div>
+                      <span
+                        className="text-[11.5px] font-bold uppercase tracking-widest"
+                        style={{ color: "#1a5242" }}
+                      >
+                        Notre blog
+                      </span>
+                    </div>
+                    <h2
+                      className="text-[1.5rem] md:text-[1.6rem] font-bold text-gray-900"
+                      style={{ fontFamily: "Segoe UI, sans-serif" }}
+                    >
+                      Actualités & Conseils
+                    </h2>
                   </div>
-                  <span
-                    className="text-[11.5px] font-bold uppercase tracking-widest"
+                  <Link
+                    to="/blog"
+                    className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
                     style={{ color: "#1a5242" }}
                   >
-                    Notre blog
-                  </span>
+                    Voir tous les articles <ArrowRight size={15} />
+                  </Link>
                 </div>
-                <h2
-                  className="text-[1.5rem] md:text-[1.6rem] font-bold text-gray-900"
-                  style={{ fontFamily: "Segoe UI, sans-serif" }}
+
+                {/* Flèche gauche (desktop) */}
+                {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
+                  <button
+                    onClick={() => setBlogSlide((p) => Math.max(p - 1, 0))}
+                    disabled={blogSlide === 0}
+                    className="hidden md:flex absolute left-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Articles précédents"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                )}
+
+                {/* Carrousel */}
+                <div
+                  ref={blogScrollRef}
+                  onScroll={handleBlogScroll}
+                  className="overflow-x-auto md:overflow-hidden w-full pt-2 pb-4 md:py-3 snap-x snap-mandatory md:snap-none scrollbar-hide"
                 >
-                  Actualités & Conseils
-                </h2>
-              </div>
-              <Link
-                to="/blog"
-                className="flex items-center gap-2 text-[13.5px] font-semibold hover:gap-3 transition-all"
-                style={{ color: "#1a5242" }}
-              >
-                Voir tous les articles <ArrowRight size={15} />
-              </Link>
-            </div>
-
-            {/* Flèche gauche (desktop) */}
-            {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
-              <button
-                onClick={() => setBlogSlide((p) => Math.max(p - 1, 0))}
-                disabled={blogSlide === 0}
-                className="hidden md:flex absolute left-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Articles précédents"
-              >
-                <ChevronLeft size={20} />
-              </button>
-            )}
-
-            {/* Carrousel */}
-            <div
-              ref={blogScrollRef}
-              onScroll={handleBlogScroll}
-              className="overflow-x-auto md:overflow-hidden w-full pt-2 pb-4 md:py-3 snap-x snap-mandatory md:snap-none scrollbar-hide"
-            >
-              <div
-                className="flex gap-5 md:gap-6 transition-transform duration-500"
-                style={
-                  isDesktop
-                    ? {
-                        transform: `translateX(-${blogSlide * (100 / CARDS_PER_PAGE_DESKTOP)}%)`,
-                      }
-                    : undefined
-                }
-              >
-                {blogPosts.map((post) => (
                   <div
-                    key={post.id}
-                    className="flex-none w-[85%] sm:w-[60%] md:w-auto snap-start"
+                    className="flex gap-5 md:gap-6 transition-transform duration-500"
                     style={
                       isDesktop
                         ? {
-                            width: `calc((100% - ${(CARDS_PER_PAGE_DESKTOP - 1) * 24}px) / ${CARDS_PER_PAGE_DESKTOP})`,
+                            transform: `translateX(-${blogSlide * (100 / CARDS_PER_PAGE_DESKTOP)}%)`,
                           }
                         : undefined
                     }
                   >
-                    <article className="flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden h-full transition-all hover:-translate-y-1 hover:shadow-lg">
-                      <Link
-                        to={`/blog/${post.id}`}
-                        className="block h-52 overflow-hidden bg-gray-50 group"
+                    {blogPosts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="flex-none w-[85%] sm:w-[60%] md:w-auto snap-start"
+                        style={
+                          isDesktop
+                            ? {
+                                width: `calc((100% - ${(CARDS_PER_PAGE_DESKTOP - 1) * 24}px) / ${CARDS_PER_PAGE_DESKTOP})`,
+                              }
+                            : undefined
+                        }
                       >
-                        <img
-                          src={
-                            post.image
-                              ? `${STORAGE_URL}/${post.image}`
-                              : post.image
-                          }
-                          alt={post.title}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </Link>
-                      <div className="p-5 md:p-6 flex flex-col flex-1">
-                        <span
-                          className="inline-block w-fit text-[10.5px] font-bold uppercase tracking-widest mb-3 px-2.5 py-1 rounded-full"
-                          style={{ background: "#f0f7f4", color: "#1a5242" }}
-                        >
-                          {post.category}
-                        </span>
-                        <h3 className="mb-3 leading-snug">
+                        <article className="flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden h-full transition-all hover:-translate-y-1 hover:shadow-lg">
                           <Link
                             to={`/blog/${post.id}`}
-                            className="text-gray-900 text-[1.1rem] font-bold hover:text-[#1a5242] transition-colors line-clamp-2"
+                            className="block h-52 overflow-hidden bg-gray-50 group"
                           >
-                            {post.title}
+                            <img
+                              src={
+                                post.image
+                                  ? `${STORAGE_URL}/${post.image}`
+                                  : post.image
+                              }
+                              alt={post.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
                           </Link>
-                        </h3>
-                        <p className="text-gray-500 text-[13.5px] leading-relaxed mb-5 line-clamp-3 flex-1">
-                          {post.excerpt}
-                        </p>
-                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                          <time className="text-[0.8rem] text-gray-400 font-medium">
-                            {new Date(post.created_at).toLocaleDateString(
-                              "fr-FR",
-                            )}
-                          </time>
-                          <Link
-                            to={`/blog/${post.id}`}
-                            className="inline-flex items-center gap-1.5 text-[0.82rem] font-bold uppercase tracking-wide hover:gap-2 transition-all"
-                            style={{ color: "#1a5242" }}
-                          >
-                            Lire <ArrowRight size={13} />
-                          </Link>
-                        </div>
+                          <div className="p-5 md:p-6 flex flex-col flex-1">
+                            <span
+                              className="inline-block w-fit text-[10.5px] font-bold uppercase tracking-widest mb-3 px-2.5 py-1 rounded-full"
+                              style={{
+                                background: "#f0f7f4",
+                                color: "#1a5242",
+                              }}
+                            >
+                              {post.category}
+                            </span>
+                            <h3 className="mb-3 leading-snug">
+                              <Link
+                                to={`/blog/${post.id}`}
+                                className="text-gray-900 text-[1.1rem] font-bold hover:text-[#1a5242] transition-colors line-clamp-2"
+                              >
+                                {post.title}
+                              </Link>
+                            </h3>
+                            <p className="text-gray-500 text-[13.5px] leading-relaxed mb-5 line-clamp-3 flex-1">
+                              {post.excerpt}
+                            </p>
+                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                              <time className="text-[0.8rem] text-gray-400 font-medium">
+                                {new Date(post.created_at).toLocaleDateString(
+                                  "fr-FR",
+                                )}
+                              </time>
+                              <Link
+                                to={`/blog/${post.id}`}
+                                className="inline-flex items-center gap-1.5 text-[0.82rem] font-bold uppercase tracking-wide hover:gap-2 transition-all"
+                                style={{ color: "#1a5242" }}
+                              >
+                                Lire <ArrowRight size={13} />
+                              </Link>
+                            </div>
+                          </div>
+                        </article>
                       </div>
-                    </article>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Flèche droite (desktop) */}
+                {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
+                  <button
+                    onClick={() =>
+                      setBlogSlide((p) => Math.min(p + 1, blogTotalPages - 1))
+                    }
+                    disabled={blogSlide >= blogTotalPages - 1}
+                    className="hidden md:flex absolute right-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Articles suivants"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                )}
+
+                {/* Dots mobile */}
+                <div className="md:hidden flex justify-center gap-1.5 mt-4">
+                  {Array.from({
+                    length: Math.ceil(blogPosts.length / CARDS_PER_PAGE_MOBILE),
+                  }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => scrollToBlogPage(i)}
+                      aria-label={`Aller à la page ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        mobileBlogActive === i
+                          ? "w-5 bg-[#1a5242]"
+                          : "w-1.5 bg-[#1a5242]/25"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_blog")} />
+          </Suspense>
+
+          {/* ── Services ── */}
+          <section
+            className="py-16 border-t border-gray-100"
+            style={{ background: "#f6f9f7" }}
+          >
+            <div
+              style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
+                {[
+                  {
+                    icon: Truck,
+                    val: `${shipping.delivery_days_min}–${shipping.delivery_days_max}j`,
+                    title: "Livraison rapide",
+                    sub: "Partout en Tunisie",
+                  },
+                  {
+                    icon: HeadphonesIcon,
+                    val: "24h",
+                    title: "Service client réactif",
+                    sub: "Du lundi au samedi 9h–20h",
+                  },
+                  {
+                    icon: Package,
+                    val: "100%",
+                    title: "Produits authentiques",
+                    sub: "Garantie d'origine officielle",
+                  },
+                ].map(({ icon: Icon, val, title, sub }) => (
+                  <div
+                    key={title}
+                    className="flex items-start gap-4 py-7 px-7 rounded-2xl bg-white border border-gray-100 transition-all hover:-translate-y-0.5"
+                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}
+                  >
+                    <div
+                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ background: "#FFF3B0" }}
+                    >
+                      <Icon size={20} style={{ color: "#355847" }} />
+                    </div>
+                    <div>
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <p
+                          className="text-[1.5rem] font-bold leading-none"
+                          style={{ color: "#1a5242" }}
+                        >
+                          {val}
+                        </p>
+                        <p className="text-[14px] font-bold text-gray-900">
+                          {title}
+                        </p>
+                      </div>
+                      <p className="text-[13px] text-gray-500 leading-relaxed">
+                        {sub}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Flèche droite (desktop) */}
-            {blogPosts.length > CARDS_PER_PAGE_DESKTOP && (
-              <button
-                onClick={() =>
-                  setBlogSlide((p) => Math.min(p + 1, blogTotalPages - 1))
-                }
-                disabled={blogSlide >= blogTotalPages - 1}
-                className="hidden md:flex absolute right-0 top-[calc(50%+40px)] -translate-y-1/2 w-11 h-11 rounded-full bg-white border-2 border-black/10 items-center justify-center z-10 shadow-md transition-all hover:bg-[#1a5242] hover:text-white hover:border-[#1a5242] disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Articles suivants"
-              >
-                <ChevronRight size={20} />
-              </button>
-            )}
-
-            {/* Dots mobile */}
-            <div className="md:hidden flex justify-center gap-1.5 mt-4">
-              {Array.from({
-                length: Math.ceil(blogPosts.length / CARDS_PER_PAGE_MOBILE),
-              }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToBlogPage(i)}
-                  aria-label={`Aller à la page ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    mobileBlogActive === i
-                      ? "w-5 bg-[#1a5242]"
-                      : "w-1.5 bg-[#1a5242]/25"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
+          <Suspense fallback={null}>
+            <HomeVideoSection video={videoFor("after_services")} />
+          </Suspense>
+        </>
       )}
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_blog")} />
-      </Suspense>
-
-      {/* ── Services ── */}
-      <section
-        className="py-16 border-t border-gray-100"
-        style={{ background: "#f6f9f7" }}
-      >
-        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px" }}>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
-            {[
-              {
-                icon: Truck,
-                val: `${shipping.delivery_days_min}–${shipping.delivery_days_max}j`,
-                title: "Livraison rapide",
-                sub: "Partout en Tunisie",
-              },
-              {
-                icon: HeadphonesIcon,
-                val: "24h",
-                title: "Service client réactif",
-                sub: "Du lundi au samedi 9h–20h",
-              },
-              {
-                icon: Package,
-                val: "100%",
-                title: "Produits authentiques",
-                sub: "Garantie d'origine officielle",
-              },
-            ].map(({ icon: Icon, val, title, sub }) => (
-              <div
-                key={title}
-                className="flex items-start gap-4 py-7 px-7 rounded-2xl bg-white border border-gray-100 transition-all hover:-translate-y-0.5"
-                style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.03)" }}
-              >
-                <div
-                  className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: "#FFF3B0" }}
-                >
-                  <Icon size={20} style={{ color: "#355847" }} />
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <p
-                      className="text-[1.5rem] font-bold leading-none"
-                      style={{ color: "#1a5242" }}
-                    >
-                      {val}
-                    </p>
-                    <p className="text-[14px] font-bold text-gray-900">
-                      {title}
-                    </p>
-                  </div>
-                  <p className="text-[13px] text-gray-500 leading-relaxed">
-                    {sub}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <Suspense fallback={null}>
-        <HomeVideoSection video={videoFor("after_services")} />
-      </Suspense>
     </div>
   );
 }
