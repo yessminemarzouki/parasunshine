@@ -7,6 +7,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// ✅ Protection SSG : localStorage n'existe pas côté serveur
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("auth_token");
@@ -137,7 +138,6 @@ export const removeFromWishlistApi = async (productId) => {
   return response.data;
 };
 
-// Alias pour compatibilité
 export const addToWishlist = addToWishlistApi;
 export const removeFromWishlist = removeFromWishlistApi;
 
@@ -202,22 +202,17 @@ export const saveAbandonedCart = async (data) => {
   return response.data;
 };
 
-// ── PARAMÈTRES DE LIVRAISON (avec cache + déduplication) ──
+// ── PARAMÈTRES DE LIVRAISON ──
 let shippingSettingsCache = null;
 let shippingSettingsPromise = null;
 
 export const getShippingSettings = async () => {
-  // 1. Retourne le cache s'il existe
   if (shippingSettingsCache) {
     return shippingSettingsCache;
   }
-
-  // 2. Déduplique les appels simultanés
   if (shippingSettingsPromise) {
     return shippingSettingsPromise;
   }
-
-  // 3. Premier appel : on lance la requête
   shippingSettingsPromise = api
     .get("/shipping-settings")
     .then((response) => {
@@ -229,7 +224,6 @@ export const getShippingSettings = async () => {
       shippingSettingsPromise = null;
       throw error;
     });
-
   return shippingSettingsPromise;
 };
 export const getCategoryShowcase = async () => {
@@ -285,6 +279,7 @@ export const removeBundleFromWishlistApi = async (bundleId) => {
   const response = await api.delete(`/wishlist/bundle/${bundleId}`);
   return response.data;
 };
+
 // ── CODES PROMO ──
 export const validatePromoCode = async (code, cartItems) => {
   const items = cartItems.map((item) => ({
@@ -318,7 +313,7 @@ export const updateReview = async (id, data) => {
   return response.data;
 };
 
-// ── INFORMATIONS DU SITE (coordonnées, réseaux, légales) ──
+// ── INFORMATIONS DU SITE ──
 let siteSettingsCache = null;
 let siteSettingsPromise = null;
 
@@ -341,7 +336,6 @@ export const getSiteSettings = async () => {
   return siteSettingsPromise;
 };
 
-// Invalider le cache (appelé après une modif admin)
 export const invalidateSiteSettingsCache = () => {
   siteSettingsCache = null;
   siteSettingsPromise = null;
