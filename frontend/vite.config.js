@@ -29,6 +29,7 @@ export default defineConfig({
             if (id.includes("framer-motion")) return "motion";
             return undefined;
           }
+          if (id.includes("RichTextEditor")) return "rich-text-editor";
           if (id.includes("/admin/")) return "admin";
           if (id.includes("HeroCarousel")) return undefined;
           return undefined;
