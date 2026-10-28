@@ -18,7 +18,8 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            if (id.includes("@tiptap")) return "tiptap";
+            if (id.includes("@tiptap") || id.includes("prosemirror"))
+              return "tiptap";
             if (id.includes("xlsx")) return "xlsx";
             if (id.includes("react-router")) return "react-router";
             if (id.includes("react-dom")) return "react-vendor";

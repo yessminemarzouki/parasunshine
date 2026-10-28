@@ -4,7 +4,8 @@ import { useSearchParams } from "react-router-dom";
 import ProductPreviewModal from "../components/ProductPreviewModal";
 import { STORAGE_URL } from "../../config/api";
 import ImageDropzone from "../components/ImageDropzone";
-import RichTextEditor from "../components/RichTextEditor";
+import { lazy, Suspense } from "react";
+const RichTextEditor = lazy(() => import("../components/RichTextEditor"));
 import * as XLSX from "xlsx";
 import {
   Search,
@@ -2366,21 +2367,33 @@ export default function AdminProducts() {
                   <Section title="Descriptions">
                     <div>
                       <Label>Description courte</Label>
-                      <RichTextEditor
-                        key={`short_desc_${editProduct?.id || "new"}`}
-                        value={form.short_description || ""}
-                        onChange={(val) => f("short_description", val)}
-                        placeholder="Résumé affiché en quelques lignes..."
-                      />
+                      <Suspense
+                        fallback={
+                          <div className="h-[120px] bg-gray-50 rounded-xl animate-pulse" />
+                        }
+                      >
+                        <RichTextEditor
+                          key={`short_desc_${editProduct?.id || "new"}`}
+                          value={form.short_description || ""}
+                          onChange={(val) => f("short_description", val)}
+                          placeholder="Résumé affiché en quelques lignes..."
+                        />
+                      </Suspense>
                     </div>
                     <div>
                       <Label>Description complète</Label>
-                      <RichTextEditor
-                        key={`desc_${editProduct?.id || "new"}`}
-                        value={form.description || ""}
-                        onChange={(val) => f("description", val)}
-                        placeholder="Description détaillée du produit..."
-                      />
+                      <Suspense
+                        fallback={
+                          <div className="h-[120px] bg-gray-50 rounded-xl animate-pulse" />
+                        }
+                      >
+                        <RichTextEditor
+                          key={`desc_${editProduct?.id || "new"}`}
+                          value={form.description || ""}
+                          onChange={(val) => f("description", val)}
+                          placeholder="Description détaillée du produit..."
+                        />
+                      </Suspense>
                     </div>
                   </Section>
 
@@ -2388,21 +2401,33 @@ export default function AdminProducts() {
                   <Section title="Bienfaits & Conseils d'utilisation">
                     <div>
                       <Label>Bienfaits du produit</Label>
-                      <RichTextEditor
-                        key={`benefits_${editProduct?.id || "new"}`}
-                        value={form.benefits || ""}
-                        onChange={(val) => f("benefits", val)}
-                        placeholder="• Hydrate intensément pendant 24h..."
-                      />
+                      <Suspense
+                        fallback={
+                          <div className="h-[120px] bg-gray-50 rounded-xl animate-pulse" />
+                        }
+                      >
+                        <RichTextEditor
+                          key={`benefits_${editProduct?.id || "new"}`}
+                          value={form.benefits || ""}
+                          onChange={(val) => f("benefits", val)}
+                          placeholder="• Hydrate intensément pendant 24h..."
+                        />
+                      </Suspense>
                     </div>
                     <div>
                       <Label>Conseils d'utilisation</Label>
-                      <RichTextEditor
-                        key={`usage_${editProduct?.id || "new"}`}
-                        value={form.usage_tips || ""}
-                        onChange={(val) => f("usage_tips", val)}
-                        placeholder="Appliquer matin et soir..."
-                      />
+                      <Suspense
+                        fallback={
+                          <div className="h-[120px] bg-gray-50 rounded-xl animate-pulse" />
+                        }
+                      >
+                        <RichTextEditor
+                          key={`usage_${editProduct?.id || "new"}`}
+                          value={form.usage_tips || ""}
+                          onChange={(val) => f("usage_tips", val)}
+                          placeholder="Appliquer matin et soir..."
+                        />
+                      </Suspense>
                     </div>
                   </Section>
 
