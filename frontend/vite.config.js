@@ -1,13 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-// import reactSsg from "vite-plugin-react-ssg"; // Désactivé temporairement (conflit CJS/ESM)
 
 export default defineConfig({
-  // plugins: [react(), reactSsg()],
   plugins: [react()],
 
   ssr: {
-    noExternal: ["react-router", "react-router-dom"],
+    noExternal: ["react-router", "react-router-dom", "react-helmet-async"],
   },
 
   build: {
