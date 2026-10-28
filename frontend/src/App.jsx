@@ -24,19 +24,17 @@ const PageLoader = () => (
   </div>
 );
 
-// Version SSG du layout : pas de useLocation, pas de FloatingQuizButton
+// Version SSG : on n'affiche ni Header, ni Navigation, ni FloatingQuizButton
+// qui utilisent des hooks React Router
 function LayoutSsg({ children }) {
   return (
     <div className="app">
-      <Header />
-      <Navigation />
       <main className="main-content">{children}</main>
-      <Footer />
     </div>
   );
 }
 
-// Version client du layout : utilise useLocation + FloatingQuizButton
+// Version client : tout est affiché
 function LayoutClient({ children }) {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
