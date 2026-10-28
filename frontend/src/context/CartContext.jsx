@@ -16,6 +16,7 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
+    if (typeof window === "undefined") return [];
     const savedCart = localStorage.getItem("pharmasoin_cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
@@ -23,6 +24,7 @@ export const CartProvider = ({ children }) => {
   // ✅ Track si le panier a contenu quelque chose
   // (évite de supprimer le panier abandonné quand on ouvre le site avec panier vide)
   const [hadItems, setHadItems] = useState(() => {
+    if (typeof window === "undefined") return false;
     const savedCart = localStorage.getItem("pharmasoin_cart");
     const parsed = savedCart ? JSON.parse(savedCart) : [];
     return parsed.length > 0;

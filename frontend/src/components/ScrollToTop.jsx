@@ -13,7 +13,10 @@ export default function ScrollToTop() {
   const cleanupRef = useRef(null);
 
   useLayoutEffect(() => {
-    if ("scrollRestoration" in window.history) {
+    if (
+      typeof window !== "undefined" &&
+      "scrollRestoration" in window.history
+    ) {
       window.history.scrollRestoration = "manual";
     }
   }, []);

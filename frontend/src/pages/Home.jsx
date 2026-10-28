@@ -179,7 +179,10 @@ export default function Home() {
   const blogScrollRef = useRef(null); // ← ref pour le scroll mobile
   const [mobileBlogActive, setMobileBlogActive] = useState(0); // ← page mobile
   const [promoSection, setPromoSection] = useState(null);
-  const isLoggedIn = !!localStorage.getItem("auth_token");
+  const isLoggedIn =
+    typeof window !== "undefined"
+      ? !!localStorage.getItem("auth_token")
+      : false;
   const [brands, setBrands] = useState([]);
   const [categoryShowcase, setCategoryShowcase] = useState([]);
   const [featuredVisible, setFeaturedVisible] = useState(true);

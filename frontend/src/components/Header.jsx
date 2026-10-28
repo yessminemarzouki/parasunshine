@@ -554,9 +554,13 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const checkAuth = () => setIsLoggedIn(!!localStorage.getItem("auth_token"));
+  const checkAuth = () => {
+    if (typeof window === "undefined") return;
+    setIsLoggedIn(!!localStorage.getItem("auth_token"));
+  };
 
   const handleLogout = () => {
+    if (typeof window === "undefined") return;
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
     setIsLoggedIn(false);

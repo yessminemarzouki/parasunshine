@@ -16,6 +16,7 @@ export const WishlistProvider = ({ children }) => {
 
   // Charger les favoris au montage si connecté
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("auth_token");
     if (token) {
       loadWishlist();

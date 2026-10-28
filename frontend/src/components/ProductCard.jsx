@@ -28,7 +28,8 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const token = localStorage.getItem("auth_token");
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     if (!token) {
       navigate("/login");
       return;
@@ -60,7 +61,8 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const token = localStorage.getItem("auth_token");
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     if (!token) {
       sessionStorage.setItem("pending_notify_product_id", String(product.id));
       sessionStorage.setItem(
@@ -73,7 +75,10 @@ const ProductCard = ({ product }) => {
 
     let base = { first_name: "", last_name: "", phone: "" };
     try {
-      const u = JSON.parse(localStorage.getItem("user") || "null");
+      const u =
+        typeof window !== "undefined"
+          ? JSON.parse(localStorage.getItem("user") || "null")
+          : null;
       base = {
         first_name: u?.first_name || u?.name?.split(" ")[0] || "",
         last_name: u?.last_name || u?.name?.split(" ").slice(1).join(" ") || "",
@@ -109,6 +114,7 @@ const ProductCard = ({ product }) => {
   };
 
   const handleMouseEnter = () => {
+    if (typeof window === "undefined") return;
     const cached = sessionStorage.getItem(`product_${product.slug}_time`);
     if (cached && Date.now() - parseInt(cached) < 30000) {
       return;
