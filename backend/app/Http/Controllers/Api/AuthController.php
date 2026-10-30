@@ -263,7 +263,7 @@ class AuthController extends Controller
 
             // Génère un code d'échange à usage unique, valide 60 secondes
             $code = Str::random(48);
-            Cache::put('google_auth_code:' . $code, $user->id, now()->addSeconds(60));
+            Cache::put('google_auth_code:' . $code, $user->id, now()->addMinutes(5));
             $frontendUrl = rtrim(config('app.frontend_url'), '/') . '/auth/google/callback';
             $redirectUrl = $frontendUrl . '?' . http_build_query([
                 'code' => $code,
@@ -287,7 +287,9 @@ class AuthController extends Controller
         $request->validate(['code' => 'required|string']);
 
         $cacheKey = 'google_auth_code:' . $request->code;
-        $userId = Cache::pull($cacheKey); // pull = lit et supprime en une opération (usage unique garanti)
+
+        // ✅ Remplacer Cache::pull par Cache::get pour ne pas consommer le code immédiatement
+        $userId = Cache::get($cacheKey);
 
         if (!$userId) {
             return response()->json([
@@ -297,6 +299,9 @@ class AuthController extends Controller
 
         $user = User::findOrFail($userId);
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // ✅ Supprimer le code manuellement une fois le token généré avec succès
+        Cache::forget($cacheKey);
 
         return response()->json([
             'user' => $user,
