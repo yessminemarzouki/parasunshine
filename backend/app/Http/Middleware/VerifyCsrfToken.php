@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'api/*',  // 🆕 Désactive CSRF pour toutes les routes API
+        // ⚠️ NE RIEN METTRE ICI pour les routes API.
+        // Sanctum gère le CSRF via les cookies pour les SPA.
+        // Seules des routes très spécifiques (webhooks) devraient être ajoutées ici.
     ];
 }
