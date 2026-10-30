@@ -19,9 +19,9 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [gdprAccepted, setGdprAccepted] = useState(false);
-  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(true);
+  const [gdprAccepted, setGdprAccepted] = useState(true);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -30,17 +30,32 @@ const Register = () => {
     setErrors({});
     const newErrors = {};
 
+    const NAME_RE = /^[\p{L}\s-]+$/u;
+
     if (!formData.first_name.trim())
       newErrors.first_name = "Le prénom est requis";
+    else if (!NAME_RE.test(formData.first_name.trim()))
+      newErrors.first_name = "Lettres, espaces et tirets uniquement";
+
     if (!formData.last_name.trim()) newErrors.last_name = "Le nom est requis";
+    else if (!NAME_RE.test(formData.last_name.trim()))
+      newErrors.last_name = "Lettres, espaces et tirets uniquement";
+
     if (!formData.email.trim()) newErrors.email = "L'email est requis";
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "L'email doit être valide";
+
     if (!formData.phone.trim()) newErrors.phone = "Le téléphone est requis";
+    else if (!/^[0-9\s\-+()]+$/.test(formData.phone))
+      newErrors.phone = "Chiffres, espaces et + - ( ) uniquement";
+
     if (!formData.password) newErrors.password = "Le mot de passe est requis";
-    else if (formData.password.length < 8)
+    else if (
+      formData.password.length < 8 ||
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(formData.password)
+    )
       newErrors.password =
-        "Le mot de passe doit contenir au moins 8 caractères";
+        "Au moins 8 caractères, avec une majuscule, une minuscule et un chiffre";
     if (!formData.password_confirmation)
       newErrors.password_confirmation = "Veuillez confirmer le mot de passe";
     else if (formData.password !== formData.password_confirmation)
@@ -68,10 +83,9 @@ const Register = () => {
       localStorage.setItem("user", JSON.stringify(response.user));
 
       const redirectTo =
-        localStorage.getItem("checkout_redirect_after_login") ||
+        peekPostLoginRedirect() ||
         sessionStorage.getItem("redirect_after_login") ||
         "/account";
-      localStorage.removeItem("checkout_redirect_after_login");
       sessionStorage.removeItem("redirect_after_login");
       window.location.href = redirectTo;
     } catch (err) {
@@ -80,6 +94,9 @@ const Register = () => {
         Object.keys(err.response.data.errors).forEach((key) => {
           serverErrors[key] = err.response.data.errors[key][0];
         });
+      } else if (err?.response?.status === 429) {
+        serverErrors.general =
+          "Trop de tentatives. Veuillez patienter quelques minutes.";
       } else if (err?.response?.data?.message) {
         serverErrors.general = err.response.data.message;
       } else {

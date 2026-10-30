@@ -57,9 +57,16 @@ export const updatePassword = async (data) => {
   const response = await api.put("/user/password", data);
   return response.data;
 };
-export const exchangeGoogleCode = async (code) => {
-  const response = await api.post("/auth/google/exchange", { code });
-  return response.data;
+const googleExchangePromises = new Map();
+
+export const exchangeGoogleCode = (code) => {
+  if (!googleExchangePromises.has(code)) {
+    googleExchangePromises.set(
+      code,
+      api.post("/auth/google/exchange", { code }).then((r) => r.data),
+    );
+  }
+  return googleExchangePromises.get(code);
 };
 export const sendPasswordResetLink = async (email) => {
   const response = await api.post("/password/email", { email });
