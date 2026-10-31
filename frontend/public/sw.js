@@ -1,5 +1,5 @@
-const CACHE_NAME = "parasunshine-v4";
-const API_CACHE = "parasunshine-api-v4";
+const CACHE_NAME = "parasunshine-v5"; // nouvelle version force le refresh
+const API_CACHE = "parasunshine-api-v5";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting(); // active la nouvelle version immédiatement, sans attendre la fermeture des onglets
@@ -62,22 +62,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Routes API publiques : stale-while-revalidate
+  // Routes API : toujours réseau, jamais de cache (évite les 404 obsolètes)
   if (url.pathname.startsWith("/api/")) {
-    event.respondWith(
-      caches.open(API_CACHE).then((cache) => {
-        return cache.match(request).then((response) => {
-          const fetchPromise = fetch(request)
-            .then((networkResponse) => {
-              cache.put(request, networkResponse.clone());
-              return networkResponse;
-            })
-            .catch(() => response);
-
-          return response || fetchPromise;
-        });
-      }),
-    );
+    event.respondWith(fetch(request));
     return;
   }
 
