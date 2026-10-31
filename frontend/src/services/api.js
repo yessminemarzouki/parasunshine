@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL } from "../config/api";
+import { API_URL, BASE_URL } from "../config/api";
 import { cachedFetch } from "../utils/cache";
 
 const api = axios.create({
@@ -31,13 +31,15 @@ api.interceptors.response.use(
 
 // ── AUTH ──
 export const login = async (credentials) => {
-  await api.get("/sanctum/csrf-cookie"); // ✅ Initialise la session
+  // On utilise axios directement avec BASE_URL pour éviter le préfixe /api
+  await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
   const response = await api.post("/login", credentials);
   return response.data;
 };
+
 export const register = async (userData) => {
-  await api.get("/sanctum/csrf-cookie"); // ✅ Initialise la session
+  await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
   const response = await api.post("/register", userData);
   return response.data;
@@ -62,6 +64,7 @@ export const updatePassword = async (data) => {
   const response = await api.put("/user/password", data);
   return response.data;
 };
+
 const googleExchangePromises = new Map();
 
 export const exchangeGoogleCode = (code) => {
@@ -69,8 +72,8 @@ export const exchangeGoogleCode = (code) => {
     googleExchangePromises.set(
       code,
       (async () => {
-        // 1. Initialiser le cookie CSRF AVANT la requête
-        await api.get("/sanctum/csrf-cookie");
+        // 1. Initialiser le cookie CSRF avec la bonne URL racine
+        await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, { withCredentials: true });
         
         // 2. Faire la requête d'échange
         const response = await api.post("/auth/google/exchange", { code });
@@ -80,6 +83,7 @@ export const exchangeGoogleCode = (code) => {
   }
   return googleExchangePromises.get(code);
 };
+
 export const sendPasswordResetLink = async (email) => {
   const response = await api.post("/password/email", { email });
   return response.data;
@@ -89,6 +93,7 @@ export const resetPassword = async (data) => {
   const response = await api.post("/password/reset", data);
   return response.data;
 };
+
 export const getGoogleAuthUrl = async (mode = "login") => {
   const response = await api.get("/auth/google", { params: { mode } });
   return response.data;
@@ -245,10 +250,12 @@ export const getShippingSettings = async () => {
     });
   return shippingSettingsPromise;
 };
+
 export const getCategoryShowcase = async () => {
   const response = await api.get("/category-showcase");
   return response.data;
 };
+
 export const getFeaturedSection = async () => {
   const response = await api.get("/featured-section");
   return response.data;
@@ -309,13 +316,16 @@ export const validatePromoCode = async (code, cartItems) => {
   const response = await api.post("/promo-codes/validate", { code, items });
   return response.data;
 };
+
 // ── VIDÉOS PAGE D'ACCUEIL ──
 export const getHomepageVideos = async () => {
   return cachedFetch(`${API_URL}/homepage-videos`);
 };
+
 export const getHeroSlides = async () => {
   return cachedFetch(`${API_URL}/hero-slides`);
 };
+
 // ── AVIS — gestion de son propre avis ──
 export const checkUserReview = async (productId) => {
   const response = await api.get(`/reviews/check/${productId}`);
