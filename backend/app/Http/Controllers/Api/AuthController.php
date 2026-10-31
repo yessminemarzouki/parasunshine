@@ -262,10 +262,15 @@ class AuthController extends Controller
             }
 
             // Génère un code d'échange à usage unique, valide 60 secondes
-            Log::info('GOOGLE CALLBACK: code généré pour ' . $user->email);
+            // Génère un code d'échange
             $code = Str::random(48);
-            Cache::put('google_auth_code:' . $code, $user->id, now()->addMinutes(5));
-            Log::info('CODE STOCKÉ: ' . $code);
+
+            // Stocke le code dans la base de données (fiable, partagé entre processus)
+            DB::table('google_auth_codes')->insert([
+                'code' => $code,
+                'user_id' => $user->id,
+                'expires_at' => now()->addMinutes(5),
+            ]);
             $frontendUrl = rtrim(config('app.frontend_url'), '/') . '/auth/google/callback';
             $redirectUrl = $frontendUrl . '?' . http_build_query([
                 'code' => $code,
@@ -288,34 +293,28 @@ class AuthController extends Controller
     {
         $request->validate(['code' => 'required|string']);
 
-        $cacheKey = 'google_auth_code:' . $request->code;
-        $resultKey = 'google_auth_result:' . $request->code;
+        // Chercher le code dans la base de données
+        $record = DB::table('google_auth_codes')
+            ->where('code', $request->code)
+            ->where('expires_at', '>', now())
+            ->first();
 
-        // 1. Si un résultat existe déjà, le renvoyer (idempotence)
-        if ($cached = Cache::get($resultKey)) {
-            return response()->json($cached);
-        }
-
-        // 2. Sinon, chercher le code
-        $userId = Cache::get($cacheKey);
-        if (!$userId) {
+        if (!$record) {
             return response()->json([
                 'message' => 'Code invalide ou expiré. Veuillez réessayer la connexion.',
             ], 400);
         }
 
-        // 3. Générer le token
-        $user = User::findOrFail($userId);
+        $user = User::findOrFail($record->user_id);
         $token = $user->createToken('auth_token')->plainTextToken;
-        $payload = ['user' => $user->toArray(), 'token' => $token];
 
-        // 4. Stocker le résultat AVANT de supprimer le code
-        Cache::put($resultKey, $payload, now()->addMinutes(5));
+        // Supprimer le code utilisé
+        DB::table('google_auth_codes')->where('code', $request->code)->delete();
 
-        // 5. Supprimer le code seulement après que le résultat soit stocké
-        Cache::forget($cacheKey);
-
-        return response()->json($payload);
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ]);
     }
     /**
      * ENVOYER LE LIEN DE RÉINITIALISATION
