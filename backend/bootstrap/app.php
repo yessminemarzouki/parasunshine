@@ -33,8 +33,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // ✅ LIGNE AJOUTÉE POUR SANCTUM (Résout le bug de login)
-        $middleware->statefulApi();
 
         // Alias pour le middleware admin
         $middleware->alias([
@@ -55,7 +53,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SanitizeInput::class,
         ]);
 
-        // ❌ Le bloc validateCsrfTokens a été supprimé volontairement
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
