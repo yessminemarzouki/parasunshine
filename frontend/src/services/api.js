@@ -68,7 +68,14 @@ export const exchangeGoogleCode = (code) => {
   if (!googleExchangePromises.has(code)) {
     googleExchangePromises.set(
       code,
-      api.post("/auth/google/exchange", { code }).then((r) => r.data),
+      (async () => {
+        // 1. Initialiser le cookie CSRF AVANT la requête
+        await api.get("/sanctum/csrf-cookie");
+        
+        // 2. Faire la requête d'échange
+        const response = await api.post("/auth/google/exchange", { code });
+        return response.data;
+      })(),
     );
   }
   return googleExchangePromises.get(code);
