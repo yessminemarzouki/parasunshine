@@ -72,10 +72,10 @@ export const exchangeGoogleCode = (code) => {
     googleExchangePromises.set(
       code,
       (async () => {
-        // 1. Initialiser le cookie CSRF avec un paramètre anti-cache
-        await axios.get(`${BASE_URL}/sanctum/csrf-cookie?t=${Date.now()}`, { withCredentials: true });
+        // 1. Initialiser le cookie CSRF avec la bonne URL
+        await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, { withCredentials: true });
         
-        // 2. Faire la requête d'échange avec un paramètre anti-cache
+        // 2. Requête d'échange avec un paramètre anti-cache (?t=...)
         const response = await api.post(`/auth/google/exchange?t=${Date.now()}`, { code });
         return response.data;
       })(),

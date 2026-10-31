@@ -228,7 +228,16 @@ export default function Account() {
         setStockRequests(stockData.requests || []);
       } catch {}
     } catch {
-      const stored = JSON.parse(localStorage.getItem("user"));
+      let stored = null;
+      try {
+        const storedStr = localStorage.getItem("user");
+        if (storedStr && storedStr !== "undefined") {
+          stored = JSON.parse(storedStr);
+        }
+      } catch (e) {
+        console.error("Erreur de lecture du localStorage", e);
+      }
+      
       stored
         ? setUser({ ...stored, total_spent: 0, orders_count: 0 })
         : handleLogout();

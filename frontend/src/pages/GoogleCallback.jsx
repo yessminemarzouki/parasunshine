@@ -36,6 +36,11 @@ const GoogleCallback = () => {
 
         const data = await exchangeGoogleCode(code);
 
+        // Sécurité : vérifier que le backend a bien renvoyé un token et un utilisateur
+        if (!data || !data.token || !data.user) {
+          throw new Error("Réponse invalide du serveur. Veuillez réessayer.");
+        }
+
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
