@@ -272,12 +272,18 @@ class AuthController extends Controller
             // Génère un code d'échange
             $code = Str::random(48);
 
-            // Stocke le code dans la base de données (fiable, partagé entre processus)
-            DB::table('google_auth_codes')->insert([
-                'code' => $code,
-                'user_id' => $user->id,
-                'expires_at' => now()->addMinutes(5),
-            ]);
+                     // Stocke le code dans la base de données (fiable, partagé entre processus)
+            try {
+                DB::table('google_auth_codes')->insert([
+                    'code' => $code,
+                    'user_id' => $user->id,
+                    'expires_at' => now()->addMinutes(5),
+                ]);
+                Log::info('CALLBACK: Code inséré en base', ['code' => $code, 'user_id' => $user->id]);
+            } catch (\Exception $e) {
+                Log::error('CALLBACK: Erreur insertion DB', ['error' => $e->getMessage()]);
+                throw $e;
+            }
             $frontendUrl = rtrim(config('app.frontend_url'), '/') . '/auth/google/callback';
             $redirectUrl = $frontendUrl . '?' . http_build_query([
                 'code' => $code,
@@ -300,23 +306,31 @@ class AuthController extends Controller
     {
         $request->validate(['code' => 'required|string']);
 
-        // Chercher le code dans la base de données
+        $code = trim($request->code); // On nettoie les espaces invisibles
+
+        Log::info('EXCHANGE: Requête reçue', ['code' => $code]);
+        $count = DB::table('google_auth_codes')->count();
+        Log::info('EXCHANGE: Nombre de codes en base', ['count' => $count]);
+
         $record = DB::table('google_auth_codes')
-            ->where('code', $request->code)
+            ->where('code', $code)
             ->where('expires_at', '>', now())
             ->first();
 
         if (!$record) {
+            Log::warning('EXCHANGE: Code NON trouvé', ['code' => $code]);
             return response()->json([
                 'message' => 'Code invalide ou expiré. Veuillez réessayer la connexion.',
             ], 400);
         }
 
+        Log::info('EXCHANGE: Code trouvé', ['user_id' => $record->user_id]);
+
         $user = User::findOrFail($record->user_id);
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // Supprimer le code utilisé
-        DB::table('google_auth_codes')->where('code', $request->code)->delete();
+        DB::table('google_auth_codes')->where('code', $code)->delete();
 
         return response()->json([
             'user' => $user,
