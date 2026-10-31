@@ -5,6 +5,8 @@ import { cachedFetch } from "../utils/cache";
 const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
+  withCredentials: true, // ✅ Envoie les cookies de session
+  withXSRFToken: true, // ✅ Envoie le header CSRF
 });
 
 // ✅ Protection SSG : localStorage n'existe pas côté serveur
@@ -29,10 +31,14 @@ api.interceptors.response.use(
 
 // ── AUTH ──
 export const login = async (credentials) => {
+  await api.get("/sanctum/csrf-cookie"); // ✅ Initialise la session
+
   const response = await api.post("/login", credentials);
   return response.data;
 };
 export const register = async (userData) => {
+  await api.get("/sanctum/csrf-cookie"); // ✅ Initialise la session
+
   const response = await api.post("/register", userData);
   return response.data;
 };
