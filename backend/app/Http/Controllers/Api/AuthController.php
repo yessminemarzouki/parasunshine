@@ -291,26 +291,28 @@ class AuthController extends Controller
         $cacheKey = 'google_auth_code:' . $request->code;
         $resultKey = 'google_auth_result:' . $request->code;
 
-        // Appel répété avec le même code (double montage React) : même réponse
+        // 1. Si un résultat existe déjà, le renvoyer (idempotence)
         if ($cached = Cache::get($resultKey)) {
             return response()->json($cached);
         }
 
+        // 2. Sinon, chercher le code
         $userId = Cache::get($cacheKey);
-
         if (!$userId) {
             return response()->json([
                 'message' => 'Code invalide ou expiré. Veuillez réessayer la connexion.',
             ], 400);
         }
 
+        // 3. Générer le token
         $user = User::findOrFail($userId);
         $token = $user->createToken('auth_token')->plainTextToken;
-
         $payload = ['user' => $user->toArray(), 'token' => $token];
 
-        // Résultat conservé 30 s seulement, puis le code est détruit
-        Cache::put($resultKey, $payload, now()->addSeconds(30));
+        // 4. Stocker le résultat AVANT de supprimer le code
+        Cache::put($resultKey, $payload, now()->addMinutes(5));
+
+        // 5. Supprimer le code seulement après que le résultat soit stocké
         Cache::forget($cacheKey);
 
         return response()->json($payload);
