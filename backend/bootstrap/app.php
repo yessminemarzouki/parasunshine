@@ -1,5 +1,16 @@
 <?php
 
+// ✅ FIX : Forcer le répertoire temporaire vers storage/framework/tmp
+$tmpDir = __DIR__ . '/../storage/framework/tmp';
+if (!is_dir($tmpDir)) {
+    @mkdir($tmpDir, 0775, true);
+}
+if (is_writable($tmpDir)) {
+    putenv("TMPDIR={$tmpDir}");
+    putenv("TMP={$tmpDir}");
+    putenv("TEMP={$tmpDir}");
+    ini_set('sys_temp_dir', $tmpDir);
+}
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

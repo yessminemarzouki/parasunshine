@@ -287,8 +287,13 @@ class AuthController extends Controller
         $request->validate(['code' => 'required|string']);
 
         $cacheKey = 'google_auth_code:' . $request->code;
+        $resultKey = 'google_auth_result:' . $request->code;
 
-        // ✅ Remplacer Cache::pull par Cache::get pour ne pas consommer le code immédiatement
+        // Appel répété avec le même code (double montage React) : même réponse
+        if ($cached = Cache::get($resultKey)) {
+            return response()->json($cached);
+        }
+
         $userId = Cache::get($cacheKey);
 
         if (!$userId) {
@@ -300,13 +305,13 @@ class AuthController extends Controller
         $user = User::findOrFail($userId);
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // ✅ Supprimer le code manuellement une fois le token généré avec succès
+        $payload = ['user' => $user->toArray(), 'token' => $token];
+
+        // Résultat conservé 30 s seulement, puis le code est détruit
+        Cache::put($resultKey, $payload, now()->addSeconds(30));
         Cache::forget($cacheKey);
 
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ]);
+        return response()->json($payload);
     }
     /**
      * ENVOYER LE LIEN DE RÉINITIALISATION
