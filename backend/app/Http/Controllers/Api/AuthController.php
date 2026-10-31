@@ -192,6 +192,13 @@ class AuthController extends Controller
      */
     public function handleGoogleCallback(Request $request)
     {
+        // 🔍 LOG DE DÉBOGAGE : écrit dans un fichier séparé
+        file_put_contents(
+            storage_path('logs/google_callback_debug.txt'),
+            date('Y-m-d H:i:s') . ' - URL: ' . $request->fullUrl() . ' - Code: ' . $request->query('code') . "\n",
+            FILE_APPEND
+        );
+
         try {
             // Récupérer les infos de l'utilisateur depuis Google
             $googleUser = Socialite::driver('google')
