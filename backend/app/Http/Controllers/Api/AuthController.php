@@ -262,8 +262,10 @@ class AuthController extends Controller
             }
 
             // Génère un code d'échange à usage unique, valide 60 secondes
+            Log::info('GOOGLE CALLBACK: code généré pour ' . $user->email);
             $code = Str::random(48);
             Cache::put('google_auth_code:' . $code, $user->id, now()->addMinutes(5));
+            Log::info('CODE STOCKÉ: ' . $code);
             $frontendUrl = rtrim(config('app.frontend_url'), '/') . '/auth/google/callback';
             $redirectUrl = $frontendUrl . '?' . http_build_query([
                 'code' => $code,
