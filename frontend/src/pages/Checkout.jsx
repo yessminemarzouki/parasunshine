@@ -198,7 +198,39 @@ export default function Checkout() {
   }, [navigate]);
 
   useEffect(() => {
-    if (cart.length === 0) navigate("/cart");
+    if (cart.length === 0) {
+      navigate("/cart");
+      return;
+    }
+
+    // 🆕 AJOUT : Tracking Pixel Meta (InitiateCheckout)
+    // On utilise sessionStorage pour ne pas le déclencher en boucle si le panier change
+    if (typeof window !== "undefined" && window.fbq) {
+      const checkoutTracked = sessionStorage.getItem("fb_checkout_tracked");
+
+      if (!checkoutTracked) {
+        const total = cart.reduce(
+          (acc, item) =>
+            acc +
+            parseFloat(item.effective_price ?? item.price) * item.quantity,
+          0,
+        );
+
+        window.fbq("track", "InitiateCheckout", {
+          content_ids: cart.map((item) => item.id),
+          contents: cart.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            item_price: parseFloat(item.effective_price ?? item.price),
+          })),
+          num_items: cart.length,
+          value: total,
+          currency: "TND",
+        });
+
+        sessionStorage.setItem("fb_checkout_tracked", "true");
+      }
+    }
   }, [cart, navigate]);
 
   const handleChange = (e) => {

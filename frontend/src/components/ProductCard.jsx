@@ -52,6 +52,17 @@ const ProductCard = ({ product }) => {
     }
 
     if (product.stock > 0) {
+      // 🆕 AJOUT : Tracking Pixel Meta (AddToCart)
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "AddToCart", {
+          content_name: product.name,
+          content_ids: [product.id],
+          content_type: "product",
+          value: parseFloat(product.effective_price ?? product.price),
+          currency: "TND",
+        });
+      }
+
       addToCart(product);
       showCartNotification(product, 1);
     }

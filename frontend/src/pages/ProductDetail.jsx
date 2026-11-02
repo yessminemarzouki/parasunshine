@@ -198,6 +198,18 @@ export default function ProductDetail() {
       block: "nearest",
     });
   }, [activeTab]);
+  // 🆕 AJOUT : Tracking Pixel Meta (ViewContent)
+  useEffect(() => {
+    if (product && typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", "ViewContent", {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: "product",
+        value: parseFloat(product.effective_price ?? product.price),
+        currency: "TND",
+      });
+    }
+  }, [product]);
 
   useEffect(() => {
     if (!product) return;
