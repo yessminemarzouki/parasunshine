@@ -328,8 +328,13 @@ class AuthController extends Controller
         $user = User::findOrFail($record->user_id);
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Supprimer le code utilisé
-        DB::table('google_auth_codes')->where('code', $code)->delete();
+        // Au lieu de supprimer tout de suite, on raccourcit la validité à 30 s :
+        // un second appel immédiat (double montage React) reste accepté,
+        // puis le code expire. Les codes expirés sont purgés.
+        DB::table('google_auth_codes')
+            ->where('code', $code)
+            ->update(['expires_at' => now()->addSeconds(30)]);
+        DB::table('google_auth_codes')->where('expires_at', '<', now())->delete();
 
         return response()->json([
             'user' => $user,
