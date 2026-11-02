@@ -73,10 +73,15 @@ export const exchangeGoogleCode = (code) => {
       code,
       (async () => {
         // 1. Initialiser le cookie CSRF avec la bonne URL
-        await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, { withCredentials: true });
-        
+        await axios.get(`${BASE_URL}/sanctum/csrf-cookie`, {
+          withCredentials: true,
+        });
+
         // 2. Requête d'échange avec un paramètre anti-cache (?t=...)
-        const response = await api.post(`/auth/google/exchange?t=${Date.now()}`, { code });
+        const response = await api.post(
+          `/auth/google/exchange?t=${Date.now()}`,
+          { code },
+        );
         return response.data;
       })(),
     );
@@ -108,7 +113,10 @@ export const fetchProducts = async (params = {}) => {
 export const fetchProduct = async (slug) => {
   return cachedFetch(`${API_URL}/products/${slug}`);
 };
-
+export const getSimilarProducts = async (slug) => {
+  const response = await api.get(`/products/${slug}/similar`);
+  return response.data;
+};
 export const fetchFeaturedProducts = async () => {
   const response = await api.get("/products/featured");
   return response.data;

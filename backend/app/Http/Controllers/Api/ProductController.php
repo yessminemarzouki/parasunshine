@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -679,7 +680,231 @@ class ProductController extends Controller
 
         return response()->json($products);
     }
+    // ─────────────────────────────────────────────
+    // PRODUITS SIMILAIRES
+    // ─────────────────────────────────────────────
+    private const SIMILAR_STOPWORDS = [
+        'pour', 'avec', 'sans', 'dans', 'cette', 'votre', 'vous', 'nous', 'tout',
+        'plus', 'tres', 'fait', 'aussi', 'chez', 'entre', 'comme', 'permet',
+        'grace', 'ainsi', 'apre', 'produit', 'utilisation', 'utiliser',
+        'appliquer', 'formule', 'recommande', 'convient', 'contient',
+    ];
 
+    /**
+     * Extrait les mots significatifs d'un texte : sans HTML, sans accents,
+     * sans chiffres, pluriel simplifié. Retourne [mot => occurrences].
+     */
+    private function similarTokens(?string $text): array
+    {
+        $text = html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = Str::ascii(mb_strtolower($text));
+        $words = preg_split('/[^a-z]+/', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $counts = [];
+        foreach ($words as $w) {
+            $w = preg_replace('/(s|x)$/', '', $w);
+            if (strlen($w) < 4 || in_array($w, self::SIMILAR_STOPWORDS, true)) {
+                continue;
+            }
+            $counts[$w] = ($counts[$w] ?? 0) + 1;
+        }
+        return $counts;
+    }
+
+    private function computeSimilarIds(Product $product, int $limit = 8): array
+    {
+        $myCats = array_values(array_filter([
+            (int) $product->category_id,
+            (int) $product->category2_id,
+        ]));
+
+        // Catégories sœurs (même parent)
+        $parentIds = array_values(array_filter([
+            $product->category?->parent_id,
+            $product->category2?->parent_id,
+        ]));
+        $siblingCats = $parentIds
+            ? Category::whereIn('parent_id', $parentIds)->pluck('id')->map(fn ($i) => (int) $i)->all()
+            : [];
+
+        // Famille de marque (marque mère + toutes ses sous-marques)
+        $rootBrandId = $product->brand?->parent_id ?? $product->brand_id;
+        $brandFamily = $rootBrandId
+            ? Brand::where('id', $rootBrandId)->orWhere('parent_id', $rootBrandId)
+                ->pluck('id')->map(fn ($i) => (int) $i)->all()
+            : [];
+
+        // Mots-clés du nom (hors nom de marque)
+        $brandTokens = array_keys($this->similarTokens($product->brand?->name));
+        $nameTokens = array_values(array_diff(
+            array_keys($this->similarTokens($product->name)),
+            $brandTokens
+        ));
+        $nameTokens = array_slice($nameTokens, 0, 6);
+
+        // Mots-clés de la description + description courte (les plus fréquents)
+        $descCounts = $this->similarTokens(
+            ($product->short_description ?? '') . ' ' .
+            mb_substr(strip_tags((string) $product->description), 0, 1500)
+        );
+        arsort($descCounts);
+        $descTokens = array_slice(
+            array_values(array_diff(array_keys($descCounts), $nameTokens, $brandTokens)),
+            0,
+            12
+        );
+
+        $scored = [];
+
+        if ($myCats || $brandFamily || $nameTokens) {
+            // Pré-tri SQL approximatif pour garder les 200 meilleurs candidats
+            $parts = [];
+            $bindings = [];
+            if ($myCats) {
+                $parts[] = 'CASE WHEN category_id IN (' . implode(',', array_fill(0, count($myCats), '?')) . ') THEN 6 ELSE 0 END';
+                array_push($bindings, ...$myCats);
+            }
+            if ($brandFamily) {
+                $parts[] = 'CASE WHEN brand_id IN (' . implode(',', array_fill(0, count($brandFamily), '?')) . ') THEN 4 ELSE 0 END';
+                array_push($bindings, ...$brandFamily);
+            }
+            foreach ($nameTokens as $t) {
+                $parts[] = 'CASE WHEN name LIKE ? THEN 2 ELSE 0 END';
+                $bindings[] = "%{$t}%";
+            }
+
+            $pool = Product::select($this->listColumns)
+                ->selectRaw('SUBSTRING(description, 1, 600) AS description_excerpt')
+                ->with(['category:id,name,slug,parent_id', 'brand:id,name,slug,parent_id'])
+                ->where('id', '!=', $product->id)
+                ->where('is_unavailable', false)
+                ->where('stock', '>', 0)
+                ->where(function ($q) use ($myCats, $siblingCats, $brandFamily, $nameTokens) {
+                    if ($myCats) {
+                        $q->orWhereIn('category_id', $myCats)->orWhereIn('category2_id', $myCats);
+                    }
+                    if ($siblingCats) {
+                        $q->orWhereIn('category_id', $siblingCats);
+                    }
+                    if ($brandFamily) {
+                        $q->orWhereIn('brand_id', $brandFamily);
+                    }
+                    foreach ($nameTokens as $t) {
+                        $q->orWhere('name', 'LIKE', "%{$t}%");
+                    }
+                })
+                ->orderByRaw('(' . implode(' + ', $parts) . ') DESC', $bindings)
+                ->orderByDesc('is_bestseller')
+                ->limit(200)
+                ->get();
+
+            $nameSet = array_flip($nameTokens);
+            $descSet = array_flip($descTokens);
+
+            foreach ($pool as $c) {
+                $score = 0.0;
+
+                // Catégorie
+                if ($product->category_id && (int) $c->category_id === (int) $product->category_id) {
+                    $score += 6;
+                } elseif (in_array((int) $c->category_id, $myCats, true)
+                    || ($c->category2_id && in_array((int) $c->category2_id, $myCats, true))) {
+                    $score += 4;
+                } elseif (in_array((int) $c->category_id, $siblingCats, true)) {
+                    $score += 2;
+                }
+
+                // Marque
+                if ($product->brand_id && (int) $c->brand_id === (int) $product->brand_id) {
+                    $score += 4;
+                } elseif ($c->brand_id && in_array((int) $c->brand_id, $brandFamily, true)) {
+                    $score += 2;
+                }
+
+                // Mots du nom en commun
+                $cName = $this->similarTokens($c->name);
+                $score += min(8, count(array_intersect_key($cName, $nameSet)) * 2);
+
+                // Mots-clés description / description courte
+                $cText = $this->similarTokens(($c->short_description ?? '') . ' ' . ($c->description_excerpt ?? ''));
+                $score += min(4, count(array_intersect_key($cText + $cName, $descSet)) * 0.6);
+
+                // Prix comparable
+                if ($product->price > 0 && $c->price > 0) {
+                    $ratio = $c->price / $product->price;
+                    if ($ratio >= 0.5 && $ratio <= 2) {
+                        $score += 1;
+                    }
+                }
+
+                if ($c->is_bestseller) {
+                    $score += 0.5;
+                }
+
+                if ($score >= 3) {
+                    $scored[$c->id] = $score;
+                }
+            }
+
+            arsort($scored);
+        }
+
+        $ids = array_slice(array_keys($scored), 0, $limit);
+
+        // Complément si trop peu de résultats : best-sellers de la même catégorie
+        if (count($ids) < 4) {
+            $extra = Product::where('id', '!=', $product->id)
+                ->where('is_unavailable', false)
+                ->where('stock', '>', 0)
+                ->whereNotIn('id', $ids)
+                ->when($myCats, fn ($q) => $q->where(function ($qq) use ($myCats) {
+                    $qq->whereIn('category_id', $myCats)->orWhereIn('category2_id', $myCats);
+                }))
+                ->orderByDesc('is_bestseller')
+                ->orderByDesc('is_featured')
+                ->limit($limit - count($ids))
+                ->pluck('id')
+                ->all();
+            $ids = array_merge($ids, $extra);
+        }
+
+        return array_map('intval', $ids);
+    }
+
+    public function similar($slug)
+    {
+        $product = Product::with([
+            'brand:id,name,parent_id',
+            'category:id,parent_id',
+            'category2:id,parent_id',
+        ])->where('slug', $slug)->firstOrFail();
+
+        // On met en cache uniquement les IDs : prix/stock restent toujours frais
+        $ids = Cache::remember('product_similar_ids_' . $slug, 1800, function () use ($product) {
+            return $this->computeSimilarIds($product, 8);
+        });
+
+        if (empty($ids)) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = Product::select($this->listColumns)
+            ->with([
+                'category:id,name,slug,parent_id',
+                'brand:id,name,slug,parent_id',
+                'brand.parent:id,name,slug',
+                'promoCampaign:id,name,discount_percentage,starts_at,ends_at,is_active',
+            ])
+            ->whereIn('id', $ids)
+            ->where('is_unavailable', false)
+            ->get()
+            ->sortBy(fn ($p) => array_search($p->id, $ids))
+            ->values();
+
+        $products->each(fn ($p) => $p->formatPromoForFrontend());
+
+        return response()->json(['products' => $products]);
+    }
     /**
      * Détail d'un produit
      */

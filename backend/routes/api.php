@@ -111,6 +111,7 @@ Route::get('/products/newest', [ProductController::class, 'newest']);
 Route::get('/products/promotions', [ProductController::class, 'promotions']);
 Route::get('/products/bestsellers', [ProductController::class, 'bestsellers']);
 Route::get('/products/search', [ProductController::class, 'search']);
+Route::get('/products/{slug}/similar', [ProductController::class, 'similar']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::post('/products/{id}/notify', [ProductController::class, 'notifyMe']);
 Route::get('/products/{productId}/reviews', [ReviewController::class, 'index']);
