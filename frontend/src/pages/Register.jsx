@@ -50,12 +50,9 @@ const Register = () => {
       newErrors.phone = "Chiffres, espaces et + - ( ) uniquement";
 
     if (!formData.password) newErrors.password = "Le mot de passe est requis";
-    else if (
-      formData.password.length < 8 ||
-      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(formData.password)
-    )
+    else if (formData.password.length < 8)
       newErrors.password =
-        "Au moins 8 caractères, avec une majuscule, une minuscule et un chiffre";
+        "Le mot de passe doit contenir au moins 8 caractères";
     if (!formData.password_confirmation)
       newErrors.password_confirmation = "Veuillez confirmer le mot de passe";
     else if (formData.password !== formData.password_confirmation)

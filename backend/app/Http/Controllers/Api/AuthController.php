@@ -51,12 +51,11 @@ class AuthController extends Controller
                    'max:255',
                    'unique:users',
                ],
-               'password' => [
+                          'password' => [
                    'required',
                    'string',
                    'min:8',
                    'confirmed',
-                   'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
                ],
                'phone' => [
                    'nullable',
@@ -67,7 +66,7 @@ class AuthController extends Controller
            ], [
              'first_name.regex' => 'Le prénom ne peut contenir que des lettres et espaces',
              'last_name.regex' => 'Le nom ne peut contenir que des lettres et espaces',
-             'password.regex' => 'Le mot de passe doit contenir au moins une majuscule et un chiffre',
+
              'phone.regex' => 'Format de téléphone invalide',
              'email.unique' => 'Cet email est déjà utilisé',
          ]);
@@ -272,7 +271,7 @@ class AuthController extends Controller
             // Génère un code d'échange
             $code = Str::random(48);
 
-                     // Stocke le code dans la base de données (fiable, partagé entre processus)
+            // Stocke le code dans la base de données (fiable, partagé entre processus)
             try {
                 DB::table('google_auth_codes')->insert([
                     'code' => $code,
@@ -391,15 +390,14 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
             'token' => 'required|string',
-            'password' => [
+                    'password' => [
                 'required',
                 'string',
                 'min:8',
                 'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
             ],
         ], [
-            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule et un chiffre',
+
             'email.exists' => 'Aucun compte associé à cet email',
         ]);
 
@@ -527,7 +525,7 @@ class AuthController extends Controller
         $isGoogleUser = !empty($user->google_id);
 
         $rules = [
-            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+            'password' => 'required|string|min:8|confirmed',
         ];
 
         if (!$isGoogleUser) {
@@ -535,7 +533,7 @@ class AuthController extends Controller
         }
 
         $request->validate($rules, [
-            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule et un chiffre',
+
         ]);
 
         if (!$isGoogleUser && !Hash::check($request->current_password, $user->password)) {
