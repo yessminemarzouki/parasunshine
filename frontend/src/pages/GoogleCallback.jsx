@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { exchangeGoogleCode } from "../services/api";
@@ -7,8 +7,12 @@ const GoogleCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const handleCallback = async () => {
       try {
         const code = searchParams.get("code");
@@ -53,8 +57,7 @@ const GoogleCallback = () => {
 
         sessionStorage.removeItem("redirect_after_login");
         setTimeout(() => {
-          navigate(finalRedirect);
-          window.location.reload();
+          window.location.replace(finalRedirect);
         }, 1000);
       } catch (err) {
         const msg =
@@ -67,7 +70,8 @@ const GoogleCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
