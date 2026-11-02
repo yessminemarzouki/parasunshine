@@ -18,6 +18,23 @@ const OrderConfirmation = () => {
     fetchOrderDetails();
   }, [orderId, navigate]);
 
+  // 🆕 AJOUT : Tracking du Pixel Meta (Achat)
+  useEffect(() => {
+    if (order && order.total && typeof window !== "undefined" && window.fbq) {
+      // On crée une clé unique basée sur l'ID de la commande
+      const trackedKey = `fb_purchase_tracked_${order.id}`;
+
+      // On vérifie si on n'a pas déjà tracké cette commande (pour éviter le double comptage si on rafraîchit la page)
+      if (!sessionStorage.getItem(trackedKey)) {
+        window.fbq("track", "Purchase", {
+          value: parseFloat(order.total),
+          currency: "TND",
+        });
+        sessionStorage.setItem(trackedKey, "true");
+      }
+    }
+  }, [order]);
+
   const fetchOrderDetails = async () => {
     try {
       const response = await getOrder(orderId);
