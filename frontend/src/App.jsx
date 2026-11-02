@@ -1,5 +1,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import MetaPixelTracker from "./components/MetaPixelTracker"; // <--- AJOUTEZ CECI
+
 import { CartProvider } from "./context/CartContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { WishlistProvider } from "./context/WishlistContext";
@@ -60,6 +62,7 @@ export default function App() {
           <NotificationProvider>
             <CartNotificationProvider>
               {isClient && <ScrollToTop />}
+              {isClient && <MetaPixelTracker />} {/* <--- AJOUTEZ CECI */}
               <Layout>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
