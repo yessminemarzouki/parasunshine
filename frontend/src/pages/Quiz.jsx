@@ -18,27 +18,34 @@ import { useCart } from "../context/CartContext";
 import InlineVideoPlayer from "../components/InlineVideoPlayer";
 
 const GRADIENT = "linear-gradient(135deg, #2d7a5f 0%, #3f9973 100%)";
+const QUIZ_STATE_KEY = "quiz_state_v1";
 
+const loadSavedQuiz = () => {
+  try {
+    const raw = sessionStorage.getItem(QUIZ_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 export default function Quiz() {
   const { addToCart } = useCart();
 
-  // ── Étape 1 : choix de solution ──
-  const [step, setStep] = useState("solutions"); // "solutions" | "quiz" | "results"
+  const [step, setStep] = useState("solutions");
   const [solutions, setSolutions] = useState([]);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
   const [activeSolution, setActiveSolution] = useState(null);
   const [loadingSolutionId, setLoadingSolutionId] = useState(null);
 
-  // ── Étape 2 : questions ──
   const [questions, setQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState([]); // [{ question_id, option_id }]
+  const [answers, setAnswers] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Étape 3 : résultats ──
   const [results, setResults] = useState(null);
+  const [restored, setRestored] = useState(false);
 
   const [error, setError] = useState(null);
 
@@ -46,6 +53,51 @@ export default function Quiz() {
     fetchSolutions();
   }, []);
 
+  // Restauration après le montage (compatible SSG)
+  useEffect(() => {
+    const saved = loadSavedQuiz();
+    if (saved) {
+      setStep(saved.step || "solutions");
+      setActiveSolution(saved.activeSolution || null);
+      setQuestions(saved.questions || []);
+      setCurrentIdx(saved.currentIdx || 0);
+      setAnswers(saved.answers || []);
+      setSelectedOption(saved.selectedOption || null);
+      setResults(saved.results || null);
+    }
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      if (step === "solutions") {
+        sessionStorage.removeItem(QUIZ_STATE_KEY);
+        return;
+      }
+      sessionStorage.setItem(
+        QUIZ_STATE_KEY,
+        JSON.stringify({
+          step,
+          activeSolution,
+          questions,
+          currentIdx,
+          answers,
+          selectedOption,
+          results,
+        }),
+      );
+    } catch {}
+  }, [
+    restored,
+    step,
+    activeSolution,
+    questions,
+    currentIdx,
+    answers,
+    selectedOption,
+    results,
+  ]);
   const fetchSolutions = async () => {
     try {
       setLoadingSolutions(true);
@@ -172,6 +224,8 @@ export default function Quiz() {
   const progress = questions.length
     ? Math.round((currentIdx / questions.length) * 100)
     : 0;
+
+  if (!restored) return null;
 
   // ══════════════ ÉTAPE 1 — CHOIX DE SOLUTION ══════════════
   if (step === "solutions") {
