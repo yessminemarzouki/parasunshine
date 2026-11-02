@@ -240,9 +240,7 @@ const OrderConfirmation = () => {
                   </p>
                   <p className="text-[13px] text-gray-500">
                     {order.shipping_city}
-                    {order.shipping_postal_code
-                      ? `, ${order.shipping_postal_code}`
-                      : ""}
+                    {order.shipping_city}
                   </p>
                 </>
               )}

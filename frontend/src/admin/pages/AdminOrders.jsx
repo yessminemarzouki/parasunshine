@@ -475,12 +475,7 @@ export default function AdminOrders() {
                         ? ["Le client viendra retirer sa commande en magasin"]
                         : [
                             selected.shipping_address,
-                            selected.shipping_city &&
-                              `${selected.shipping_city}${
-                                selected.shipping_postal_code
-                                  ? `, ${selected.shipping_postal_code}`
-                                  : ""
-                              }`,
+                            selected.shipping_city,
                             selected.shipping_phone &&
                               `Tél : ${selected.shipping_phone}`,
                           ].filter(Boolean),

@@ -153,7 +153,7 @@ export default function Checkout() {
     governorate: "",
     delegation: "",
     address: "",
-    postalCode: "",
+
     addressLabel: "Domicile",
   });
 
@@ -261,7 +261,7 @@ export default function Checkout() {
   };
 
   const getShippingAddressString = (addr) => {
-    return `${addr.address}, ${addr.delegation}, ${addr.governorate}${addr.postal_code ? " " + addr.postal_code : ""}`;
+    return `${addr.address}, ${addr.delegation}, ${addr.governorate}`;
   };
 
   const handleSubmit = async (e) => {
@@ -301,7 +301,7 @@ export default function Checkout() {
         const addr = savedAddresses.find((a) => a.id === selectedAddressId);
         shippingAddress = getShippingAddressString(addr);
       } else {
-        shippingAddress = `${formData.address}, ${formData.delegation}, ${formData.governorate}${formData.postalCode ? " " + formData.postalCode : ""}`;
+        shippingAddress = `${formData.address}, ${formData.delegation}, ${formData.governorate}`;
       }
 
       const orderData = {
@@ -327,13 +327,6 @@ export default function Checkout() {
               ? formData.governorate
               : savedAddresses.find((a) => a.id === selectedAddressId)
                   ?.governorate || "",
-        shipping_postal_code:
-          deliveryMethod === "store_pickup"
-            ? ""
-            : useNewAddress
-              ? formData.postalCode
-              : savedAddresses.find((a) => a.id === selectedAddressId)
-                  ?.postal_code || "",
       };
 
       const response = await createOrder(orderData);
@@ -348,7 +341,7 @@ export default function Checkout() {
             governorate: formData.governorate,
             delegation: formData.delegation,
             address: formData.address,
-            postal_code: formData.postalCode,
+
             // Si c'est la 1ère adresse OU si l'utilisateur a coché "Définir comme principale"
             is_default: setAsDefault || savedAddresses.length === 0,
           });
@@ -649,7 +642,6 @@ export default function Checkout() {
                                 <p className="text-[12.5px] text-gray-500 mt-0.5">
                                   {addr.address}, {addr.delegation},{" "}
                                   {addr.governorate}
-                                  {addr.postal_code && ` — ${addr.postal_code}`}
                                 </p>
                                 <p className="text-[12.5px] text-gray-500">
                                   {addr.phone}
@@ -802,18 +794,6 @@ export default function Checkout() {
                               onChange={handleChange}
                               placeholder="N° rue, nom de la rue, appartement..."
                               required
-                            />
-                          </div>
-
-                          {/* Code postal */}
-                          <div>
-                            <Label>Code postal</Label>
-                            <InputField
-                              type="text"
-                              name="postalCode"
-                              value={formData.postalCode}
-                              onChange={handleChange}
-                              placeholder="Ex: 1000"
                             />
                           </div>
 

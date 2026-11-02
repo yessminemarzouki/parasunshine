@@ -138,7 +138,6 @@ export default function Account() {
     governorate: "",
     delegation: "",
     address: "",
-    postal_code: "",
     is_default: false,
   });
 
@@ -237,7 +236,7 @@ export default function Account() {
       } catch (e) {
         console.error("Erreur de lecture du localStorage", e);
       }
-      
+
       stored
         ? setUser({ ...stored, total_spent: 0, orders_count: 0 })
         : handleLogout();
@@ -266,7 +265,6 @@ export default function Account() {
       governorate: "",
       delegation: "",
       address: "",
-      postal_code: "",
       is_default: false,
     });
     setEditingAddress(null);
@@ -342,7 +340,7 @@ export default function Account() {
       governorate: addr.governorate,
       delegation: addr.delegation,
       address: addr.address,
-      postal_code: addr.postal_code || "",
+
       is_default: addr.is_default,
     });
     setShowAddressForm(true);
@@ -640,7 +638,6 @@ export default function Account() {
                           governorate: "",
                           delegation: "",
                           address: "",
-                          postal_code: "",
                           is_default: false,
                         });
                       }}
@@ -793,19 +790,6 @@ export default function Account() {
                         placeholder="N° rue, nom de la rue, appartement..."
                       />
 
-                      {/* Code postal */}
-                      <FieldInput
-                        label="Code postal"
-                        value={addressForm.postal_code}
-                        onChange={(e) =>
-                          setAddressForm((p) => ({
-                            ...p,
-                            postal_code: e.target.value,
-                          }))
-                        }
-                        placeholder="Ex: 1000"
-                      />
-
                       {/* Par défaut */}
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -892,7 +876,6 @@ export default function Account() {
                           <br />
                           {addr.delegation}, {addr.governorate}
                           <br />
-                          {addr.postal_code && `${addr.postal_code} — `}
                           {addr.phone}
                         </p>
                         <div className="flex gap-3 mt-4 pt-3 border-t border-gray-100">

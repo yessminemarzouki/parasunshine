@@ -418,12 +418,7 @@ export default function OrderDetail() {
                   <p className="font-semibold text-gray-800">
                     {order.shipping_address}
                   </p>
-                  <p>
-                    {order.shipping_city}
-                    {order.shipping_postal_code
-                      ? `, ${order.shipping_postal_code}`
-                      : ""}
-                  </p>
+                  <p>{order.shipping_city}</p>
                   <div className="flex items-center gap-1.5 mt-2 text-gray-500">
                     <Phone size={13} />
                     <span>{order.shipping_phone}</span>
