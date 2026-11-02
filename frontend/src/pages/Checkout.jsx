@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import {
@@ -107,6 +107,7 @@ export default function Checkout() {
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [deliveryMethod, setDeliveryMethod] = useState("delivery");
   const [ready, setReady] = useState(false);
+  const orderPlaced = useRef(false);
   const [shipping, setShipping] = useState({
     free_shipping_enabled: true,
     free_shipping_threshold: 99,
@@ -199,7 +200,7 @@ export default function Checkout() {
 
   useEffect(() => {
     if (cart.length === 0) {
-      navigate("/cart");
+      if (!orderPlaced.current) navigate("/cart");
       return;
     }
 
@@ -356,8 +357,9 @@ export default function Checkout() {
         }
       }
 
-      clearCart();
+      orderPlaced.current = true;
       navigate(`/order-confirmation/${response.order.id}`);
+      clearCart();
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
@@ -408,7 +410,7 @@ export default function Checkout() {
     );
   }
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && !orderPlaced.current) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
         <div className="text-center max-w-md">
