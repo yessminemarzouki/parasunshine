@@ -18,18 +18,37 @@ const OrderConfirmation = () => {
     fetchOrderDetails();
   }, [orderId, navigate]);
 
-  // 🆕 AJOUT : Tracking du Pixel Meta (Achat)
+  // 🆕 AJOUT : Tracking Meta & Google
   useEffect(() => {
-    if (order && order.total && typeof window !== "undefined" && window.fbq) {
-      // On crée une clé unique basée sur l'ID de la commande
+    if (order && order.total && typeof window !== "undefined") {
       const trackedKey = `fb_purchase_tracked_${order.id}`;
 
-      // On vérifie si on n'a pas déjà tracké cette commande (pour éviter le double comptage si on rafraîchit la page)
       if (!sessionStorage.getItem(trackedKey)) {
-        window.fbq("track", "Purchase", {
-          value: parseFloat(order.total),
-          currency: "TND",
-        });
+        const total = parseFloat(order.total);
+
+        // ✅ Meta Pixel
+        if (window.fbq) {
+          window.fbq("track", "Purchase", {
+            value: total,
+            currency: "TND",
+          });
+        }
+
+        // 🆕 Google Analytics 4
+        if (window.gtag) {
+          window.gtag("event", "purchase", {
+            transaction_id: order.id,
+            value: total,
+            currency: "TND",
+            items: (order.items || []).map((item) => ({
+              item_id: item.product_id,
+              item_name: item.product?.name || "Produit",
+              price: parseFloat(item.price),
+              quantity: item.quantity,
+            })),
+          });
+        }
+
         sessionStorage.setItem(trackedKey, "true");
       }
     }

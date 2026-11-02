@@ -52,14 +52,32 @@ const ProductCard = ({ product }) => {
     }
 
     if (product.stock > 0) {
-      // 🆕 AJOUT : Tracking Pixel Meta (AddToCart)
+      const price = parseFloat(product.effective_price ?? product.price);
+
+      // ✅ Meta Pixel
       if (typeof window !== "undefined" && window.fbq) {
         window.fbq("track", "AddToCart", {
           content_name: product.name,
           content_ids: [product.id],
           content_type: "product",
-          value: parseFloat(product.effective_price ?? product.price),
+          value: price,
           currency: "TND",
+        });
+      }
+
+      // 🆕 Google Analytics 4
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag("event", "add_to_cart", {
+          currency: "TND",
+          value: price,
+          items: [
+            {
+              item_id: product.id,
+              item_name: product.name,
+              price: price,
+              quantity: 1,
+            },
+          ],
         });
       }
 

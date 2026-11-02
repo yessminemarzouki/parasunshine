@@ -203,9 +203,8 @@ export default function Checkout() {
       return;
     }
 
-    // 🆕 AJOUT : Tracking Pixel Meta (InitiateCheckout)
-    // On utilise sessionStorage pour ne pas le déclencher en boucle si le panier change
-    if (typeof window !== "undefined" && window.fbq) {
+    // 🆕 AJOUT : Tracking Meta & Google
+    if (typeof window !== "undefined") {
       const checkoutTracked = sessionStorage.getItem("fb_checkout_tracked");
 
       if (!checkoutTracked) {
@@ -216,17 +215,34 @@ export default function Checkout() {
           0,
         );
 
-        window.fbq("track", "InitiateCheckout", {
-          content_ids: cart.map((item) => item.id),
-          contents: cart.map((item) => ({
-            id: item.id,
-            quantity: item.quantity,
-            item_price: parseFloat(item.effective_price ?? item.price),
-          })),
-          num_items: cart.length,
-          value: total,
-          currency: "TND",
-        });
+        // ✅ Meta Pixel
+        if (window.fbq) {
+          window.fbq("track", "InitiateCheckout", {
+            content_ids: cart.map((item) => item.id),
+            contents: cart.map((item) => ({
+              id: item.id,
+              quantity: item.quantity,
+              item_price: parseFloat(item.effective_price ?? item.price),
+            })),
+            num_items: cart.length,
+            value: total,
+            currency: "TND",
+          });
+        }
+
+        // 🆕 Google Analytics 4
+        if (window.gtag) {
+          window.gtag("event", "begin_checkout", {
+            currency: "TND",
+            value: total,
+            items: cart.map((item) => ({
+              item_id: item.id,
+              item_name: item.name,
+              price: parseFloat(item.effective_price ?? item.price),
+              quantity: item.quantity,
+            })),
+          });
+        }
 
         sessionStorage.setItem("fb_checkout_tracked", "true");
       }
