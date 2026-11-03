@@ -1997,9 +1997,11 @@ export default function ProductDetail() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-3">
                 {similar.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <div key={p.id} className="similar-card">
+                    <ProductCard product={p} />
+                  </div>
                 ))}
               </div>
             )}
@@ -2021,6 +2023,11 @@ export default function ProductDetail() {
           .blog-content u {
             color: inherit !important;
           }
+                      .similar-card button,
+          .similar-card a { font-size: 11.5px !important; }
+          .similar-card button { padding-top: 6px !important; padding-bottom: 6px !important; margin-top: 6px !important; }
+          .similar-card p { font-size: 10px !important; }
+          .similar-card span { font-size: 12.5px !important; }
           .scrollbar-hide::-webkit-scrollbar { display: none; }
           .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
         `}</style>
