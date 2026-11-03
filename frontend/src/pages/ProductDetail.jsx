@@ -37,6 +37,7 @@ import { useWishlist } from "../context/WishlistContext";
 import CartNotification from "../components/CartNotification";
 import ImageLightbox from "../components/ImageLightbox";
 import Seo from "../components/Seo";
+import ProductCard from "../components/ProductCard";
 
 // ── Petite pastille "sonnette" affichée sous une variante indisponible ──
 const NotifyBell = ({ onClick, title }) => (
@@ -1997,65 +1998,9 @@ export default function ProductDetail() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                {similar.map((p) => {
-                  const promo = !!p.is_promo_active;
-                  const shown = parseFloat(p.effective_price ?? p.price) || 0;
-                  const ref = parseFloat(p.effective_reference_price ?? 0) || 0;
-                  const pct =
-                    promo && ref > shown
-                      ? Math.round(((ref - shown) / ref) * 100)
-                      : 0;
-                  return (
-                    <Link
-                      key={p.id}
-                      to={`/products/${p.slug}`}
-                      className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md hover:border-gray-200 transition-all flex flex-col"
-                    >
-                      <div className="relative bg-gray-50 h-40 md:h-48 overflow-hidden">
-                        {p.image ? (
-                          <img
-                            src={`${STORAGE_URL}/${p.image}`}
-                            alt={p.name}
-                            loading="lazy"
-                            className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-[12px]">
-                            Aucune image
-                          </div>
-                        )}
-                        {pct > 0 && (
-                          <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-red-500 text-white">
-                            -{pct}%
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3 flex flex-col gap-1.5 flex-1">
-                        {p.brand?.name && (
-                          <p className="text-[10.5px] text-gray-400 uppercase tracking-wider font-semibold truncate">
-                            {p.brand.name}
-                          </p>
-                        )}
-                        <p className="text-[13px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-[#1a5242] transition-colors">
-                          {p.name}
-                        </p>
-                        <div className="mt-auto flex items-baseline gap-2 flex-wrap pt-1">
-                          <span
-                            className="text-[14.5px] font-extrabold"
-                            style={{ color: "#3f9973" }}
-                          >
-                            {shown.toFixed(3)} DT
-                          </span>
-                          {pct > 0 && (
-                            <span className="text-[11.5px] text-gray-400 line-through">
-                              {ref.toFixed(3).replace(".", ",")} DT
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {similar.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
               </div>
             )}
           </section>
