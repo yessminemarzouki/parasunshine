@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\Admin\AdminShippingController;
 use App\Http\Controllers\Api\ShippingController;
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\Admin\AdminSiteSettingsController;
+use App\Http\Controllers\Api\SitemapController;
 
 // ========================================
 // AUTHENTIFICATION (publiques)
@@ -157,6 +158,7 @@ Route::get('/blog/{id}', [AdminBlogController::class, 'publicShow']);
 Route::get('/promo-section', [AdminPromoSectionController::class, 'public']);
 Route::get('/shipping-settings', [ShippingController::class, 'show']);
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/quiz/solutions', [QuizController::class, 'solutions']);
 Route::get('/quiz/solutions/{slug}/questions', [QuizController::class, 'questions']);
 Route::middleware('throttle:20,1')->group(function () {
