@@ -632,7 +632,10 @@ export default function ProductDetail() {
       "@type": "Offer",
       url: `https://www.parasunshine.tn/products/${product.slug}`,
       priceCurrency: "TND",
-      price: displayPrice,
+      price: displayPrice.toFixed(3),
+      priceValidUntil: product.promo_ends_at
+        ? String(product.promo_ends_at).slice(0, 10)
+        : undefined,
       availability: isUnavailable
         ? "https://schema.org/OutOfStock"
         : "https://schema.org/InStock",
@@ -1033,14 +1036,22 @@ export default function ProductDetail() {
                 style={{ color: "#3f9973" }}
               >
                 {displayPrice.toFixed(3)} DT
-              </span>
+              </span>{" "}
               {hasPromo && effectiveReferencePrice > 0 && (
-                <span className="text-[16px] text-gray-400 line-through font-medium">
-                  {effectiveReferencePrice.toFixed(3).replace(".", ",")} DT
-                </span>
+                <>
+                  <span
+                    data-nosnippet
+                    className="text-[16px] text-gray-400 line-through font-medium"
+                  >
+                    {effectiveReferencePrice.toFixed(3).replace(".", ",")} DT
+                  </span>{" "}
+                </>
               )}
               {hasPromo && effectiveReferencePrice > effectivePrice && (
-                <span className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg">
+                <span
+                  data-nosnippet
+                  className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg"
+                >
                   Économisez{" "}
                   {(effectiveReferencePrice - effectivePrice)
                     .toFixed(3)
