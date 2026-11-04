@@ -269,7 +269,7 @@ const ProductCard = ({ product }) => {
                     .toFixed(3)
                     .replace(".", ",")}{" "}
                   DT
-                </span>
+                </span>{" "}
                 {product.effective_reference_price && (
                   <span
                     data-nosnippet
