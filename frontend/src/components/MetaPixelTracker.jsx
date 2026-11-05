@@ -1,17 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 const MetaPixelTracker = () => {
   const location = useLocation();
+  const isFirst = useRef(true);
 
   useEffect(() => {
-    // On vérifie que window.fbq existe (chargé par index.html)
+    if (isFirst.current) {
+      isFirst.current = false; // le 1er PageView est déjà envoyé par index.html
+      return;
+    }
     if (typeof window !== "undefined" && window.fbq) {
       window.fbq("track", "PageView");
     }
-  }, [location.pathname]); // Se déclenche à chaque changement d'URL
+  }, [location.pathname]);
 
-  return null; // Ce composant n'affiche rien
+  return null;
 };
 
 export default MetaPixelTracker;
