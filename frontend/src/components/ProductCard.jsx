@@ -272,14 +272,12 @@ const ProductCard = ({ product }) => {
                 </span>{" "}
                 {product.effective_reference_price && (
                   <span
-                    data-nosnippet
-                    className="text-[11px] md:text-[0.9rem] font-normal text-gray-400 line-through"
-                  >
-                    {parseFloat(product.effective_reference_price)
+                    aria-hidden="true"
+                    className="old-price text-[11px] md:text-[0.9rem] font-normal text-gray-400 line-through"
+                    data-txt={`${parseFloat(product.effective_reference_price)
                       .toFixed(3)
-                      .replace(".", ",")}{" "}
-                    DT
-                  </span>
+                      .replace(".", ",")} DT`}
+                  />
                 )}
               </>
             ) : (

@@ -649,10 +649,22 @@ export default function ProductDetail() {
     }),
   };
 
+  const cleanText = (s) =>
+    s
+      ? s
+          .replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+      : "";
+  const baseDesc =
+    cleanText(product.short_description) ||
+    cleanText(product.description) ||
+    `Découvrez ${product.name} sur ParaSunshine, votre parapharmacie en ligne en Tunisie.`;
   const seoDescription =
-    product.short_description?.replace(/<[^>]*>/g, "").substring(0, 155) ||
-    product.description?.replace(/<[^>]*>/g, "").substring(0, 155) ||
-    `Découvrez ${product.name} sur ParaSunshine, votre parapharmacie en ligne en Tunisie. Livraison rapide 24-48h.`;
+    `${product.name} à ${displayPrice.toFixed(3)} DT. ${baseDesc}`.substring(
+      0,
+      155,
+    );
 
   const faqs = [
     {
@@ -1036,28 +1048,20 @@ export default function ProductDetail() {
                 style={{ color: "#3f9973" }}
               >
                 {displayPrice.toFixed(3)} DT
-              </span>{" "}
+              </span>
               {hasPromo && effectiveReferencePrice > 0 && (
-                <>
-                  <span
-                    data-nosnippet
-                    className="text-[16px] text-gray-400 line-through font-medium"
-                  >
-                    {effectiveReferencePrice.toFixed(3).replace(".", ",")} DT
-                  </span>{" "}
-                </>
+                <span
+                  aria-hidden="true"
+                  className="old-price text-[16px] text-gray-400 line-through font-medium"
+                  data-txt={`${effectiveReferencePrice.toFixed(3).replace(".", ",")} DT`}
+                />
               )}
               {hasPromo && effectiveReferencePrice > effectivePrice && (
                 <span
-                  data-nosnippet
-                  className="text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg"
-                >
-                  Économisez{" "}
-                  {(effectiveReferencePrice - effectivePrice)
-                    .toFixed(3)
-                    .replace(".", ",")}{" "}
-                  DT
-                </span>
+                  aria-hidden="true"
+                  className="old-price text-[13px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg"
+                  data-txt={`Économisez ${(effectiveReferencePrice - effectivePrice).toFixed(3).replace(".", ",")} DT`}
+                />
               )}
             </div>
 
@@ -2040,6 +2044,7 @@ export default function ProductDetail() {
           .similar-card p { font-size: 10px !important; }
           .similar-card span { font-size: 12.5px !important; }
           .scrollbar-hide::-webkit-scrollbar { display: none; }
+                    .old-price::after { content: attr(data-txt); }
           .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
         `}</style>
 
