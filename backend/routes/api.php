@@ -209,6 +209,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Utilisateurs
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::get('/users/{user}', [AdminUserController::class, 'show']);
+    // Paniers abandonnés (visiteurs + clients)
+    Route::get('/abandoned-carts', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'index']);
+    Route::post('/abandoned-carts/purge', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'purge']);
+
 
     // Avis
     Route::get('/reviews', [AdminReviewController::class, 'index']);
@@ -359,6 +363,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
 
         // Utilisateurs
         Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
+        // Paniers abandonnés
+        Route::delete('/abandoned-carts/{abandonedCart}', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'destroy']);
 
         // Avis
         Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy']);

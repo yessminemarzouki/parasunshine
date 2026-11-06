@@ -777,3 +777,18 @@ export const importBrandLogosZip = async (file) => {
   });
   return response.data;
 };
+// ── PANIERS ABANDONNÉS ──
+export const getAdminAbandonedCarts = async (params = {}) => {
+  const response = await api.get("/admin/abandoned-carts", { params });
+  return response.data;
+};
+
+export const deleteAdminAbandonedCart = async (id) => {
+  const response = await api.delete(`/admin/abandoned-carts/${id}`);
+  return response.data;
+};
+
+export const purgeAdminAbandonedCarts = async (days) => {
+  const response = await api.post("/admin/abandoned-carts/purge", { days });
+  return response.data;
+};

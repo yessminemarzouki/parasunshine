@@ -24,6 +24,9 @@ const AdminPromoCampaigns = lazy(
 const AdminPromotionsLayout = lazy(
   () => import("./admin/components/AdminPromotionsLayout"),
 );
+const AdminAbandonedCarts = lazy(
+  () => import("./admin/pages/AdminAbandonedCarts"),
+);
 const AdminBlog = lazy(() => import("./admin/pages/AdminBlog"));
 const AdminHygieneSection = lazy(
   () => import("./admin/pages/AdminHygieneSection"),
@@ -62,6 +65,7 @@ export default function AdminApp() {
         <Route path="promo-codes" element={<AdminPromoCodes />} />
         <Route path="homepage-videos" element={<AdminHomepageVideos />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="contacts" element={<AdminContacts />} />
         <Route path="newsletter" element={<AdminNewsletter />} />
