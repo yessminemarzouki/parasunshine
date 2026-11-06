@@ -8,14 +8,10 @@ use Illuminate\Http\Request;
 
 class AdminAbandonedCartController extends Controller
 {
-    /**
-     * Filtres communs (hors "type") — sert à la liste ET aux statistiques.
-     */
     private function baseQuery(Request $request)
     {
         $query = AbandonedCart::query();
 
-        // Un panier n'est "abandonné" qu'après X minutes d'inactivité
         $idle = max(0, (int) $request->get('idle_minutes', 60));
         if ($idle > 0) {
             $query->where('last_activity', '<=', now()->subMinutes($idle));
@@ -51,7 +47,6 @@ class AdminAbandonedCartController extends Controller
     {
         $base = $this->baseQuery($request);
 
-        // Statistiques (indépendantes du filtre "type")
         $row = (clone $base)->selectRaw(
             'COALESCE(SUM(CASE WHEN user_id IS NULL THEN 1 ELSE 0 END), 0) AS guests_count,
              COALESCE(SUM(CASE WHEN user_id IS NULL THEN total ELSE 0 END), 0) AS guests_value,
@@ -93,10 +88,6 @@ class AdminAbandonedCartController extends Controller
         return response()->json(['message' => 'Panier supprimé.']);
     }
 
-    /**
-     * Supprime les paniers VISITEURS inactifs depuis plus de N jours.
-     * Les paniers des clients (avec compte) ne sont jamais touchés.
-     */
     public function purge(Request $request)
     {
         $validated = $request->validate([
