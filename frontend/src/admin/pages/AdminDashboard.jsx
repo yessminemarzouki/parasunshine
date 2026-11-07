@@ -97,7 +97,7 @@ const STAT_GROUPS = (stats) => [
         icon: AlertTriangle,
         bg: "bg-red-50",
         ic: "text-red-600",
-        link: null,
+        link: "/admin/abandoned-carts",
       },
       {
         label: "Avis à modérer",

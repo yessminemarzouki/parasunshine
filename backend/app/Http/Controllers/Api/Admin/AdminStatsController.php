@@ -73,7 +73,9 @@ class AdminStatsController extends Controller
         $totalReviews   = Review::count();
 
         // Paniers abandonnés
-        $abandonedCarts = AbandonedCart::where('recovered', false)->count();
+        $abandonedCarts = AbandonedCart::where('recovered', false)
+         ->where('last_activity', '<=', now()->subHour())
+         ->count();
 
         // Messages non lus
         $unreadContacts = Contact::where('is_read', false)->count();
