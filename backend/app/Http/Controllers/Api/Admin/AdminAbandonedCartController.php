@@ -19,9 +19,11 @@ class AdminAbandonedCartController extends Controller
 
         $status = $request->get('status', 'pending');
         if ($status === 'pending') {
-            $query->where('recovered', false);
+            $query->where('recovered', false)->whereNull('cancelled_at');
         } elseif ($status === 'recovered') {
             $query->where('recovered', true);
+        } elseif ($status === 'cancelled') {
+            $query->whereNotNull('cancelled_at');
         }
 
         if ($request->filled('from')) {
@@ -43,6 +45,18 @@ class AdminAbandonedCartController extends Controller
         return $query;
     }
 
+    private function applyType($query, Request $request)
+    {
+        $type = $request->get('type');
+        if ($type === 'guests') {
+            $query->whereNull('user_id');
+        } elseif ($type === 'customers') {
+            $query->whereNotNull('user_id');
+        }
+
+        return $query;
+    }
+
     public function index(Request $request)
     {
         $base = $this->baseQuery($request);
@@ -59,14 +73,10 @@ class AdminAbandonedCartController extends Controller
             'guests_value'    => round((float) $row->guests_value, 3),
             'customers_count' => (int) $row->customers_count,
             'customers_value' => round((float) $row->customers_value, 3),
+            'cancelled_total' => AbandonedCart::whereNotNull('cancelled_at')->count(),
         ];
 
-        $type = $request->get('type');
-        if ($type === 'guests') {
-            $base->whereNull('user_id');
-        } elseif ($type === 'customers') {
-            $base->whereNotNull('user_id');
-        }
+        $this->applyType($base, $request);
 
         $perPage = min(max((int) $request->get('per_page', 20), 1), 50);
 
@@ -78,6 +88,53 @@ class AdminAbandonedCartController extends Controller
         return response()->json([
             'stats' => $stats,
             'carts' => $carts,
+        ]);
+    }
+
+    public function cancel(AbandonedCart $abandonedCart)
+    {
+        $abandonedCart->update(['cancelled_at' => now()]);
+
+        return response()->json(['message' => 'Panier annulé.']);
+    }
+
+    public function restore(AbandonedCart $abandonedCart)
+    {
+        $abandonedCart->update(['cancelled_at' => null]);
+
+        return response()->json(['message' => 'Panier restauré.']);
+    }
+
+    /**
+     * Annule plusieurs paniers : soit une liste d'ids,
+     * soit tous les paniers correspondant aux filtres (all_filtered = true).
+     */
+    public function bulkCancel(Request $request)
+    {
+        $request->validate([
+            'ids'          => 'nullable|array|max:500',
+            'ids.*'        => 'integer',
+            'all_filtered' => 'nullable|boolean',
+        ]);
+
+        if ($request->boolean('all_filtered')) {
+            // On n'annule que les paniers "non récupérés" et pas déjà annulés
+            $request->merge(['status' => 'pending']);
+            $query = $this->applyType($this->baseQuery($request), $request);
+        } else {
+            if (empty($request->ids)) {
+                return response()->json(['message' => 'Aucun panier sélectionné.'], 422);
+            }
+            $query = AbandonedCart::whereIn('id', $request->ids)
+                ->where('recovered', false)
+                ->whereNull('cancelled_at');
+        }
+
+        $count = $query->update(['cancelled_at' => now()]);
+
+        return response()->json([
+            'message' => "{$count} panier(s) annulé(s).",
+            'count'   => $count,
         ]);
     }
 

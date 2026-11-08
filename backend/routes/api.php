@@ -212,6 +212,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
     // Paniers abandonnés (visiteurs + clients)
     Route::get('/abandoned-carts', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'index']);
     Route::post('/abandoned-carts/purge', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'purge']);
+    Route::post('/abandoned-carts/bulk-cancel', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'bulkCancel']);
+    Route::post('/abandoned-carts/{abandonedCart}/cancel', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'cancel']);
+    Route::post('/abandoned-carts/{abandonedCart}/restore', [\App\Http\Controllers\Api\Admin\AdminAbandonedCartController::class, 'restore']);
 
 
     // Avis

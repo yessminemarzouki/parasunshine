@@ -794,3 +794,20 @@ export const purgeAdminAbandonedCarts = async (days) => {
   });
   return response.data;
 };
+export const cancelAdminAbandonedCart = async (id) => {
+  const response = await adminApi.post(`/admin/abandoned-carts/${id}/cancel`);
+  return response.data;
+};
+
+export const restoreAdminAbandonedCart = async (id) => {
+  const response = await adminApi.post(`/admin/abandoned-carts/${id}/restore`);
+  return response.data;
+};
+
+export const bulkCancelAdminAbandonedCarts = async (payload) => {
+  const response = await adminApi.post(
+    "/admin/abandoned-carts/bulk-cancel",
+    payload,
+  );
+  return response.data;
+};

@@ -12,6 +12,7 @@ class AbandonedCart extends Model
         'session_id',
         'customer_email',
         'customer_name',
+        'cancelled_at'  => 'datetime',
         'cart_items',
         'total',
         'last_activity',
@@ -22,6 +23,7 @@ class AbandonedCart extends Model
         'cart_items'    => 'array',
         'total'         => 'decimal:3',
         'last_activity' => 'datetime',
+        'cancelled_at'  => 'datetime',
         'recovered'     => 'boolean',
     ];
 
