@@ -7,8 +7,6 @@ import {
   User,
   UserX,
   Eraser,
-  Ban,
-  RotateCcw,
   Mail as MailIcon,
   Phone,
 } from "lucide-react";
@@ -17,9 +15,6 @@ import {
   getAdminAbandonedCarts,
   deleteAdminAbandonedCart,
   purgeAdminAbandonedCarts,
-  cancelAdminAbandonedCart,
-  restoreAdminAbandonedCart,
-  bulkCancelAdminAbandonedCarts,
 } from "../services/adminApi";
 import {
   Badge,
@@ -87,8 +82,8 @@ const itemsCount = (cart) =>
   );
 
 const statusOf = (cart) => {
-  if (cart.cancelled_at) return { label: "Annulé", type: "danger" };
-  if (cart.recovered) return { label: "Récupéré", type: "success" };
+  if (cart.cancelled_at) return { label: "Annulé (vidé)", type: "danger" };
+  if (cart.recovered) return { label: "Commandé", type: "success" };
   return { label: "Abandonné", type: "warning" };
 };
 
@@ -151,8 +146,7 @@ export default function AdminAbandonedCarts() {
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
-  const [checked, setChecked] = useState([]);
-  const [confirm, setConfirm] = useState(null); // { kind, cart? }
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [purgeDays, setPurgeDays] = useState("60");
   const [busy, setBusy] = useState(false);
@@ -160,6 +154,13 @@ export default function AdminAbandonedCarts() {
   const reqId = useRef(0);
 
   const showToast = (message, t = "success") => setToast({ message, type: t });
+
+  // Les paniers vidés sont récents : on ne filtre pas sur l'inactivité
+  useEffect(() => {
+    if (status === "cancelled") setIdle("0");
+    else if (idle === "0" && status === "pending") setIdle("60");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const fetchCarts = async () => {
     const id = ++reqId.current;
@@ -179,7 +180,6 @@ export default function AdminAbandonedCarts() {
       setCarts(data.carts?.data || []);
       setMeta(data.carts || {});
       setStats((prev) => data.stats || prev);
-      setChecked([]);
     } catch {
       if (id === reqId.current) showToast("Erreur de chargement.", "error");
     } finally {
@@ -197,57 +197,18 @@ export default function AdminAbandonedCarts() {
     setPage(1);
   };
 
-  const toggleOne = (id) =>
-    setChecked((c) =>
-      c.includes(id) ? c.filter((x) => x !== id) : [...c, id],
-    );
-
-  const selectableIds = carts
-    .filter((c) => !c.cancelled_at && !c.recovered)
-    .map((c) => c.id);
-  const allPageChecked =
-    selectableIds.length > 0 &&
-    selectableIds.every((id) => checked.includes(id));
-  const toggleAllPage = () => setChecked(allPageChecked ? [] : selectableIds);
-
-  const runConfirm = async () => {
-    if (!confirm) return;
+  const doDelete = async () => {
+    if (!confirmDelete) return;
     setBusy(true);
     try {
-      let res;
-      if (confirm.kind === "delete") {
-        res = await deleteAdminAbandonedCart(confirm.cart.id);
-      } else if (confirm.kind === "cancel") {
-        res = await cancelAdminAbandonedCart(confirm.cart.id);
-      } else if (confirm.kind === "bulk") {
-        res = await bulkCancelAdminAbandonedCarts({ ids: checked });
-      } else if (confirm.kind === "bulkAll") {
-        res = await bulkCancelAdminAbandonedCarts({
-          all_filtered: true,
-          type: type || undefined,
-          idle_minutes: idle,
-          from: from || undefined,
-          to: to || undefined,
-          search: debouncedSearch || undefined,
-        });
-      }
-      setConfirm(null);
-      showToast(res?.message || "Terminé.");
+      await deleteAdminAbandonedCart(confirmDelete.id);
+      setConfirmDelete(null);
+      showToast("Panier supprimé.");
       fetchCarts();
     } catch {
-      showToast("Une erreur est survenue.", "error");
+      showToast("Erreur lors de la suppression.", "error");
     } finally {
       setBusy(false);
-    }
-  };
-
-  const doRestore = async (cart) => {
-    try {
-      const res = await restoreAdminAbandonedCart(cart.id);
-      showToast(res.message || "Panier restauré.");
-      fetchCarts();
-    } catch {
-      showToast("Erreur lors de la restauration.", "error");
     }
   };
 
@@ -264,29 +225,6 @@ export default function AdminAbandonedCarts() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const confirmTexts = {
-    delete: {
-      title: "Supprimer définitivement ?",
-      text: "Ce panier sera effacé sans possibilité de retour.",
-      label: "Supprimer",
-    },
-    cancel: {
-      title: "Annuler ce panier ?",
-      text: "Il sera retiré de la liste des paniers abandonnés. Vous pourrez le retrouver dans le filtre « Annulés ».",
-      label: "Annuler le panier",
-    },
-    bulk: {
-      title: `Annuler ${checked.length} panier(s) ?`,
-      text: "Ils seront retirés de la liste des paniers abandonnés (restaurables depuis « Annulés »).",
-      label: "Annuler",
-    },
-    bulkAll: {
-      title: `Annuler les ${meta.total ?? 0} paniers affichés ?`,
-      text: "Tous les paniers correspondant aux filtres actuels (toutes pages) seront annulés. Ils restent restaurables depuis « Annulés ».",
-      label: "Tout annuler",
-    },
   };
 
   const statCards = [
@@ -326,13 +264,13 @@ export default function AdminAbandonedCarts() {
         />
       )}
 
-      {confirm && (
+      {confirmDelete && (
         <ConfirmBox
-          title={confirmTexts[confirm.kind].title}
-          text={confirmTexts[confirm.kind].text}
-          confirmLabel={confirmTexts[confirm.kind].label}
-          onConfirm={runConfirm}
-          onCancel={() => setConfirm(null)}
+          title="Supprimer définitivement ?"
+          text="Ce panier sera effacé sans possibilité de retour."
+          confirmLabel="Supprimer"
+          onConfirm={doDelete}
+          onCancel={() => setConfirmDelete(null)}
           busy={busy}
         />
       )}
@@ -363,8 +301,8 @@ export default function AdminAbandonedCarts() {
       )}
 
       <PageHeader
-        title="Paniers abandonnés"
-        subtitle={`${meta.total ?? 0} panier(s) affiché(s) · ${stats.cancelled_total ?? 0} annulé(s) au total`}
+        title="Paniers abandonnés et annulés"
+        subtitle={`${meta.total ?? 0} panier(s) affiché(s) · ${stats.cancelled_total ?? 0} panier(s) vidé(s) par les clients au total`}
         action={
           <Btn ghost onClick={() => setPurgeOpen(true)}>
             <Eraser size={14} /> Supprimer les anciens
@@ -397,7 +335,7 @@ export default function AdminAbandonedCarts() {
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-col lg:flex-row gap-2.5 mb-4 flex-wrap">
+      <div className="flex flex-col lg:flex-row gap-2.5 mb-5 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search
             size={14}
@@ -416,9 +354,9 @@ export default function AdminAbandonedCarts() {
           <option value="customers">Clients (avec compte)</option>
         </Select>
         <Select value={status} onChange={resetPage(setStatus)}>
-          <option value="pending">Abandonnés (actifs)</option>
-          <option value="cancelled">Annulés</option>
-          <option value="recovered">Récupérés (commande passée)</option>
+          <option value="pending">Abandonnés (panier en attente)</option>
+          <option value="cancelled">Annulés (panier vidé par le client)</option>
+          <option value="recovered">Commandés</option>
           <option value="all">Tous</option>
         </Select>
         <Select value={idle} onChange={resetPage(setIdle)}>
@@ -436,30 +374,6 @@ export default function AdminAbandonedCarts() {
         <Input type="date" value={to} onChange={resetPage(setTo)} title="Au" />
       </div>
 
-      {/* Barre d'actions groupées */}
-      {status === "pending" && carts.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 mb-4 bg-white border border-gray-100 rounded-xl px-4 py-2.5">
-          <label className="flex items-center gap-2 text-[12.5px] text-gray-600 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={allPageChecked}
-              onChange={toggleAllPage}
-              className="w-4 h-4 accent-[#1a4731]"
-            />
-            Sélectionner la page
-          </label>
-          {checked.length > 0 && (
-            <Btn danger onClick={() => setConfirm({ kind: "bulk" })}>
-              <Ban size={14} /> Annuler la sélection ({checked.length})
-            </Btn>
-          )}
-          <Btn ghost onClick={() => setConfirm({ kind: "bulkAll" })}>
-            <Ban size={14} /> Annuler tous les paniers affichés (
-            {meta.total ?? 0})
-          </Btn>
-        </div>
-      )}
-
       {/* Tableau */}
       <TableWrap>
         {loading ? (
@@ -467,12 +381,11 @@ export default function AdminAbandonedCarts() {
         ) : (
           <Table
             headers={[
-              "",
               "Type",
               "Contact",
               "Produits",
               "Total",
-              "Dernière activité",
+              status === "cancelled" ? "Vidé le" : "Dernière activité",
               "Statut",
               "Actions",
             ]}
@@ -483,19 +396,8 @@ export default function AdminAbandonedCarts() {
               const isGuest = !cart.user_id;
               const products = cart.cart_products || [];
               const st = statusOf(cart);
-              const canCheck = !cart.cancelled_at && !cart.recovered;
               return (
                 <TR key={cart.id}>
-                  <TD>
-                    {canCheck ? (
-                      <input
-                        type="checkbox"
-                        checked={checked.includes(cart.id)}
-                        onChange={() => toggleOne(cart.id)}
-                        className="w-4 h-4 accent-[#1a4731]"
-                      />
-                    ) : null}
-                  </TD>
                   <TD>
                     <Badge type={isGuest ? "gray" : "info"}>
                       {isGuest ? "Visiteur" : "Client"}
@@ -549,7 +451,11 @@ export default function AdminAbandonedCarts() {
                     </span>
                   </TD>
                   <TD className="text-[12px] text-gray-500 whitespace-nowrap">
-                    {timeAgo(cart.last_activity)}
+                    {timeAgo(
+                      status === "cancelled" && cart.cancelled_at
+                        ? cart.cancelled_at
+                        : cart.last_activity,
+                    )}
                   </TD>
                   <TD>
                     <Badge type={st.type}>{st.label}</Badge>
@@ -563,26 +469,9 @@ export default function AdminAbandonedCarts() {
                       >
                         <Eye size={13} />
                       </ActionBtn>
-                      {cart.cancelled_at ? (
-                        <ActionBtn
-                          type="success"
-                          onClick={() => doRestore(cart)}
-                          title="Restaurer"
-                        >
-                          <RotateCcw size={13} />
-                        </ActionBtn>
-                      ) : !cart.recovered ? (
-                        <ActionBtn
-                          type="warning"
-                          onClick={() => setConfirm({ kind: "cancel", cart })}
-                          title="Annuler (vider)"
-                        >
-                          <Ban size={13} />
-                        </ActionBtn>
-                      ) : null}
                       <ActionBtn
                         type="danger"
-                        onClick={() => setConfirm({ kind: "delete", cart })}
+                        onClick={() => setConfirmDelete(cart)}
                         title="Supprimer définitivement"
                       >
                         <Trash2 size={13} />
@@ -648,7 +537,8 @@ export default function AdminAbandonedCarts() {
                   </p>
                   {selected.cancelled_at && (
                     <p className="text-[11.5px] text-red-500 font-semibold">
-                      Annulé le {fullDate(selected.cancelled_at)}
+                      Panier vidé par le client le{" "}
+                      {fullDate(selected.cancelled_at)}
                     </p>
                   )}
                 </div>

@@ -91,52 +91,10 @@ class AdminAbandonedCartController extends Controller
         ]);
     }
 
-    public function cancel(AbandonedCart $abandonedCart)
-    {
-        $abandonedCart->update(['cancelled_at' => now()]);
 
-        return response()->json(['message' => 'Panier annulé.']);
-    }
 
-    public function restore(AbandonedCart $abandonedCart)
-    {
-        $abandonedCart->update(['cancelled_at' => null]);
 
-        return response()->json(['message' => 'Panier restauré.']);
-    }
 
-    /**
-     * Annule plusieurs paniers : soit une liste d'ids,
-     * soit tous les paniers correspondant aux filtres (all_filtered = true).
-     */
-    public function bulkCancel(Request $request)
-    {
-        $request->validate([
-            'ids'          => 'nullable|array|max:500',
-            'ids.*'        => 'integer',
-            'all_filtered' => 'nullable|boolean',
-        ]);
-
-        if ($request->boolean('all_filtered')) {
-            // On n'annule que les paniers "non récupérés" et pas déjà annulés
-            $request->merge(['status' => 'pending']);
-            $query = $this->applyType($this->baseQuery($request), $request);
-        } else {
-            if (empty($request->ids)) {
-                return response()->json(['message' => 'Aucun panier sélectionné.'], 422);
-            }
-            $query = AbandonedCart::whereIn('id', $request->ids)
-                ->where('recovered', false)
-                ->whereNull('cancelled_at');
-        }
-
-        $count = $query->update(['cancelled_at' => now()]);
-
-        return response()->json([
-            'message' => "{$count} panier(s) annulé(s).",
-            'count'   => $count,
-        ]);
-    }
 
     public function destroy(AbandonedCart $abandonedCart)
     {

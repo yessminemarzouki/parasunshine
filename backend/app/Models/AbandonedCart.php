@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Collection;
 class AbandonedCart extends Model
 {
     protected $fillable = [
-        'user_id',
-        'session_id',
-        'customer_email',
-        'customer_name',
-        'cancelled_at'  => 'datetime',
-        'cart_items',
-        'total',
-        'last_activity',
-        'recovered',
+      'user_id',
+      'session_id',
+      'customer_email',
+      'customer_name',
+      'cart_items',
+      'total',
+      'last_activity',
+      'recovered',
+      'cancelled_at',
     ];
 
     protected $casts = [

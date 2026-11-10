@@ -310,9 +310,9 @@ class OrderController extends Controller
                 Log::error('Erreur envoi email confirmation commande: ' . $e->getMessage());
             }
 
-            // ✅ Marquer le panier abandonné comme récupéré (commande passée)
             \App\Models\AbandonedCart::where('user_id', $user->id)
                 ->where('recovered', false)
+                ->whereNull('cancelled_at')
                 ->update(['recovered' => true]);
 
             DB::commit();

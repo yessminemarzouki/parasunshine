@@ -93,7 +93,6 @@ class AbandonedCartController extends Controller
     {
         $user = Auth::guard('sanctum')->user();
 
-        // Filet de sécurité : résoudre manuellement l'utilisateur via le token
         if (!$user) {
             $bearerToken = $request->bearerToken();
             if ($bearerToken) {
@@ -104,18 +103,14 @@ class AbandonedCartController extends Controller
 
         $sessionId = md5($request->ip() . $request->userAgent());
 
-        if ($user) {
-            // Supprime le panier abandonné rattaché au compte
-            AbandonedCart::where('user_id', $user->id)->delete();
-        } else {
-            // Supprime le panier abandonné invité lié à la session
-            AbandonedCart::where('session_id', $sessionId)
-                ->whereNull('user_id')
-                ->delete();
-        }
+        $query = $user
+            ? AbandonedCart::where('user_id', $user->id)
+            : AbandonedCart::where('session_id', $sessionId)->whereNull('user_id');
 
-        return response()->json([
-            'message' => 'Panier abandonné supprimé',
-        ]);
+        $query->where('recovered', false)
+            ->whereNull('cancelled_at')
+            ->update(['cancelled_at' => now(), 'last_activity' => now()]);
+
+        return response()->json(['message' => 'Panier annulé']);
     }
 }
