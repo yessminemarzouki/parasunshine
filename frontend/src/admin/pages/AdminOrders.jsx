@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useSearchParams, Link } from "react-router-dom";
-import { Search, Eye, Trash2, Sparkles } from "lucide-react";
+import {
+  Search,
+  Eye,
+  Trash2,
+  Sparkles,
+  Download,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { STORAGE_URL } from "../../config/api";
 import {
   getAdminOrders,
@@ -9,6 +17,7 @@ import {
   deleteOrder,
   getAdminOrderDetail,
   markAsSeen,
+  exportJetpackOrders,
 } from "../services/adminApi";
 import {
   Badge,
@@ -54,7 +63,75 @@ const isNew = (dateStr) => {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   return diffMs < 24 * 60 * 60 * 1000;
 };
+function StatusMultiSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
+  useEffect(() => {
+    const h = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const options = STATUS_OPTIONS.slice(1);
+  const toggle = (v) =>
+    onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
+
+  const label =
+    value.length === 0
+      ? "Tous les statuts"
+      : value.length === 1
+        ? STATUS_LABEL[value[0]]
+        : `${value.length} statuts sélectionnés`;
+
+  return (
+    <div ref={ref} className="relative w-full sm:w-[210px]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="h-9 w-full px-3 border border-gray-200 rounded-lg text-[13.5px] text-gray-800 bg-white flex items-center justify-between gap-2"
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-10 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+          {options.map((o) => {
+            const on = value.includes(o.value);
+            return (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => toggle(o.value)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+              >
+                <span
+                  className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                    on ? "bg-[#1a4731] border-[#1a4731]" : "border-gray-300"
+                  }`}
+                >
+                  {on && <Check size={11} className="text-white" />}
+                </span>
+                {o.label}
+              </button>
+            );
+          })}
+          {value.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="w-full text-left px-3 py-2 text-[12px] text-gray-400 hover:bg-gray-50 border-t border-gray-100"
+            >
+              Tout effacer
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 export default function AdminOrders() {
   const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState([]);
@@ -62,7 +139,10 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
-  const [status, setStatus] = useState(searchParams.get("status") || "");
+  const [status, setStatus] = useState(() =>
+    (searchParams.get("status") || "").split(",").filter(Boolean),
+  );
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -73,13 +153,13 @@ export default function AdminOrders() {
   useEffect(() => {
     const urlStatus = searchParams.get("status");
     if (urlStatus !== null) {
-      setStatus(urlStatus);
+      setStatus(urlStatus.split(",").filter(Boolean));
       setPage(1);
     }
   }, [searchParams]);
   useEffect(() => {
     fetchOrders();
-  }, [debouncedSearch, status, page]);
+  }, [debouncedSearch, status.join(","), page]);
 
   useEffect(() => {
     markAsSeen("orders");
@@ -90,7 +170,7 @@ export default function AdminOrders() {
     try {
       const data = await getAdminOrders({
         search: debouncedSearch,
-        status,
+        status: status.join(","),
         page,
         per_page: 15,
       });
@@ -105,6 +185,35 @@ export default function AdminOrders() {
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleExportJetpack = async () => {
+    if (status.length === 0) {
+      showToast("Sélectionnez au moins un statut.", "error");
+      return;
+    }
+    setExporting(true);
+    try {
+      const res = await exportJetpackOrders({
+        status: status.join(","),
+        search: debouncedSearch,
+      });
+      const url = window.URL.createObjectURL(
+        new Blob([res.data], { type: "text/csv;charset=utf-8" }),
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `jetpack_commandes_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast("Fichier Jetpack téléchargé.");
+    } catch {
+      showToast("Erreur lors de l'export.", "error");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleMouseEnter = async (order) => {
@@ -253,20 +362,31 @@ export default function AdminOrders() {
             className="pl-9 w-full"
           />
         </div>
-        <Select
+        <StatusMultiSelect
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
+          onChange={(v) => {
+            setStatus(v);
             setPage(1);
           }}
-          className="w-full sm:w-auto"
+        />
+        <button
+          type="button"
+          onClick={handleExportJetpack}
+          disabled={exporting || status.length === 0}
+          title={
+            status.length === 0
+              ? "Sélectionnez au moins un statut"
+              : "Télécharger le fichier CSV pour Jetpack"
+          }
+          className="h-9 px-4 rounded-lg bg-[#1a4731] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 hover:bg-[#153d29] transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
         >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </Select>
+          {exporting ? (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Download size={14} />
+          )}
+          Exporter pour Jetpack
+        </button>
       </div>
 
       <TableWrap>

@@ -190,6 +190,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin', 'throttle:120,1'])-
 
     // Commandes
     Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::get('/orders/export-jetpack', [AdminOrderController::class, 'exportJetpack']);
     Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
     Route::put('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
     // ── Produits (toutes les routes AVANT {product} doivent être déclarées en premier) ──

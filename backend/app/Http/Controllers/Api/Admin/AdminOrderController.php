@@ -11,17 +11,25 @@ use Illuminate\Support\Facades\DB;
 
 class AdminOrderController extends Controller
 {
-    // Liste paginée avec filtres
-    public function index(Request $request)
-    {
-        $query = Order::with([
-            'user:id,name,email,phone',
-            'items.product:id,name,image,slug',
-            'items.bundle:id,name,image,slug',
-        ])->latest();
+    private const VALID_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-        if ($request->status) {
-            $query->where('status', $request->status);
+    /** "pending,processing" => ['pending','processing'] (valeurs inconnues ignorées) */
+    private function parseStatuses(Request $request): array
+    {
+        $raw = $request->input('status');
+        $list = is_array($raw) ? $raw : explode(',', (string) $raw);
+
+        return array_values(array_intersect(
+            array_map('trim', $list),
+            self::VALID_STATUSES
+        ));
+    }
+
+    private function applyFilters($query, Request $request)
+    {
+        $statuses = $this->parseStatuses($request);
+        if (!empty($statuses)) {
+            $query->whereIn('status', $statuses);
         }
 
         if ($request->search) {
@@ -40,9 +48,77 @@ class AdminOrderController extends Controller
             $query->where('created_at', '>=', now()->startOfMonth());
         }
 
-        $orders = $query->paginate($request->per_page ?? 15);
+        return $query;
+    }
 
-        return response()->json($orders);
+    // Liste paginée avec filtres
+    public function index(Request $request)
+    {
+        $query = Order::with([
+            'user:id,name,email,phone',
+            'items.product:id,name,image,slug',
+            'items.bundle:id,name,image,slug',
+        ])->latest();
+
+        $this->applyFilters($query, $request);
+
+        return response()->json($query->paginate($request->per_page ?? 15));
+    }
+
+    // Export CSV au format Jetpack (livraison)
+    public function exportJetpack(Request $request)
+    {
+        if (empty($this->parseStatuses($request))) {
+            return response()->json(['message' => 'Sélectionnez au moins un statut.'], 422);
+        }
+
+        $query = Order::with('user:id,name,first_name,last_name')
+            ->where(function ($q) {
+                $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'store_pickup');
+            });
+        $this->applyFilters($query, $request);
+
+        $delimiter = ';'; // ';' pour Excel en français. Mettre ',' si Jetpack l'exige.
+        $designation = 'Parapharmacie';
+
+        // Empêche l'exécution de formules si un champ commence par = + - @
+        $safe = function ($v) {
+            $v = trim((string) $v);
+            return ($v !== '' && in_array($v[0], ['=', '+', '-', '@'], true)) ? "'" . $v : $v;
+        };
+
+        $filename = 'jetpack_commandes_' . now()->format('Y-m-d_His') . '.csv';
+
+        return response()->streamDownload(function () use ($query, $delimiter, $designation, $safe) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 : accents corrects dans Excel
+
+            fputcsv($out, [
+                'destinataire_nom', 'adresse', 'ville', 'gouvernerat', 'telephone',
+                'telephone2', 'nombre_de_colis', 'prix', 'designation',
+            ], $delimiter);
+
+            $query->chunkById(200, function ($orders) use ($out, $delimiter, $designation, $safe) {
+                foreach ($orders as $o) {
+                    $u = $o->user;
+                    $name = trim(($u?->first_name ?? '') . ' ' . ($u?->last_name ?? '')) ?: ($u?->name ?? '');
+
+                    fputcsv($out, [
+                        $safe($name),
+                        $safe($o->shipping_address),
+                        $safe($o->shipping_city),
+                        $safe($o->shipping_city),
+                        trim((string) $o->shipping_phone),
+                        '',
+                        1,
+                        rtrim(rtrim(number_format((float) $o->total, 3, '.', ''), '0'), '.'),
+                        $designation,
+                    ], $delimiter);
+                }
+            });
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     // Détail d'une commande

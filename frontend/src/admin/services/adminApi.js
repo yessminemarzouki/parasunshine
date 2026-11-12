@@ -121,6 +121,15 @@ export const deleteOrder = async (id) => {
   return response.data;
 };
 
+export const exportJetpackOrders = async (params = {}) => {
+  const response = await adminApi.get("/admin/orders/export-jetpack", {
+    params,
+    responseType: "blob",
+    timeout: 5 * 60 * 1000,
+  });
+  return response;
+};
+
 // ========================================
 // PRODUITS
 // ========================================
