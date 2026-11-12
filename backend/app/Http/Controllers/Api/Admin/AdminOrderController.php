@@ -72,14 +72,15 @@ class AdminOrderController extends Controller
             return response()->json(['message' => 'Sélectionnez au moins un statut.'], 422);
         }
 
-        $query = Order::with('user:id,name,first_name,last_name')
-            ->where(function ($q) {
-                $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'store_pickup');
-            });
+        $query = Order::with([
+            'user:id,name,first_name,last_name',
+            'items:id,order_id,product_name,bundle_name,quantity',
+        ])->where(function ($q) {
+            $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'store_pickup');
+        });
         $this->applyFilters($query, $request);
 
         $delimiter = ';'; // ';' pour Excel en français. Mettre ',' si Jetpack l'exige.
-        $designation = 'Parapharmacie';
 
         // Empêche l'exécution de formules si un champ commence par = + - @
         $safe = function ($v) {
@@ -87,9 +88,24 @@ class AdminOrderController extends Controller
             return ($v !== '' && in_array($v[0], ['=', '+', '-', '@'], true)) ? "'" . $v : $v;
         };
 
+        // Noms des produits (et coffrets) de la commande, séparés par une virgule
+        $designationOf = function ($order) {
+            $names = $order->items
+                ->map(function ($item) {
+                    $name = $item->product_name ?: $item->bundle_name;
+                    $name = html_entity_decode(strip_tags((string) $name), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    return trim(preg_replace('/\s+/', ' ', $name));
+                })
+                ->filter()
+                ->values()
+                ->all();
+
+            return implode(', ', $names);
+        };
+
         $filename = 'jetpack_commandes_' . now()->format('Y-m-d_His') . '.csv';
 
-        return response()->streamDownload(function () use ($query, $delimiter, $designation, $safe) {
+        return response()->streamDownload(function () use ($query, $delimiter, $safe, $designationOf) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 : accents corrects dans Excel
 
@@ -98,7 +114,7 @@ class AdminOrderController extends Controller
                 'telephone2', 'nombre_de_colis', 'prix', 'designation',
             ], $delimiter);
 
-            $query->chunkById(200, function ($orders) use ($out, $delimiter, $designation, $safe) {
+            $query->chunkById(200, function ($orders) use ($out, $delimiter, $safe, $designationOf) {
                 foreach ($orders as $o) {
                     $u = $o->user;
                     $name = trim(($u?->first_name ?? '') . ' ' . ($u?->last_name ?? '')) ?: ($u?->name ?? '');
@@ -111,8 +127,9 @@ class AdminOrderController extends Controller
                         trim((string) $o->shipping_phone),
                         '',
                         1,
+                        // Total TTC, livraison incluse = montant à encaisser
                         rtrim(rtrim(number_format((float) $o->total, 3, '.', ''), '0'), '.'),
-                        $designation,
+                        $safe($designationOf($o)),
                     ], $delimiter);
                 }
             });
