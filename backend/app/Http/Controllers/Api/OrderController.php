@@ -317,6 +317,29 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Meta API Conversions : même event_id que le Pixel (déduplication)
+            app()->terminating(function () use ($order, $request, $user) {
+                try {
+                    app(\App\Services\MetaConversionsService::class)->send(
+                        'Purchase',
+                        'purchase_' . $order->id,
+                        [
+                            'value'        => (float) $order->total,
+                            'currency'     => 'TND',
+                            'content_type' => 'product',
+                            'content_ids'  => $order->items()->pluck('product_id')->filter()->values()->all(),
+                            'num_items'    => (int) $order->items()->sum('quantity'),
+                        ],
+                        $request,
+                        $user,
+                        rtrim(config('app.url'), '/') . '/order-confirmation/' . $order->id,
+                        $order->shipping_phone,
+                    );
+                } catch (\Throwable $e) {
+                    // Ne jamais bloquer une commande à cause de Meta
+                }
+            });
+
             return response()->json([
                 'message' => 'Commande créée avec succès',
                 'order' => $order->load('items.product'),

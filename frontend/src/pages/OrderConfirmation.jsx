@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Package, Truck, Home, MapPin, Mail } from "lucide-react";
 import { getOrder } from "../services/api";
+import { trackMeta } from "../utils/metaTrack";
 
 const OrderConfirmation = () => {
   const { orderId } = useParams();
@@ -26,13 +27,24 @@ const OrderConfirmation = () => {
       if (!sessionStorage.getItem(trackedKey)) {
         const total = parseFloat(order.total);
 
-        // ✅ Meta Pixel
-        if (window.fbq) {
-          window.fbq("track", "Purchase", {
+        // ✅ Meta Pixel — eventID identique à celui envoyé par le serveur
+        // (OrderController envoie le même "purchase_{id}")
+        trackMeta(
+          "Purchase",
+          {
             value: total,
             currency: "TND",
-          });
-        }
+            content_type: "product",
+            content_ids: (order.items || [])
+              .map((i) => i.product_id)
+              .filter(Boolean),
+            num_items: (order.items || []).reduce(
+              (s, i) => s + (i.quantity || 0),
+              0,
+            ),
+          },
+          { eventId: `purchase_${order.id}` },
+        );
 
         // 🆕 Google Analytics 4
         if (window.gtag) {

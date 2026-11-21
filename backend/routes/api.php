@@ -141,6 +141,7 @@ Route::middleware('throttle:30,1')->group(function () {
     Route::post('/abandoned-cart', [AbandonedCartController::class, 'store']);
     Route::delete('/abandoned-cart', [AbandonedCartController::class, 'destroy']);
 });
+Route::middleware('throttle:60,1')->post('/meta/event', [\App\Http\Controllers\Api\MetaEventController::class, 'store']);
 
 // ========================================
 // CONTACT & NEWSLETTER (publiques)

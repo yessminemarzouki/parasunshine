@@ -34,6 +34,7 @@ import {
   validatePromoCode,
 } from "../services/api";
 import { GOVERNORATES, getDelegations } from "../data/tunisia";
+import { trackMeta } from "../utils/metaTrack";
 
 const Label = ({ children, required }) => (
   <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
@@ -216,20 +217,23 @@ export default function Checkout() {
           0,
         );
 
-        // ✅ Meta Pixel
-        if (window.fbq) {
-          window.fbq("track", "InitiateCheckout", {
+        // ✅ Meta Pixel + API Conversions (même event_id des deux côtés)
+        trackMeta(
+          "InitiateCheckout",
+          {
             content_ids: cart.map((item) => item.id),
             contents: cart.map((item) => ({
               id: item.id,
               quantity: item.quantity,
               item_price: parseFloat(item.effective_price ?? item.price),
             })),
+            content_type: "product",
             num_items: cart.length,
             value: total,
             currency: "TND",
-          });
-        }
+          },
+          { server: true },
+        );
 
         // 🆕 Google Analytics 4
         if (window.gtag) {

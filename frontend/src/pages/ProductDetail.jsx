@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { trackMeta } from "../utils/metaTrack";
 import {
   ShoppingCart,
   Zap,
@@ -200,18 +201,21 @@ export default function ProductDetail() {
       block: "nearest",
     });
   }, [activeTab]);
-  // 🆕 AJOUT : Tracking Pixel Meta (ViewContent)
   useEffect(() => {
-    if (product && typeof window !== "undefined" && window.fbq) {
-      window.fbq("track", "ViewContent", {
+    if (!product?.id) return;
+    trackMeta(
+      "ViewContent",
+      {
         content_name: product.name,
         content_ids: [product.id],
         content_type: "product",
         value: parseFloat(product.effective_price ?? product.price),
         currency: "TND",
-      });
-    }
-  }, [product]);
+      },
+      { server: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
 
   useEffect(() => {
     if (!product) return;

@@ -2,6 +2,7 @@ import { useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, ShoppingCart, Bell, X, CheckCircle2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { trackMeta } from "../utils/metaTrack";
 import { useWishlist } from "../context/WishlistContext";
 import { useCartNotification } from "../context/CartNotificationContext";
 import { STORAGE_URL } from "../config/api";
@@ -54,16 +55,17 @@ const ProductCard = ({ product }) => {
     if (product.stock > 0) {
       const price = parseFloat(product.effective_price ?? product.price);
 
-      // ✅ Meta Pixel
-      if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "AddToCart", {
+      trackMeta(
+        "AddToCart",
+        {
           content_name: product.name,
           content_ids: [product.id],
           content_type: "product",
           value: price,
           currency: "TND",
-        });
-      }
+        },
+        { server: true },
+      );
 
       // 🆕 Google Analytics 4
       if (typeof window !== "undefined" && window.gtag) {
