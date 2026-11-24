@@ -29,6 +29,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import CartNotification from "../components/CartNotification";
 import ImageLightbox from "../components/ImageLightbox";
+import { withBundlePricing } from "../utils/bundlePrice";
 export default function BundleDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -875,7 +876,7 @@ export default function BundleDetail() {
 
         <CartNotification
           isVisible={cartNotif}
-          product={bundle}
+          product={withBundlePricing(bundle)}
           quantity={quantity}
           onClose={() => setCartNotif(false)}
         />

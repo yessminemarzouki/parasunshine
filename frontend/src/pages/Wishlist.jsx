@@ -16,6 +16,7 @@ import api from "../services/api";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { useNotification } from "../context/NotificationContext";
+import { withBundlePricing } from "../utils/bundlePrice";
 
 export default function Wishlist() {
   const navigate = useNavigate();
@@ -104,7 +105,7 @@ export default function Wishlist() {
   const handleAddBundleToCart = (bundle) => {
     if (bundle.is_available !== false) {
       addBundleToCart(bundle, 1);
-      showNotification(bundle, 1);
+      showNotification(withBundlePricing({ ...bundle, isBundle: true }), 1);
     }
   };
 

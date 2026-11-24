@@ -17,9 +17,42 @@ import {
   ChevronRight,
   Check,
   Loader2,
+  Gift,
 } from "lucide-react";
 
 const COLS = "1.5fr 110px 150px 100px 40px";
+// Cadeaux d'un coffret : icône + liste des articles offerts
+const BundleGifts = ({ item, size = 11.5 }) => {
+  if (!item.isBundle) return null;
+  const free = (item.items || []).filter((i) => i.is_free);
+  if (free.length === 0) return null;
+
+  const names = free
+    .map((i) => i.product?.name || i.custom_name)
+    .filter(Boolean);
+  const label =
+    names.length === free.length
+      ? `Offert : ${names.join(", ")}`
+      : `${free.length} article${free.length > 1 ? "s" : ""} offert${free.length > 1 ? "s" : ""}`;
+
+  return (
+    <p
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 5,
+        fontSize: size,
+        fontWeight: 600,
+        color: "#059669",
+        margin: "3px 0 0",
+        lineHeight: 1.35,
+      }}
+    >
+      <Gift size={12} style={{ flexShrink: 0, marginTop: 1 }} />
+      <span>{label}</span>
+    </p>
+  );
+};
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -482,6 +515,7 @@ export default function Cart() {
                           {item.brand.name}
                         </p>
                       )}
+                      <BundleGifts item={item} />
                       {item.reference && (
                         <p
                           style={{
@@ -788,7 +822,11 @@ export default function Cart() {
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <Link
-                        to={`/products/${item.slug}`}
+                        to={
+                          item.isBundle
+                            ? `/coffrets/${item.slug}`
+                            : `/products/${item.slug}`
+                        }
                         style={{
                           display: "block",
                           fontSize: 13,
@@ -812,6 +850,7 @@ export default function Cart() {
                           {item.brand.name}
                         </p>
                       )}
+                      <BundleGifts item={item} size={11} />
                       {(item.selectedSize ||
                         item.selectedColor ||
                         item.selectedAge) && (
