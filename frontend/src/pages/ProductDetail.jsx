@@ -389,6 +389,17 @@ export default function ProductDetail() {
         selectedAgeColor,
       });
     }
+    trackMeta(
+      "AddToCart",
+      {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: "product",
+        value: displayPrice * quantity,
+        currency: "TND",
+      },
+      { server: true },
+    );
     setCartNotif(true);
     setTimeout(() => setCartNotif(false), 3000);
   };
