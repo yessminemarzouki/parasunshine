@@ -310,7 +310,8 @@ export default function Checkout() {
 
       const orderData = {
         items: cart.map((item) => ({
-          product_id: item.id,
+          product_id: item.isBundle ? null : item.id,
+          bundle_id: item.isBundle ? item.bundleId : null,
           quantity: item.quantity,
           selected_size: item.selectedSize || null,
           selected_color:

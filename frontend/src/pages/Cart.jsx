@@ -449,7 +449,11 @@ export default function Cart() {
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <Link
-                        to={`/products/${item.slug}`}
+                        to={
+                          item.isBundle
+                            ? `/coffrets/${item.slug}`
+                            : `/products/${item.slug}`
+                        }
                         style={{
                           display: "block",
                           fontSize: 13.5,

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import CartNotification from "../components/CartNotification";
+import { isBundleLike, withBundlePricing } from "../utils/bundlePrice";
 
 const CartNotificationContext = createContext(null);
 
@@ -8,15 +9,17 @@ export function CartNotificationProvider({ children }) {
 
   const showCartNotification = useCallback((product, quantity = 1) => {
     // ✅ On force le prix effectif pour ne pas afficher la promo si pas active
-    const safeProduct = {
-      ...product,
-      effective_price: product.is_promo_active
-        ? product.effective_price
-        : product.price,
-      effective_reference_price: product.is_promo_active
-        ? product.effective_reference_price
-        : null,
-    };
+    const safeProduct = isBundleLike(product)
+      ? withBundlePricing(product)
+      : {
+          ...product,
+          effective_price: product.is_promo_active
+            ? product.effective_price
+            : product.price,
+          effective_reference_price: product.is_promo_active
+            ? product.effective_reference_price
+            : null,
+        };
     setNotification({ product: safeProduct, quantity });
   }, []);
 

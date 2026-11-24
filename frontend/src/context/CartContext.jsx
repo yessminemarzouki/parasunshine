@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { withBundlePricing } from "../utils/bundlePrice";
 import {
   saveAbandonedCart,
   deleteAbandonedCart as deleteAbandonedCartApi,
@@ -18,7 +19,8 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
     if (typeof window === "undefined") return [];
     const savedCart = localStorage.getItem("pharmasoin_cart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    const parsed = savedCart ? JSON.parse(savedCart) : [];
+    return parsed.map((i) => (i.isBundle ? withBundlePricing(i) : i));
   });
 
   // ✅ Track si le panier a contenu quelque chose
@@ -193,13 +195,13 @@ export const CartProvider = ({ children }) => {
       }
       return [
         ...prev,
-        {
+        withBundlePricing({
           ...bundle,
           id: cartId,
           bundleId: bundle.id,
           isBundle: true,
           quantity,
-        },
+        }),
       ];
     });
   };
