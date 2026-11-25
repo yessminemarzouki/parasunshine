@@ -154,9 +154,7 @@ const OrderConfirmation = () => {
               <p className="text-[14px] font-bold text-gray-800">
                 {isStorePickup
                   ? "Retrait en magasin"
-                  : order.payment_method === "cash_on_delivery"
-                    ? "Paiement à la livraison"
-                    : order.payment_method || "—"}
+                  : "Paiement à la livraison"}
               </p>
               <span
                 className={`inline-flex mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${

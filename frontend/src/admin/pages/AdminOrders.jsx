@@ -9,6 +9,7 @@ import {
   Download,
   ChevronDown,
   Check,
+  Gift,
 } from "lucide-react";
 import { STORAGE_URL } from "../../config/api";
 import {
@@ -49,6 +50,23 @@ const STATUS_LABEL = {
   shipped: "Expédiée",
   delivered: "Livrée",
   cancelled: "Annulée",
+};
+// Un article de commande est soit un produit, soit un coffret
+const itemInfo = (item) => {
+  if (item.bundle_id || item.bundle) {
+    return {
+      isBundle: true,
+      name: item.bundle?.name || item.bundle_name || "Coffret",
+      image: item.bundle?.image || null,
+      to: "/admin/bundles",
+    };
+  }
+  return {
+    isBundle: false,
+    name: item.product?.name || item.product_name || "Produit supprimé",
+    image: item.product?.image || null,
+    to: `/admin/products?search=${encodeURIComponent(item.product?.reference || item.product?.name || "")}&highlight=${item.product?.id}`,
+  };
 };
 const timeAgo = (dateStr) => {
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -445,29 +463,45 @@ export default function AdminOrders() {
                 </TD>
                 <TD>
                   <div className="space-y-1">
-                    {order.items?.slice(0, 2).map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-1.5 text-[12px] text-gray-600"
-                      >
-                        {item.product?.image && (
-                          <img
-                            src={`${STORAGE_URL}/${item.product.image}`}
-                            alt=""
-                            className="w-5 h-5 rounded object-cover flex-shrink-0"
+                    {order.items?.slice(0, 2).map((item) => {
+                      const info = itemInfo(item);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-1.5 text-[12px] text-gray-600"
+                        >
+                          {info.image ? (
+                            <img
+                              src={`${STORAGE_URL}/${info.image}`}
+                              alt=""
+                              className="w-5 h-5 rounded object-cover flex-shrink-0"
+                            />
+                          ) : info.isBundle ? (
+                            <span className="w-5 h-5 rounded bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                              <Gift size={11} className="text-emerald-600" />
+                            </span>
+                          ) : null}
+                          <Link
+                            to={info.to}
+                            className="truncate max-w-[120px] text-[#1a4731] hover:underline hover:text-[#0d3d30] transition-colors"
+                            title={
+                              info.isBundle
+                                ? "Voir les coffrets"
+                                : "Voir ce produit dans l'admin"
+                            }
+                            dangerouslySetInnerHTML={{ __html: info.name }}
                           />
-                        )}
-                        <Link
-                          to={`/admin/products?search=${encodeURIComponent(item.product?.reference || item.product?.name || "")}&highlight=${item.product?.id}`}
-                          className="truncate max-w-[120px] text-[#1a4731] hover:underline hover:text-[#0d3d30] transition-colors"
-                          title="Voir ce produit dans l'admin"
-                          dangerouslySetInnerHTML={{
-                            __html: item.product?.name,
-                          }}
-                        />
-                        <span className="text-gray-400">×{item.quantity}</span>
-                      </div>
-                    ))}
+                          {info.isBundle && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex-shrink-0">
+                              Coffret
+                            </span>
+                          )}
+                          <span className="text-gray-400">
+                            ×{item.quantity}
+                          </span>
+                        </div>
+                      );
+                    })}
                     {order.items?.length > 2 && (
                       <span className="text-[11px] text-gray-400">
                         +{order.items.length - 2} autre(s)
@@ -617,9 +651,9 @@ export default function AdminOrders() {
                     Paiement
                   </p>
                   <p className="text-[13.5px] text-gray-700">
-                    {selected.payment_method === "cash_on_delivery"
-                      ? "Paiement à la livraison"
-                      : selected.payment_method}
+                    {selected.payment_method === "store_pickup"
+                      ? "Paiement lors du retrait en magasin"
+                      : "Paiement à la livraison"}
                   </p>
                   <Badge
                     type={
@@ -661,22 +695,62 @@ export default function AdminOrders() {
                       key={item.id}
                       className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
                     >
-                      {item.product?.image && (
+                      {itemInfo(item).image ? (
                         <img
-                          src={`${STORAGE_URL}/${item.product.image}`}
+                          src={`${STORAGE_URL}/${itemInfo(item).image}`}
                           alt=""
                           className="w-11 h-11 rounded-xl object-cover border border-gray-100 flex-shrink-0"
                         />
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center flex-shrink-0">
+                          {itemInfo(item).isBundle && (
+                            <Gift size={16} className="text-gray-400" />
+                          )}
+                        </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <Link
-                          to={`/admin/products?search=${encodeURIComponent(item.product?.reference || item.product?.name || "")}&highlight=${item.product?.id}`}
+                          to={itemInfo(item).to}
                           className="block text-[13px] font-semibold text-gray-800 truncate hover:text-[#1a4731] hover:underline transition-colors"
-                          title="Voir ce produit dans l'admin"
+                          title={
+                            itemInfo(item).isBundle
+                              ? "Voir les coffrets"
+                              : "Voir ce produit dans l'admin"
+                          }
                           dangerouslySetInnerHTML={{
-                            __html: item.product?.name,
+                            __html: itemInfo(item).name,
                           }}
                         />
+                        {itemInfo(item).isBundle && (
+                          <>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full mt-0.5">
+                              <Gift size={9} /> Coffret
+                            </span>
+                            {item.bundle?.items?.length > 0 && (
+                              <ul className="mt-1 space-y-0.5">
+                                {item.bundle.items.map((bi) => (
+                                  <li
+                                    key={bi.id}
+                                    className="flex items-center gap-1 text-[11px] text-gray-500"
+                                  >
+                                    <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                    <span className="truncate">
+                                      {bi.product?.name || bi.custom_name}
+                                      {bi.quantity > 1
+                                        ? ` ×${bi.quantity}`
+                                        : ""}
+                                    </span>
+                                    {bi.is_free && (
+                                      <span className="text-emerald-600 font-semibold flex-shrink-0">
+                                        offert
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </>
+                        )}
                         <p className="text-[11.5px] text-gray-400">
                           {item.quantity} × {parseFloat(item.price).toFixed(3)}{" "}
                           DT

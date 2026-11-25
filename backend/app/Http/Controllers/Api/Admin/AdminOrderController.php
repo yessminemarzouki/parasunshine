@@ -144,7 +144,8 @@ class AdminOrderController extends Controller
         $order->load([
             'user:id,name,email,phone',
             'items.product:id,name,image,slug,price',
-            'items.bundle:id,name,image,slug,price',
+                    'items.bundle:id,name,image,slug,price',
+            'items.bundle.items.product:id,name,image',
             'statusHistories.user:id,name',
         ]);
 

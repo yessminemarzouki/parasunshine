@@ -49,7 +49,56 @@ const emptyForm = {
   stock: 999,
   is_unavailable: false,
 };
+// État de la fenêtre de promo d'après les dates
+const promoWindow = (b) => {
+  const toDate = (v) => (v ? new Date(String(v).replace(" ", "T")) : null);
+  const now = new Date();
+  const start = toDate(b.promo_starts_at);
+  const end = toDate(b.promo_ends_at);
+  if (end && end < now) return "expired";
+  if (start && start > now) return "scheduled";
+  return "active";
+};
 
+function BundlePriceCell({ bundle }) {
+  const price = parseFloat(bundle.price) || 0;
+  const promo = parseFloat(bundle.promo_price) || 0;
+  const hasPromo = promo > 0 && promo < price;
+
+  if (!hasPromo) {
+    return (
+      <span className="font-semibold text-gray-800">{price.toFixed(3)} DT</span>
+    );
+  }
+
+  const pct =
+    bundle.discount_percentage || Math.round(((price - promo) / price) * 100);
+  const state = promoWindow(bundle);
+
+  return (
+    <div>
+      <p className="font-semibold text-red-600">{promo.toFixed(3)} DT</p>
+      <p className="text-[11.5px] text-gray-400 line-through">
+        {price.toFixed(3)} DT
+      </p>
+      <div className="flex flex-wrap gap-1 mt-0.5">
+        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full">
+          -{pct}%
+        </span>
+        {state === "expired" && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-full">
+            Promo expirée
+          </span>
+        )}
+        {state === "scheduled" && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-full">
+            Promo programmée
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 export default function AdminBundles() {
   const [bundles, setBundles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -670,6 +719,8 @@ export default function AdminBundles() {
                         </p>
                         <p className="text-[11.5px] text-gray-400">
                           {bundle.items_count} produit(s)
+                          {(bundle.items || []).some((i) => i.is_free) &&
+                            ` · ${(bundle.items || []).filter((i) => i.is_free).length} offert(s)`}
                         </p>
                       </div>
                     </div>
@@ -677,8 +728,8 @@ export default function AdminBundles() {
                   <td className="px-5 py-3 text-gray-600">
                     {bundle.brand?.name || "—"}
                   </td>
-                  <td className="px-5 py-3 font-semibold text-gray-800">
-                    {parseFloat(bundle.price).toFixed(3)} DT
+                  <td className="px-5 py-3">
+                    <BundlePriceCell bundle={bundle} />
                   </td>
                   <td className="px-5 py-3 text-gray-600">{bundle.stock}</td>
                   <td className="px-5 py-3">

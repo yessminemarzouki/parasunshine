@@ -281,10 +281,10 @@ export default function OrderDetail() {
                   >
                     {/* Image */}
                     <div className="w-20 h-20 rounded-xl bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {item.product?.image ? (
+                      {(item.bundle || item.product)?.image ? (
                         <img
-                          src={`${STORAGE_URL}/${item.product.image}`}
-                          alt={item.product?.name}
+                          src={`${STORAGE_URL}/${(item.bundle || item.product).image}`}
+                          alt={item.bundle?.name || item.product?.name}
                           className="w-full h-full object-contain p-1"
                         />
                       ) : (
@@ -294,10 +294,18 @@ export default function OrderDetail() {
                     {/* Infos */}
                     <div className="flex-1 min-w-0">
                       <Link
-                        to={`/products/${item.product?.slug}`}
+                        to={
+                          item.bundle
+                            ? `/coffrets/${item.bundle.slug}`
+                            : `/products/${item.product?.slug}`
+                        }
                         className="block text-[14px] font-semibold text-gray-800 hover:text-[#1a5242] transition-colors truncate"
                       >
-                        {item.product?.name || "Produit"}
+                        {item.bundle?.name ||
+                          item.bundle_name ||
+                          item.product?.name ||
+                          item.product_name ||
+                          "Produit"}
                       </Link>
                       {item.product?.brand && (
                         <p className="text-[11.5px] text-gray-400 uppercase tracking-wide mt-0.5">
@@ -436,12 +444,9 @@ export default function OrderDetail() {
               <p className="text-[13.5px] text-gray-600 mb-3">
                 {isStorePickup
                   ? "Paiement lors du retrait en magasin"
-                  : order.payment_method === "cash" ||
-                      order.payment_method === "cash_on_delivery"
-                    ? "Paiement à la livraison"
-                    : order.payment_method === "card"
-                      ? "Carte bancaire"
-                      : order.payment_method}
+                  : order.payment_method === "card"
+                    ? "Carte bancaire"
+                    : "Paiement à la livraison"}
               </p>
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold border ${
