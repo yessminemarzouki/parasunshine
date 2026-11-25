@@ -180,7 +180,7 @@ class AdminOrderController extends Controller
             // Paiement à la livraison : le paiement est considéré effectué
             // dès que la commande passe au statut "Livrée". S'il en sort
             // (ex: erreur admin, retour), on repasse le paiement en attente.
-            if ($order->payment_method === 'cash_on_delivery') {
+            if (in_array($order->payment_method, ['cash_on_delivery', 'delivery', 'store_pickup'], true)) {
                 if ($newStatus === 'delivered') {
                     $updateData['payment_status'] = 'paid';
                 } elseif ($oldStatus === 'delivered' && $newStatus !== 'delivered') {
