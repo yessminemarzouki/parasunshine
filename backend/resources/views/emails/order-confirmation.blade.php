@@ -136,13 +136,50 @@
 
             <h3 style="color: #1a5242; font-size: 16px; margin: 20px 0 10px 0;">Détails de votre commande</h3>
 
-            @foreach($order->items as $item)
+                   @foreach($order->items as $item)
+                @php
+                    $isBundle = !empty($item->bundle_id);
+                    $itemName = $item->product_name ?: ($item->bundle_name ?: 'Article');
+                    $details = $item->bundle_details ?? [];
+                    $bundleItems = $details['items'] ?? [];
+                    $normalPrice = (float) ($details['normal_price'] ?? 0);
+                    $paidPrice = (float) $item->price;
+                    $hasDiscount = $isBundle && $normalPrice > $paidPrice + 0.0005;
+                @endphp
                 <div class="product-item">
-                    <strong>{{ $item->product_name }}</strong><br>
+                    <strong>{{ $itemName }}</strong>
+                    @if($isBundle)
+                        <span style="background: #ecfdf5; color: #047857; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;">Coffret</span>
+                    @endif
+                    <br>
                     <span style="color: #6b7280; font-size: 13px;">Quantité : {{ $item->quantity }}</span>
                     <span style="float: right; font-weight: 600; color: #1a5242;">
                         {{ number_format($item->total, 3) }} DT
                     </span>
+
+                    @if($isBundle && count($bundleItems) > 0)
+                        <div style="margin-top: 8px; font-size: 12.5px; color: #4b5563;">
+                            Contenu du coffret :
+                            <ul style="margin: 4px 0 0 0; padding-left: 18px;">
+                                @foreach($bundleItems as $bi)
+                                    <li>
+                                        {{ $bi['name'] ?? 'Article' }}
+                                        @if(($bi['quantity'] ?? 1) > 1) (x{{ $bi['quantity'] }}) @endif
+                                        @if(!empty($bi['is_free']))
+                                            <strong style="color: #047857;">offert</strong>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if($hasDiscount)
+                        <div style="margin-top: 6px; font-size: 12.5px; color: #6b7280;">
+                            Prix normal : <span style="text-decoration: line-through;">{{ number_format($normalPrice, 3) }} DT</span>
+                            &nbsp;|&nbsp; Prix promo : <strong style="color: #1a5242;">{{ number_format($paidPrice, 3) }} DT</strong>
+                        </div>
+                    @endif
                 </div>
             @endforeach
 
@@ -168,9 +205,9 @@
             </div>
 
             <div class="shipping-info">
-                <h4>Adresse de livraison</h4>
-                <p>{{ $order->shipping_address }}</p>
-                @if($order->shipping_city)
+                         <h4>{{ $order->payment_method === 'store_pickup' ? 'Retrait en magasin' : 'Adresse de livraison' }}</h4>
+                <p>{{ $order->payment_method === 'store_pickup' ? 'Vous serez contacté par téléphone dès que votre commande sera prête.' : $order->shipping_address }}</p>
+                @if($order->shipping_city && $order->payment_method !== 'store_pickup')
                     <p>{{ $order->shipping_city }}{{ $order->shipping_postal_code ? ', ' . $order->shipping_postal_code : '' }}</p>
                 @endif
                 <p>Téléphone : {{ $order->shipping_phone }}</p>

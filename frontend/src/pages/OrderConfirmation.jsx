@@ -36,7 +36,13 @@ const OrderConfirmation = () => {
             currency: "TND",
             content_type: "product",
             content_ids: (order.items || [])
-              .map((i) => i.product_id)
+              .map((i) =>
+                i.product_id
+                  ? String(i.product_id)
+                  : i.bundle_id
+                    ? `bundle_${i.bundle_id}`
+                    : null,
+              )
               .filter(Boolean),
             num_items: (order.items || []).reduce(
               (s, i) => s + (i.quantity || 0),
@@ -53,8 +59,13 @@ const OrderConfirmation = () => {
             value: total,
             currency: "TND",
             items: (order.items || []).map((item) => ({
-              item_id: item.product_id,
-              item_name: item.product?.name || "Produit",
+              item_id: item.product_id || `bundle_${item.bundle_id}`,
+              item_name:
+                item.product?.name ||
+                item.bundle?.name ||
+                item.bundle_name ||
+                item.product_name ||
+                "Produit",
               price: parseFloat(item.price),
               quantity: item.quantity,
             })),
@@ -249,7 +260,6 @@ const OrderConfirmation = () => {
                     {order.shipping_address}
                   </p>
                   <p className="text-[13px] text-gray-500">
-                    {order.shipping_city}
                     {order.shipping_city}
                   </p>
                 </>

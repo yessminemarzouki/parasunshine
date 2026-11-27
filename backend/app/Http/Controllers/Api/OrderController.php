@@ -340,7 +340,9 @@ class OrderController extends Controller
                             'value'        => (float) $order->total,
                             'currency'     => 'TND',
                             'content_type' => 'product',
-                            'content_ids'  => $order->items()->pluck('product_id')->filter()->values()->all(),
+                                                     'content_ids'  => $order->items()->get(['product_id', 'bundle_id'])
+                                ->map(fn ($i) => $i->product_id ? (string) $i->product_id : ($i->bundle_id ? 'bundle_' . $i->bundle_id : null))
+                                ->filter()->values()->all(),
                             'num_items'    => (int) $order->items()->sum('quantity'),
                         ],
                         $request,
