@@ -266,22 +266,13 @@ function OrderItemRow({ item }) {
   const d = bundleDetailsOf(item);
   const items = d?.items || [];
   const normal = d?.normal || paid;
-  const itemsValue = items.reduce(
-    (s, i) =>
-      s + (parseFloat(i.unit_price) || 0) * (parseInt(i.quantity, 10) || 1),
-    0,
-  );
+
   const gifts = items.filter((i) => i.is_free);
-  const giftValue = gifts.reduce(
-    (s, i) =>
-      s + (parseFloat(i.unit_price) || 0) * (parseInt(i.quantity, 10) || 1),
-    0,
-  );
+
   const promoApplied = normal > paid + 0.0005;
   const discount = normal - paid;
   const pct =
     promoApplied && normal > 0 ? Math.round((discount / normal) * 100) : 0;
-  const saving = itemsValue - paid;
 
   return (
     <div className="py-3 border-b border-gray-50 last:border-0">
@@ -324,27 +315,11 @@ function OrderItemRow({ item }) {
                       </span>
                     )}
                   </span>
-                  <span className="flex items-center gap-1.5 flex-shrink-0">
-                    {bi.is_free ? (
-                      <>
-                        <span className="text-gray-400 line-through">
-                          {money(
-                            (parseFloat(bi.unit_price) || 0) *
-                              (bi.quantity || 1),
-                          )}
-                        </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
-                          Offert
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-gray-500">
-                        {money(
-                          (parseFloat(bi.unit_price) || 0) * (bi.quantity || 1),
-                        )}
-                      </span>
-                    )}
-                  </span>
+                  {bi.is_free && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex-shrink-0">
+                      Offert
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -356,17 +331,12 @@ function OrderItemRow({ item }) {
         </div>
 
         <div className="border-t border-gray-200 pt-2.5 space-y-1.5">
-          {items.length > 0 && (
-            <Row label="Valeur des articles (achetés séparément)">
-              {money(itemsValue)}
-            </Row>
-          )}
           <Row
             label="Articles offerts"
             tone={gifts.length ? "green" : undefined}
           >
             {gifts.length
-              ? `${gifts.length} article${gifts.length > 1 ? "s" : ""} (valeur ${money(giftValue)})`
+              ? `${gifts.length} article${gifts.length > 1 ? "s" : ""}`
               : "Aucun"}
           </Row>
           <Row label="Prix normal du coffret">{money(normal)}</Row>
@@ -382,11 +352,6 @@ function OrderItemRow({ item }) {
           <Row label="Total de la ligne" strong>
             {money(item.total)}
           </Row>
-          {saving > 0.0005 && (
-            <Row label="Économie vs achat séparé" tone="green">
-              {money(saving)}
-            </Row>
-          )}
         </div>
 
         {d && !d.snapshot && (
