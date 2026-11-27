@@ -537,7 +537,8 @@ export default function Wishlist() {
 const BundleWishlistCard = ({ bundle, removing, onRemove, onAddToCart }) => {
   const price = parseFloat(bundle.price) || 0;
   const promoPrice = parseFloat(bundle.promo_price) || 0;
-  const hasPromo = promoPrice > 0 && promoPrice < price;
+  const hasPromo =
+    promoPrice > 0 && promoPrice < price && bundle.is_promo_active !== false;
   const display = hasPromo ? promoPrice : price;
   const discount = hasPromo
     ? Math.round(((price - promoPrice) / price) * 100)

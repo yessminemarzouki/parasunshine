@@ -73,7 +73,33 @@ function BundlePriceCell({ bundle }) {
 
   const pct =
     bundle.discount_percentage || Math.round(((price - promo) / price) * 100);
-  const state = promoWindow(bundle);
+  const w = promoWindow(bundle);
+  const state = bundle.is_promo_active
+    ? "active"
+    : w === "scheduled"
+      ? "scheduled"
+      : "expired";
+
+  // Promo expirée ou programmée : le site affiche le prix normal
+  if (state !== "active") {
+    return (
+      <div>
+        <p className="font-semibold text-gray-800">{price.toFixed(3)} DT</p>
+        <p className="text-[11px] text-gray-400">
+          Promo {promo.toFixed(3)} DT (-{pct}%)
+        </p>
+        <span
+          className={`inline-block mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
+            state === "expired"
+              ? "bg-gray-100 text-gray-500 border-gray-200"
+              : "bg-blue-50 text-blue-600 border-blue-200"
+          }`}
+        >
+          {state === "expired" ? "Promo expirée" : "Promo programmée"}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -81,21 +107,9 @@ function BundlePriceCell({ bundle }) {
       <p className="text-[11.5px] text-gray-400 line-through">
         {price.toFixed(3)} DT
       </p>
-      <div className="flex flex-wrap gap-1 mt-0.5">
-        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full">
-          -{pct}%
-        </span>
-        {state === "expired" && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-full">
-            Promo expirée
-          </span>
-        )}
-        {state === "scheduled" && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-full">
-            Promo programmée
-          </span>
-        )}
-      </div>
+      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full">
+        -{pct}%
+      </span>
     </div>
   );
 }
@@ -921,7 +935,7 @@ export default function AdminBundles() {
                       onDragOver={handleDragOver("main")}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDropMain}
-                      className={`w-full h-full rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 overflow-hidden bg-gray-50 block transition-colors ${
+                      className={`w-full h-full rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 overflow-hidden bg-gray-50 transition-colors ${
                         dragOverSlot === "main"
                           ? "border-[#1a4731] bg-[#1a4731]/5"
                           : "border-gray-200 hover:border-[#1a4731]"
@@ -972,7 +986,7 @@ export default function AdminBundles() {
                         onDragOver={handleDragOver(i)}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDropGallery(i)}
-                        className={`w-full h-full rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 overflow-hidden bg-gray-50 block transition-colors ${
+                        className={`w-full h-full rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 overflow-hidden bg-gray-50 transition-colors ${
                           dragOverSlot === i
                             ? "border-[#1a4731] bg-[#1a4731]/5"
                             : "border-gray-200 hover:border-[#1a4731]"

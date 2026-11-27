@@ -13,12 +13,23 @@ class BundleController extends Controller
     private $listColumns = [
         'id', 'name', 'slug', 'image', 'price', 'promo_price',
         'discount_percentage', 'stock', 'is_unavailable',
-        'brand_id', 'bundle_category_id', 'rating', 'reviews_count',
+          'brand_id', 'bundle_category_id', 'rating', 'reviews_count',
+        'promo_starts_at', 'promo_ends_at',
     ];
 
     /**
      * Liste tous les coffrets, y compris les indisponibles (affiché mais non achetable).
      */
+    /** Une promo expirée ou pas encore commencée ne doit rien afficher sur le site public */
+    private function hideInactivePromo(Bundle $bundle): Bundle
+    {
+        if (!$bundle->is_promo_active) {
+            $bundle->promo_price = null;
+            $bundle->discount_percentage = null;
+        }
+
+        return $bundle;
+    }
     public function index(Request $request)
     {
         $query = Bundle::select($this->listColumns)
@@ -45,7 +56,7 @@ class BundleController extends Controller
         // Ajoute la disponibilité calculée à chaque coffret pour le filtre "Disponibilité"
         $bundles->getCollection()->transform(function ($bundle) {
             $bundle->is_available = $bundle->is_available;
-            return $bundle;
+            return $this->hideInactivePromo($bundle);
         });
 
         if ($request->availability === 'available') {
@@ -70,6 +81,7 @@ class BundleController extends Controller
         ])->where('slug', $slug)->firstOrFail();
 
         $bundle->is_available = $bundle->is_available;
+        $this->hideInactivePromo($bundle);
 
         // Montant gagné = somme des prix des articles offerts (produits ou manuels)
         $bundle->gift_value = $bundle->items

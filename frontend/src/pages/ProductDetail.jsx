@@ -405,8 +405,7 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
-    navigate("/checkout");
+    if (handleAddToCart()) navigate("/checkout");
   };
 
   const handleWishlist = () => {

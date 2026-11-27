@@ -150,6 +150,255 @@ function StatusMultiSelect({ value, onChange }) {
     </div>
   );
 }
+const money = (n) => `${(parseFloat(n) || 0).toFixed(3)} DT`;
+
+const colorOf = (raw) => {
+  if (!raw) return null;
+  try {
+    const c = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return { name: c.name || String(raw), hex: c.hex || null };
+  } catch {
+    return { name: String(raw), hex: null };
+  }
+};
+
+// Détails d'un coffret commandé : photo prise à la commande si elle existe,
+// sinon composition actuelle du coffret (anciennes commandes)
+const bundleDetailsOf = (item) => {
+  if (item.bundle_details?.items) {
+    return {
+      snapshot: true,
+      normal: parseFloat(item.bundle_details.normal_price) || 0,
+      items: item.bundle_details.items,
+    };
+  }
+  const b = item.bundle;
+  if (!b) return null;
+  return {
+    snapshot: false,
+    normal: parseFloat(b.price) || 0,
+    items: (b.items || []).map((bi) => ({
+      name: bi.product?.name || bi.custom_name || "Article",
+      quantity: bi.quantity,
+      unit_price: parseFloat(bi.product?.price ?? bi.custom_price ?? 0) || 0,
+      is_free: !!bi.is_free,
+    })),
+  };
+};
+
+const Row = ({ label, children, strong, tone }) => (
+  <div className="flex justify-between gap-3 text-[12px]">
+    <span className="text-gray-500">{label}</span>
+    <span
+      className={`text-right ${strong ? "font-bold" : "font-semibold"} ${
+        tone === "green"
+          ? "text-emerald-600"
+          : tone === "red"
+            ? "text-red-500"
+            : "text-gray-800"
+      }`}
+    >
+      {children}
+    </span>
+  </div>
+);
+
+function OrderItemRow({ item }) {
+  const info = itemInfo(item);
+  const qty = parseInt(item.quantity, 10) || 1;
+  const paid = parseFloat(item.price) || 0;
+
+  const thumb = info.image ? (
+    <img
+      src={`${STORAGE_URL}/${info.image}`}
+      alt=""
+      className="w-11 h-11 rounded-xl object-cover border border-gray-100 flex-shrink-0"
+    />
+  ) : (
+    <div className="w-11 h-11 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center flex-shrink-0">
+      {info.isBundle && <Gift size={16} className="text-gray-400" />}
+    </div>
+  );
+
+  // ── Produit simple ──
+  if (!info.isBundle) {
+    const color = colorOf(item.selected_color);
+    return (
+      <div className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+        {thumb}
+        <div className="flex-1 min-w-0">
+          <Link
+            to={info.to}
+            className="block text-[13px] font-semibold text-gray-800 truncate hover:text-[#1a4731] hover:underline transition-colors"
+            title="Voir ce produit dans l'admin"
+            dangerouslySetInnerHTML={{ __html: info.name }}
+          />
+          <p className="text-[11.5px] text-gray-400">
+            {qty} × {money(paid)}
+          </p>
+          {(item.selected_size || color || item.selected_age) && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[11px] text-gray-400">
+              {item.selected_size && <span>Taille : {item.selected_size}</span>}
+              {item.selected_age && <span>Âge : {item.selected_age}</span>}
+              {color && (
+                <span className="flex items-center gap-1">
+                  Couleur :
+                  {color.hex && (
+                    <span
+                      className="inline-block w-3 h-3 rounded-full border border-gray-300"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  )}
+                  {color.name}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <span className="font-bold text-[#1a4731] text-[13px]">
+          {money(item.total)}
+        </span>
+      </div>
+    );
+  }
+
+  // ── Coffret ──
+  const d = bundleDetailsOf(item);
+  const items = d?.items || [];
+  const normal = d?.normal || paid;
+  const itemsValue = items.reduce(
+    (s, i) =>
+      s + (parseFloat(i.unit_price) || 0) * (parseInt(i.quantity, 10) || 1),
+    0,
+  );
+  const gifts = items.filter((i) => i.is_free);
+  const giftValue = gifts.reduce(
+    (s, i) =>
+      s + (parseFloat(i.unit_price) || 0) * (parseInt(i.quantity, 10) || 1),
+    0,
+  );
+  const promoApplied = normal > paid + 0.0005;
+  const discount = normal - paid;
+  const pct =
+    promoApplied && normal > 0 ? Math.round((discount / normal) * 100) : 0;
+  const saving = itemsValue - paid;
+
+  return (
+    <div className="py-3 border-b border-gray-50 last:border-0">
+      <div className="flex items-center gap-3">
+        {thumb}
+        <div className="flex-1 min-w-0">
+          <Link
+            to={info.to}
+            className="block text-[13px] font-semibold text-gray-800 truncate hover:text-[#1a4731] hover:underline transition-colors"
+            title="Voir les coffrets"
+            dangerouslySetInnerHTML={{ __html: info.name }}
+          />
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full mt-0.5">
+            <Gift size={9} /> Coffret
+          </span>
+        </div>
+        <span className="font-bold text-[#1a4731] text-[13px]">
+          {money(item.total)}
+        </span>
+      </div>
+
+      <div className="mt-2.5 rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-2.5">
+        <div>
+          <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+            Contenu du coffret
+          </p>
+          {items.length > 0 ? (
+            <ul className="space-y-1">
+              {items.map((bi, i) => (
+                <li
+                  key={i}
+                  className="flex items-center justify-between gap-2 text-[12px] text-gray-700"
+                >
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                    <span className="truncate">{bi.name}</span>
+                    {bi.quantity > 1 && (
+                      <span className="text-gray-400 flex-shrink-0">
+                        ×{bi.quantity}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-1.5 flex-shrink-0">
+                    {bi.is_free ? (
+                      <>
+                        <span className="text-gray-400 line-through">
+                          {money(
+                            (parseFloat(bi.unit_price) || 0) *
+                              (bi.quantity || 1),
+                          )}
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                          Offert
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-500">
+                        {money(
+                          (parseFloat(bi.unit_price) || 0) * (bi.quantity || 1),
+                        )}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[12px] text-gray-400">
+              Composition indisponible
+            </p>
+          )}
+        </div>
+
+        <div className="border-t border-gray-200 pt-2.5 space-y-1.5">
+          {items.length > 0 && (
+            <Row label="Valeur des articles (achetés séparément)">
+              {money(itemsValue)}
+            </Row>
+          )}
+          <Row
+            label="Articles offerts"
+            tone={gifts.length ? "green" : undefined}
+          >
+            {gifts.length
+              ? `${gifts.length} article${gifts.length > 1 ? "s" : ""} (valeur ${money(giftValue)})`
+              : "Aucun"}
+          </Row>
+          <Row label="Prix normal du coffret">{money(normal)}</Row>
+          {promoApplied && (
+            <Row label="Remise promotionnelle" tone="red">
+              -{pct}% (-{money(discount)})
+            </Row>
+          )}
+          <Row label="Prix payé par coffret" strong>
+            {money(paid)}
+          </Row>
+          <Row label="Quantité commandée">{qty}</Row>
+          <Row label="Total de la ligne" strong>
+            {money(item.total)}
+          </Row>
+          {saving > 0.0005 && (
+            <Row label="Économie vs achat séparé" tone="green">
+              {money(saving)}
+            </Row>
+          )}
+        </div>
+
+        {d && !d.snapshot && (
+          <p className="text-[10.5px] text-gray-400 italic">
+            Commande antérieure : composition et prix normal d'après le coffret
+            actuel.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 export default function AdminOrders() {
   const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState([]);
@@ -691,117 +940,7 @@ export default function AdminOrders() {
                 </p>
                 <div className="space-y-2">
                   {selected.items?.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
-                    >
-                      {itemInfo(item).image ? (
-                        <img
-                          src={`${STORAGE_URL}/${itemInfo(item).image}`}
-                          alt=""
-                          className="w-11 h-11 rounded-xl object-cover border border-gray-100 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-11 h-11 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center flex-shrink-0">
-                          {itemInfo(item).isBundle && (
-                            <Gift size={16} className="text-gray-400" />
-                          )}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          to={itemInfo(item).to}
-                          className="block text-[13px] font-semibold text-gray-800 truncate hover:text-[#1a4731] hover:underline transition-colors"
-                          title={
-                            itemInfo(item).isBundle
-                              ? "Voir les coffrets"
-                              : "Voir ce produit dans l'admin"
-                          }
-                          dangerouslySetInnerHTML={{
-                            __html: itemInfo(item).name,
-                          }}
-                        />
-                        {itemInfo(item).isBundle && (
-                          <>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full mt-0.5">
-                              <Gift size={9} /> Coffret
-                            </span>
-                            {item.bundle?.items?.length > 0 && (
-                              <ul className="mt-1 space-y-0.5">
-                                {item.bundle.items.map((bi) => (
-                                  <li
-                                    key={bi.id}
-                                    className="flex items-center gap-1 text-[11px] text-gray-500"
-                                  >
-                                    <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
-                                    <span className="truncate">
-                                      {bi.product?.name || bi.custom_name}
-                                      {bi.quantity > 1
-                                        ? ` ×${bi.quantity}`
-                                        : ""}
-                                    </span>
-                                    {bi.is_free && (
-                                      <span className="text-emerald-600 font-semibold flex-shrink-0">
-                                        offert
-                                      </span>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </>
-                        )}
-                        <p className="text-[11.5px] text-gray-400">
-                          {item.quantity} × {parseFloat(item.price).toFixed(3)}{" "}
-                          DT
-                        </p>
-                        {item.selected_size && (
-                          <div className="flex flex-col gap-0.5">
-                            {item.selected_size && (
-                              <p className="text-[11px] text-gray-400">
-                                Taille: {item.selected_size}
-                              </p>
-                            )}
-                            {item.selected_color && (
-                              <p className="text-[11px] text-gray-400 flex items-center gap-1">
-                                Couleur:
-                                {(() => {
-                                  try {
-                                    const c =
-                                      typeof item.selected_color === "string"
-                                        ? JSON.parse(item.selected_color)
-                                        : item.selected_color;
-                                    return (
-                                      <>
-                                        <span
-                                          className="inline-block w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
-                                          style={{
-                                            backgroundColor: c.hex || "#808080",
-                                          }}
-                                        />
-                                        <span>
-                                          {c.name || item.selected_color}
-                                        </span>
-                                      </>
-                                    );
-                                  } catch {
-                                    return <span>{item.selected_color}</span>;
-                                  }
-                                })()}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        {item.selected_color && (
-                          <p className="text-[11.5px] text-[#1a4731] font-semibold mt-0.5">
-                            Couleur : {item.selected_color}
-                          </p>
-                        )}
-                      </div>
-                      <span className="font-bold text-[#1a4731] text-[13px]">
-                        {parseFloat(item.total).toFixed(3)} DT
-                      </span>
-                    </div>
+                    <OrderItemRow key={item.id} item={item} />
                   ))}
                 </div>
                 <div className="pt-3 border-t-2 border-gray-100 mt-2 space-y-2">

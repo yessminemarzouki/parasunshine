@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Concerns\HasBundlePromo;
 
 class Bundle extends Model
 {
+    use HasBundlePromo;
+
     protected $fillable = [
         'name', 'slug', 'brand_id', 'bundle_category_id', 'description',
         'image', 'images', 'price', 'price_mode', 'promo_price',

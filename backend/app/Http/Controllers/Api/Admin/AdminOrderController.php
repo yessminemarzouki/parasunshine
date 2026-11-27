@@ -145,7 +145,7 @@ class AdminOrderController extends Controller
             'user:id,name,email,phone',
             'items.product:id,name,image,slug,price',
                     'items.bundle:id,name,image,slug,price',
-            'items.bundle.items.product:id,name,image',
+            'items.bundle.items.product:id,name,image,price',
             'statusHistories.user:id,name',
         ]);
 

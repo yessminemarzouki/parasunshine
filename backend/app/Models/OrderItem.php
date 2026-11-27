@@ -7,17 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     protected $fillable = [
-    'order_id',
-    'product_id',
-    'product_name',
-    'bundle_id',
-    'bundle_name',
-    'quantity',
-    'price',
-    'total',
-    'selected_size',
-    'selected_color',
-];
+        'order_id',
+        'product_id',
+        'product_name',
+        'bundle_id',
+        'bundle_name',
+        'quantity',
+        'price',
+        'total',
+        'selected_size',
+        'selected_color',
+        'bundle_details',
+    ];
+
+    protected $casts = [
+        'bundle_details' => 'array',
+    ];
 
     public function order()
     {

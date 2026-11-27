@@ -121,12 +121,23 @@ class OrderController extends Controller
                         ], 400);
                     }
 
-                    $price = $bundle->promo_price && $bundle->promo_price < $bundle->price
-                        ? $bundle->promo_price
-                        : $bundle->price;
+                    // Prix valide à l'instant T (promo seulement si dans ses dates)
+                    $price = $bundle->effective_price;
 
                     $itemTotal = $price * $item['quantity'];
                     $subtotal += $itemTotal;
+
+                    // Photo du coffret au moment de la commande (composition + prix normal)
+                    $details = [
+                        'normal_price'  => (float) $bundle->price,
+                        'promo_applied' => (bool) $bundle->is_promo_active,
+                        'items'         => $bundle->items->map(fn ($bi) => [
+                            'name'       => $bi->product?->name ?? $bi->custom_name,
+                            'quantity'   => (int) $bi->quantity,
+                            'unit_price' => (float) ($bi->product?->price ?? $bi->custom_price ?? 0),
+                            'is_free'    => (bool) $bi->is_free,
+                        ])->values()->all(),
+                    ];
 
                     $itemsData[] = [
                         'type'     => 'bundle',
@@ -134,8 +145,10 @@ class OrderController extends Controller
                         'quantity' => $item['quantity'],
                         'price'    => $price,
                         'total'    => $itemTotal,
+                        'details'  => $details,
                     ];
                     continue;
+
                 }
 
                 // ── Article de type produit ──
@@ -208,8 +221,7 @@ class OrderController extends Controller
 
                 $hasPromoItem = collect($itemsData)->contains(function ($item) {
                     if ($item['type'] === 'bundle') {
-                        $b = $item['bundle'];
-                        return $b->promo_price && $b->promo_price < $b->price;
+                        return $item['bundle']->is_promo_active;
                     }
                     $p = $item['product'];
                     return $p->promo_price && $p->promo_price < $p->price;
@@ -274,12 +286,13 @@ class OrderController extends Controller
             foreach ($itemsData as $itemData) {
                 if ($itemData['type'] === 'bundle') {
                     OrderItem::create([
-                        'order_id'    => $order->id,
-                        'bundle_id'   => $itemData['bundle']->id,
-                        'bundle_name' => $itemData['bundle']->name,
-                        'quantity'    => $itemData['quantity'],
-                        'price'       => $itemData['price'],
-                        'total'       => $itemData['total'],
+                        'order_id'       => $order->id,
+                        'bundle_id'      => $itemData['bundle']->id,
+                        'bundle_name'    => $itemData['bundle']->name,
+                        'quantity'       => $itemData['quantity'],
+                        'price'          => $itemData['price'],
+                        'total'          => $itemData['total'],
+                        'bundle_details' => $itemData['details'],
                     ]);
                     continue;
                 }
@@ -342,7 +355,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'message' => 'Commande créée avec succès',
-                'order' => $order->load('items.product'),
+                            'order' => $order->load('items.product', 'items.bundle'),
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
